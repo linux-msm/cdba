@@ -370,7 +370,7 @@ static void usage(void)
 {
 	extern const char *__progname;
 
-	fprintf(stderr, "usage: %s -b <board> boot.img\n", __progname);
+	fprintf(stderr, "usage: %s -b <board> -h <host> boot.img\n", __progname);
 	exit(1);
 }
 
@@ -382,6 +382,7 @@ int main(int argc, char **argv)
 	struct work *work;
 	struct circ_buf recv_buf = { 0 };
 	const char *board = NULL;
+	const char *host = NULL;
 	struct stat sb;
 	int ssh_fds[3];
 	char buf[128];
@@ -391,17 +392,20 @@ int main(int argc, char **argv)
 	int opt;
 	int ret;
 
-	while ((opt = getopt(argc, argv, "b:")) != -1) {
+	while ((opt = getopt(argc, argv, "b:h:")) != -1) {
 		switch (opt) {
 		case 'b':
 			board = optarg;
+			break;
+		case 'h':
+			host = optarg;
 			break;
 		default:
 			usage();
 		}
 	}
 
-	if (optind >= argc || !board)
+	if (optind >= argc || !board || !host)
 		usage();
 
 	fastboot_file = argv[optind];
@@ -412,9 +416,9 @@ int main(int argc, char **argv)
 
 	request_select_board(board);
 
-	ret = fork_ssh("minitux.lan", "sandbox/cdba/bad", ssh_fds);
+	ret = fork_ssh(host, "sandbox/cdba/bad", ssh_fds);
 	if (ret)
-		err(1, "failed to connect to flasher.lan");
+		err(1, "failed to connect to \"%s\"", host);
 
 	//sleep(5);
 
