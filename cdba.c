@@ -376,8 +376,6 @@ static void usage(void)
 
 int main(int argc, char **argv)
 {
-	struct timeval *timeout;
-	struct timeval tv = {0, 0};
 	struct work *next;
 	struct work *work;
 	struct circ_buf recv_buf = { 0 };
@@ -387,6 +385,7 @@ int main(int argc, char **argv)
 	int ssh_fds[3];
 	char buf[128];
 	fd_set rfds;
+	fd_set wfds;
 	ssize_t n;
 	int nfds;
 	int opt;
@@ -432,11 +431,11 @@ int main(int argc, char **argv)
 		FD_SET(ssh_fds[1], &rfds);
 		FD_SET(ssh_fds[2], &rfds);
 
-		tv.tv_sec = 0;
-		tv.tv_usec = 1;
-		timeout = list_empty(&work_items) ? NULL : &tv;
+		FD_ZERO(&wfds);
+		if (!list_empty(&work_items))
+			FD_SET(ssh_fds[0], &wfds);
 
-		ret = select(nfds + 1, &rfds, NULL, NULL, timeout);
+		ret = select(nfds + 1, &rfds, &wfds, NULL, NULL);
 #if 0
 		printf("select: %d (%c%c%c)\n", ret, FD_ISSET(STDIN_FILENO, &rfds) ? 'X' : '-',
 						     FD_ISSET(ssh_fds[1], &rfds) ? 'X' : '-',
@@ -480,10 +479,12 @@ int main(int argc, char **argv)
 				break;
 		}
 
-		list_for_each_entry_safe(work, next, &work_items, node) {
-			list_del(&work->node);
+		if (FD_ISSET(ssh_fds[0], &wfds)) {
+			list_for_each_entry_safe(work, next, &work_items, node) {
+				list_del(&work->node);
 
-			work->fn(work, ssh_fds[0]);
+				work->fn(work, ssh_fds[0]);
+			}
 		}
 	}
 
