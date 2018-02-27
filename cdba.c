@@ -195,13 +195,16 @@ static void select_board_fn(struct work *work, int ssh_stdin)
 	struct select_board *board = container_of(work, struct select_board, work);
 	size_t blen = strlen(board->board) + 1;
 	struct msg *msg;
+	ssize_t n;
 
 	msg = alloca(sizeof(*msg) + blen);
 	msg->type = MSG_SELECT_BOARD;
 	msg->len = blen;
 	memcpy(msg->data, board->board, blen);
 
-	write(ssh_stdin, msg, sizeof(*msg) + blen);
+	n = write(ssh_stdin, msg, sizeof(*msg) + blen);
+	if (n < 0)
+		err(1, "failed to send power on request");
 
 	free(work);
 }
@@ -220,8 +223,11 @@ static void request_select_board(const char *board)
 static void request_power_on_fn(struct work *work, int ssh_stdin)
 {
 	struct msg msg = { MSG_POWER_ON, };
+	ssize_t n;
 
-	write(ssh_stdin, &msg, sizeof(msg));
+	n = write(ssh_stdin, &msg, sizeof(msg));
+	if (n < 0)
+		err(1, "failed to send power on request");
 }
 
 static void request_power_on(void)
@@ -246,7 +252,7 @@ static void fastboot_work_fn(struct work *_work, int ssh_stdin)
 	size_t left;
 	ssize_t n;
 
-	left = MIN(4096, work->size - work->offset);
+	left = MIN(2048, work->size - work->offset);
 
 	msg = alloca(sizeof(*msg) + left);
 	msg->type = MSG_FASTBOOT_DOWNLOAD;
