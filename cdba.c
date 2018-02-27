@@ -20,6 +20,8 @@
 static struct termios orig_tios;
 static bool quit;
 
+static const char *fastboot_file;
+
 static int tty_unbuffer(void)
 {
 	struct termios tios;
@@ -277,9 +279,9 @@ static void request_fastboot_files(void)
 	work = calloc(1, sizeof(*work));
 	work->work.fn = fastboot_work_fn;
 
-	fd = open("boot.img", O_RDONLY);
+	fd = open(fastboot_file, O_RDONLY);
 	if (fd < 0)
-		err(1, "failed to open \"boot.img\"");
+		err(1, "failed to open \"%s\"", fastboot_file);
 
 	fstat(fd, &sb);
 
@@ -290,7 +292,7 @@ static void request_fastboot_files(void)
 
 	list_add(&work_items, &work->work.node);
 }
-			
+
 static void handle_status_update(const void *data, size_t len)
 {
 	char *str = alloca(len + 1);
@@ -364,6 +366,14 @@ static int handle_message(struct circ_buf *buf)
 	return 0;
 }
 
+static void usage(void)
+{
+	extern const char *__progname;
+
+	fprintf(stderr, "usage: %s -b <board> boot.img\n", __progname);
+	exit(1);
+}
+
 int main(int argc, char **argv)
 {
 	struct timeval *timeout;
@@ -371,14 +381,36 @@ int main(int argc, char **argv)
 	struct work *next;
 	struct work *work;
 	struct circ_buf recv_buf = { 0 };
+	const char *board = NULL;
+	struct stat sb;
 	int ssh_fds[3];
 	char buf[128];
 	fd_set rfds;
 	ssize_t n;
 	int nfds;
+	int opt;
 	int ret;
 
-	request_select_board("db820c");
+	while ((opt = getopt(argc, argv, "b:")) != -1) {
+		switch (opt) {
+		case 'b':
+			board = optarg;
+			break;
+		default:
+			usage();
+		}
+	}
+
+	if (optind >= argc || !board)
+		usage();
+
+	fastboot_file = argv[optind];
+	if (lstat(fastboot_file, &sb))
+		err(1, "unable to read \"%s\"", fastboot_file);
+	if (!S_ISREG(sb.st_mode))
+		errx(1, "\"%s\" is not a regular file", fastboot_file);
+
+	request_select_board(board);
 
 	ret = fork_ssh("minitux.lan", "sandbox/cdba/bad", ssh_fds);
 	if (ret)
