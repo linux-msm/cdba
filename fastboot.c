@@ -240,7 +240,7 @@ static int handle_udev_event(int fd, void *data)
 	// pid = udev_device_get_sysattr_value(dev, "idProduct");
 	serial = udev_device_get_sysattr_value(dev, "serial");
 
-	if (!action)
+	if (!action || !dev_path)
 		goto unref_dev;
 
 	if (!strcmp(action, "add")) {
