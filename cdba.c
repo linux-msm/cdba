@@ -230,9 +230,26 @@ static void request_power_on_fn(struct work *work, int ssh_stdin)
 		err(1, "failed to send power on request");
 }
 
+static void request_power_off_fn(struct work *work, int ssh_stdin)
+{
+	struct msg msg = { MSG_POWER_OFF, };
+	ssize_t n;
+
+	n = write(ssh_stdin, &msg, sizeof(msg));
+	if (n < 0)
+		err(1, "failed to send power off request");
+}
+
 static void request_power_on(void)
 {
 	static struct work work = { request_power_on_fn };
+
+	list_add(&work_items, &work.node);
+}
+
+static void request_power_off(void)
+{
+	static struct work work = { request_power_off_fn };
 
 	list_add(&work_items, &work.node);
 }
@@ -309,6 +326,30 @@ static void handle_status_update(const void *data, size_t len)
 	printf("%s\n", str);
 }
 
+static bool received_power_off;
+
+static void handle_console(const void *data, size_t len)
+{
+	static int power_off_chars = 0;
+	const char *p = data;
+	int i;
+
+	for (i = 0; i < len; i++) {
+		if (*p++ == '~') {
+			if (power_off_chars++ == 19) {
+				received_power_off = true;
+				power_off_chars = 0;
+			}
+		} else {
+			power_off_chars = 0;
+		}
+	}
+
+	write(STDOUT_FILENO, data, len);
+}
+
+static bool auto_power_on;
+
 static int handle_message(struct circ_buf *buf)
 {
 	struct msg *msg;
@@ -334,7 +375,7 @@ static int handle_message(struct circ_buf *buf)
 			request_power_on();
 			break;
 		case MSG_CONSOLE:
-			write(STDOUT_FILENO, msg->data, msg->len);
+			handle_console(msg->data, msg->len);
 			break;
 		case MSG_HARDRESET:
 			break;
@@ -343,6 +384,10 @@ static int handle_message(struct circ_buf *buf)
 			break;
 		case MSG_POWER_OFF:
 			// printf("======================================== MSG_POWER_OFF\n");
+			if (auto_power_on) {
+				sleep(2);
+				request_power_on();
+			}
 			break;
 		case MSG_FASTBOOT_PRESENT:
 			if (*(uint8_t*)msg->data) {
@@ -387,6 +432,7 @@ int main(int argc, char **argv)
 	struct circ_buf recv_buf = { 0 };
 	const char *board = NULL;
 	const char *host = NULL;
+	int power_cycles = 0;
 	struct stat sb;
 	int ssh_fds[3];
 	char buf[128];
@@ -397,10 +443,13 @@ int main(int argc, char **argv)
 	int opt;
 	int ret;
 
-	while ((opt = getopt(argc, argv, "b:h:")) != -1) {
+	while ((opt = getopt(argc, argv, "b:c:h:")) != -1) {
 		switch (opt) {
 		case 'b':
 			board = optarg;
+			break;
+		case 'c':
+			power_cycles = atoi(optarg);
 			break;
 		case 'h':
 			host = optarg;
@@ -430,6 +479,20 @@ int main(int argc, char **argv)
 	tty_unbuffer();
 
 	while (!quit) {
+		if (received_power_off) {
+			if (!power_cycles)
+				break;
+
+			printf("power cycle (%d left)\n", power_cycles);
+			fflush(stdout);
+
+			auto_power_on = true;
+			power_cycles--;
+			received_power_off = false;
+
+			request_power_off();
+		}
+
 		nfds = MAX(STDIN_FILENO, MAX(ssh_fds[1], ssh_fds[2]));
 
 		FD_ZERO(&rfds);
