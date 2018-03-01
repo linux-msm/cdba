@@ -91,6 +91,13 @@ static void msg_fastboot_download(const void *data, size_t len)
 	}
 }
 
+static void invoke_reply(int reply)
+{
+	struct msg msg = { reply, };
+
+	write(STDOUT_FILENO, &msg, sizeof(msg));
+}
+
 static int handle_stdin(int fd, void *buf)
 {
 	static struct circ_buf recv_buf = { 0 };
@@ -130,9 +137,13 @@ static int handle_stdin(int fd, void *buf)
 			break;
 		case MSG_POWER_ON:
 			device_power_on(selected_device);
+
+			invoke_reply(MSG_POWER_ON);
 			break;
 		case MSG_POWER_OFF:
 			device_power_off(selected_device);
+
+			invoke_reply(MSG_POWER_OFF);
 			break;
 		case MSG_FASTBOOT_DOWNLOAD:
 			msg_fastboot_download(msg->data, msg->len);
