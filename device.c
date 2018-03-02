@@ -73,20 +73,11 @@ int device_power_on(struct device *device)
 	return 0;
 }
 
-int device_enter_fastboot(struct device *device)
-{
-	cdb_gpio(device->cdb, 1, true);
-	cdb_vbus(device->cdb, true);
-	cdb_power(device->cdb, true);
-
-	return 0;
-}
-
 int device_power_off(struct device *device)
 {
 	if (!device)
 		return 0;
-	
+
 	cdb_vbus(device->cdb, false);
 	cdb_power(device->cdb, false);
 
@@ -109,27 +100,12 @@ void device_vbus(struct device *device, bool enable)
 	cdb_vbus(device->cdb, enable);
 }
 
-void device_trigger_fastboot(struct device *device, bool enable)
-{
-	cdb_gpio(device->cdb, 1, enable);
-}
-
 int device_write(struct device *device, const void *buf, size_t len)
 {
 	if (!device)
 		return 0;
 
 	return cdb_target_write(device->cdb, buf, len);
-}
-
-void device_break(struct device *device)
-{
-	cdb_target_break(device->cdb);
-}
-
-const char *device_get_serial(struct device *device)
-{
-	return device->serial;
 }
 
 static void device_fastboot_boot(struct device *device)
@@ -139,13 +115,12 @@ static void device_fastboot_boot(struct device *device)
 
 static void device_fastboot_flash_reboot(struct device *device)
 {
-//	fastboot_flash(fb, "boot");
-//	fastboot_reboot(fb);
+	fastboot_flash(device->fastboot, "boot");
+	fastboot_reboot(device->fastboot);
 }
 
 void device_boot(struct device *device, const void *data, size_t len)
 {
 	fastboot_download(device->fastboot, data, len);
-
 	device->boot(device);
 }
