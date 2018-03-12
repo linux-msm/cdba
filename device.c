@@ -28,7 +28,7 @@ struct device {
 	void (*boot)(struct device *);
 	bool set_active;
 
-	struct cdb_assist *cdb;
+	void *cdb;
 };
 
 static struct device devices[] = {
