@@ -7,7 +7,6 @@ struct fastboot_ops {
 	void (*opened)(struct fastboot *, void *);
 	void (*disconnect)(void *);
 	void (*info)(struct fastboot *, const void *, size_t);
-	ssize_t (*tty_write)(const void *, size_t, bool);
 };
 
 struct fastboot *fastboot_open(const char *serial, struct fastboot_ops *ops, void *);

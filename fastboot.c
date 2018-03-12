@@ -77,7 +77,7 @@ static int fastboot_read(struct fastboot *fb, char *buf, size_t len)
 			}
 			return n - 4;
 		} else if (strncmp(status, "FAIL", 4) == 0) {
-			fb->ops->tty_write(status + 4, n - 4, true);
+			fprintf(stderr, "%s\n", status + 4);
 			return -ENXIO;
 		} else if (strncmp(status, "DATA", 4) == 0) {
 			return strtol(status + 4, NULL, 16);
@@ -267,7 +267,7 @@ static int handle_udev_event(int fd, void *data)
 		if (fastboot->ops && fastboot->ops->opened)
 			fastboot->ops->opened(fastboot, fastboot->data);
 	} else if (!strcmp(action, "remove")) {
-		if (strcmp(dev_path, fastboot->dev_path))
+		if (!fastboot->dev_path || strcmp(dev_path, fastboot->dev_path))
 			goto unref_dev;
 
 		close(fastboot->fd);
