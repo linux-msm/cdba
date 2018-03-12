@@ -18,7 +18,7 @@ $(CLIENT): $(CLIENT_OBJS)
 	$(CC) $(LDFLAGS) -o $@ $^
 
 $(CDBA): $(CDBA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ $^
+	$(CC) -o $@ $^ $(LDFLAGS)
 
 clean:
 	rm -f $(CLIENT) $(CLIENT_OBJS) $(CDBA_OBJS)
