@@ -8,6 +8,7 @@
 #include <unistd.h>
 
 #include "cdb_assist.h"
+#include "conmux.h"
 #include "device.h"
 #include "fastboot.h"
 
