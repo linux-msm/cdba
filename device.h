@@ -1,10 +1,32 @@
 #ifndef __DEVICE_H__
 #define __DEVICE_H__
 
-struct device;
 struct cdb_assist;
 struct fastboot;
 struct fastboot_ops;
+
+struct device {
+	char *board;
+	char *cdb_serial;
+	char *name;
+	char *serial;
+	unsigned voltage;
+	bool tickle_mmc;
+	bool pshold_shutdown;
+	struct fastboot *fastboot;
+
+	void (*boot)(struct device *);
+
+	void *(*open)(struct device *dev);
+	int (*power_on)(struct device *dev);
+	int (*power_off)(struct device *dev);
+	void (*print_status)(struct device *dev);
+	void (*vbus)(struct device *dev, bool on);
+	int (*write)(struct device *dev, const void *buf, size_t len);
+	bool set_active;
+
+	void *cdb;
+};
 
 struct device *device_open(const char *board, struct fastboot_ops *fastboot_ops);
 int device_power_on(struct device *device);

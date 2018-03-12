@@ -1,5 +1,6 @@
 #include <sys/stat.h>
 
+#include <assert.h>
 #include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,22 +15,6 @@
 
 static void device_fastboot_boot(struct device *device);
 static void device_fastboot_flash_reboot(struct device *device);
-
-struct device {
-	char *board;
-	char *cdb_serial;
-	char *name;
-	char *serial;
-	unsigned voltage;
-	bool tickle_mmc;
-	bool pshold_shutdown;
-	struct fastboot *fastboot;
-
-	void (*boot)(struct device *);
-	bool set_active;
-
-	void *cdb;
-};
 
 static struct device devices[] = {
 };
@@ -50,11 +35,11 @@ struct device *device_open(const char *board,
 	if (!device)
 		return NULL;
 
-	device->cdb = cdb_assist_open(device->cdb_serial);
-	if (!device->cdb)
-		errx(1, "failed to open cdb assist");
+	assert(device->open);
 
-	cdb_set_voltage(device->cdb, device->voltage);
+	device->cdb = device->open(device);
+	if (!device->cdb)
+		errx(1, "failed to open device controller");
 
 	device->fastboot = fastboot_open(device->serial, fastboot_ops, NULL);
 
@@ -66,10 +51,9 @@ int device_power_on(struct device *device)
 	if (!device)
 		return 0;
 
-	cdb_power(device->cdb, true);
-	cdb_gpio(device->cdb, 0, true);
-	usleep(500000);
-	cdb_gpio(device->cdb, 0, false);
+	assert(device->power_on);
+
+	device->power_on(device);
 
 	return 0;
 }
@@ -79,26 +63,23 @@ int device_power_off(struct device *device)
 	if (!device)
 		return 0;
 
-	cdb_vbus(device->cdb, false);
-	cdb_power(device->cdb, false);
+	assert(device->power_off);
 
-	if (device->pshold_shutdown) {
-		cdb_gpio(device->cdb, 2, true);
-		sleep(2);
-		cdb_gpio(device->cdb, 2, false);
-	}
+	device->power_off(device);
 
 	return 0;
 }
 
 void device_print_status(struct device *device)
 {
-	cdb_assist_print_status(device->cdb);
+	if (device->print_status)
+		device->print_status(device);
 }
 
 void device_vbus(struct device *device, bool enable)
 {
-	cdb_vbus(device->cdb, enable);
+	if (device->vbus)
+		device->vbus(device, enable);
 }
 
 int device_write(struct device *device, const void *buf, size_t len)
@@ -106,7 +87,9 @@ int device_write(struct device *device, const void *buf, size_t len)
 	if (!device)
 		return 0;
 
-	return cdb_target_write(device->cdb, buf, len);
+	assert(device->write);
+
+	return device->write(device, buf, len);
 }
 
 static void device_fastboot_boot(struct device *device)

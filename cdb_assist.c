@@ -12,6 +12,7 @@
 #include <unistd.h>
 
 #include "bad.h"
+#include "cdb_assist.h"
 
 struct cdb_assist {
 	char serial[9];
@@ -405,8 +406,9 @@ static int cdb_ctrl_write(struct cdb_assist *cdb, const char *buf, size_t len)
 	return write(cdb->control_tty, buf, len);
 }
 
-struct cdb_assist *cdb_assist_open(const char *serial)
+void *cdb_assist_open(struct device *dev)
 {
+	const char *serial = dev->cdb_serial;
 	struct cdb_assist *cdb;
 	int ret;
 
@@ -431,6 +433,8 @@ struct cdb_assist *cdb_assist_open(const char *serial)
 	if (ret < 0)
 		return NULL;
 
+	cdb_set_voltage(cdb, dev->voltage);
+
 	return cdb;
 }
 
@@ -448,16 +452,51 @@ void cdb_assist_close(struct cdb_assist *cdb)
 	close(cdb->target_tty);
 }
 
-void cdb_power(struct cdb_assist *cdb, bool on)
+static void cdb_power(struct cdb_assist *cdb, bool on)
 {
 	const char cmd[] = "pP";
+
 	cdb_ctrl_write(cdb, &cmd[on], 1);
 }
 
 void cdb_vbus(struct cdb_assist *cdb, bool on)
 {
 	const char cmd[] = "vV";
+
 	cdb_ctrl_write(cdb, &cmd[on], 1);
+}
+
+int cdb_assist_power_on(struct device *dev)
+{
+	struct cdb_assist *cdb = dev->cdb;
+
+	cdb_power(cdb, true);
+	cdb_gpio(cdb, 0, true);
+	usleep(500000);
+	cdb_gpio(cdb, 0, false);
+
+	return 0;
+}
+
+int cdb_assist_power_off(struct device *dev)
+{
+	struct cdb_assist *cdb = dev->cdb;
+
+	cdb_vbus(cdb, false);
+	cdb_power(cdb, false);
+
+	if (dev->pshold_shutdown) {
+		cdb_gpio(cdb, 2, true);
+		sleep(2);
+		cdb_gpio(cdb, 2, false);
+	}
+
+	return 0;
+}
+
+void cdb_assist_vbus(struct device *dev, bool on)
+{
+	cdb_vbus(dev->cdb, on);
 }
 
 void cdb_gpio(struct cdb_assist *cdb, int gpio, bool on)
@@ -466,8 +505,10 @@ void cdb_gpio(struct cdb_assist *cdb, int gpio, bool on)
 	cdb_ctrl_write(cdb, &cmd[gpio][on], 1);
 }
 
-int cdb_target_write(struct cdb_assist *cdb, const void *buf, size_t len)
+int cdb_target_write(struct device *dev, const void *buf, size_t len)
 {
+	struct cdb_assist *cdb = dev->cdb;
+
 	return write(cdb->target_tty, buf, len);
 }
 
@@ -476,13 +517,14 @@ void cdb_target_break(struct cdb_assist *cdb)
 	tcsendbreak(cdb->target_tty, 0);
 }
 
-int cdb_vref(struct cdb_assist *cdb)
+unsigned int cdb_vref(struct cdb_assist *cdb)
 {
 	return cdb->vref;
 }
 
-void cdb_assist_print_status(struct cdb_assist *cdb)
+void cdb_assist_print_status(struct device *dev)
 {
+	struct cdb_assist *cdb = dev->cdb;
 	struct msg hdr;
 	char buf[128];
 	int n;
