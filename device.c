@@ -26,6 +26,7 @@ struct device {
 	struct fastboot *fastboot;
 
 	void (*boot)(struct device *);
+	bool set_active;
 
 	struct cdb_assist *cdb;
 };
@@ -121,6 +122,8 @@ static void device_fastboot_flash_reboot(struct device *device)
 
 void device_boot(struct device *device, const void *data, size_t len)
 {
+	if (device->set_active)
+		fastboot_set_active(device->fastboot, "a");
 	fastboot_download(device->fastboot, data, len);
 	device->boot(device);
 }

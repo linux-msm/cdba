@@ -393,6 +393,19 @@ int fastboot_erase(struct fastboot *fb, const char *partition)
 	return 0;
 }
 
+int fastboot_set_active(struct fastboot *fb, const char *active)
+{
+	char buf[80];
+	int n;
+
+	n = sprintf(buf, "set_active:%s", active);
+	fastboot_write(fb, buf, n);
+
+	fastboot_read(fb, buf, sizeof(buf));
+
+	return 0;
+}
+
 int fastboot_flash(struct fastboot *fb, const char *partition)
 {
 	char buf[80];
