@@ -1,6 +1,8 @@
 #ifndef __DEVICE_H__
 #define __DEVICE_H__
 
+#include "list.h"
+
 struct cdb_assist;
 struct fastboot;
 struct fastboot_ops;
@@ -26,7 +28,11 @@ struct device {
 	bool set_active;
 
 	void *cdb;
+
+	struct list_head node;
 };
+
+void device_add(struct device *device);
 
 struct device *device_open(const char *board, struct fastboot_ops *fastboot_ops);
 int device_power_on(struct device *device);
@@ -37,5 +43,8 @@ void device_vbus(struct device *device, bool enable);
 int device_write(struct device *device, const void *buf, size_t len);
 
 void device_boot(struct device *device, const void *data, size_t len);
+
+void device_fastboot_boot(struct device *device);
+void device_fastboot_flash_reboot(struct device *device);
 
 #endif

@@ -10,6 +10,7 @@
 #include "bad.h"
 #include "circ_buf.h"
 #include "device.h"
+#include "device_parser.h"
 #include "fastboot.h"
 #include "list.h"
 
@@ -200,6 +201,8 @@ int main(int argc, char **argv)
 	int flags;
 	int nfds;
 	int ret;
+
+	device_parser(".cdba");
 
 	watch_add_readfd(STDIN_FILENO, handle_stdin, NULL);
 

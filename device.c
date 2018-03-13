@@ -7,35 +7,32 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "cdb_assist.h"
-#include "conmux.h"
 #include "device.h"
 #include "fastboot.h"
+#include "list.h"
 
 #define ARRAY_SIZE(x) ((sizeof(x)/sizeof((x)[0])))
 
-static void device_fastboot_boot(struct device *device);
-static void device_fastboot_flash_reboot(struct device *device);
+static struct list_head devices = LIST_INIT(devices);
 
-static struct device devices[] = {
-};
+void device_add(struct device *device)
+{
+	list_add(&devices, &device->node);
+}
 
 struct device *device_open(const char *board,
 			   struct fastboot_ops *fastboot_ops)
 {
-	struct device *device = NULL;
-	int i;
+	struct device *device;
 
-	for (i = 0; i < ARRAY_SIZE(devices); i++) {
-		if (strcmp(devices[i].board, board) == 0) {
-			device = &devices[i];
-			break;
-		}
+	list_for_each_entry(device, &devices, node) {
+		if (!strcmp(device->board, board))
+			goto found;
 	}
 
-	if (!device)
-		return NULL;
+	return NULL;
 
+found:
 	assert(device->open);
 
 	device->cdb = device->open(device);
@@ -93,12 +90,12 @@ int device_write(struct device *device, const void *buf, size_t len)
 	return device->write(device, buf, len);
 }
 
-static void device_fastboot_boot(struct device *device)
+void device_fastboot_boot(struct device *device)
 {
 	fastboot_boot(device->fastboot);
 }
 
-static void device_fastboot_flash_reboot(struct device *device)
+void device_fastboot_flash_reboot(struct device *device)
 {
 	fastboot_flash(device->fastboot, "boot");
 	fastboot_reboot(device->fastboot);
