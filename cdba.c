@@ -462,18 +462,20 @@ int main(int argc, char **argv)
 	struct circ_buf recv_buf = { 0 };
 	const char *board = NULL;
 	const char *host = NULL;
+	struct timeval tv;
 	int power_cycles = 0;
 	struct stat sb;
 	int ssh_fds[3];
 	char buf[128];
 	fd_set rfds;
 	fd_set wfds;
+	int timeout = 0;
 	ssize_t n;
 	int nfds;
 	int opt;
 	int ret;
 
-	while ((opt = getopt(argc, argv, "b:c:h:")) != -1) {
+	while ((opt = getopt(argc, argv, "b:c:h:t:")) != -1) {
 		switch (opt) {
 		case 'b':
 			board = optarg;
@@ -483,6 +485,9 @@ int main(int argc, char **argv)
 			break;
 		case 'h':
 			host = optarg;
+			break;
+		case 't':
+			timeout = atoi(optarg);
 			break;
 		default:
 			usage();
@@ -506,6 +511,9 @@ int main(int argc, char **argv)
 
 	//sleep(5);
 
+	tv.tv_sec = timeout;
+	tv.tv_usec = 0;
+
 	tty_unbuffer();
 
 	while (!quit) {
@@ -521,6 +529,9 @@ int main(int argc, char **argv)
 			received_power_off = false;
 
 			request_power_off();
+
+			tv.tv_sec = timeout;
+			tv.tv_usec = 0;
 		}
 
 		nfds = MAX(STDIN_FILENO, MAX(ssh_fds[1], ssh_fds[2]));
@@ -534,14 +545,18 @@ int main(int argc, char **argv)
 		if (!list_empty(&work_items))
 			FD_SET(ssh_fds[0], &wfds);
 
-		ret = select(nfds + 1, &rfds, &wfds, NULL, NULL);
+		ret = select(nfds + 1, &rfds, &wfds, NULL, timeout ? &tv : NULL);
 #if 0
 		printf("select: %d (%c%c%c)\n", ret, FD_ISSET(STDIN_FILENO, &rfds) ? 'X' : '-',
 						     FD_ISSET(ssh_fds[1], &rfds) ? 'X' : '-',
 						     FD_ISSET(ssh_fds[2], &rfds) ? 'X' : '-');
 #endif
-		if (ret < 0)
+		if (ret < 0) {
 			err(1, "select");
+		} else if (ret == 0) {
+			warnx("timeout reached");
+			received_power_off = true;
+		}
 
 		if (FD_ISSET(STDIN_FILENO, &rfds))
 			tty_callback(ssh_fds);
