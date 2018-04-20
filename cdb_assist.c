@@ -501,9 +501,9 @@ int cdb_assist_power_on(struct device *dev)
 	struct cdb_assist *cdb = dev->cdb;
 
 	cdb_power(cdb, true);
-	cdb_gpio(cdb, 0, true);
-	usleep(500000);
-	cdb_gpio(cdb, 0, false);
+
+	cdb_gpio(cdb, 1, true);
+	cdb_vbus(cdb, true);
 
 	return 0;
 }
