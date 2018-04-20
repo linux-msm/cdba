@@ -19,5 +19,6 @@ void cdb_target_break(struct cdb_assist *cdb);
 unsigned int cdb_vref(struct cdb_assist *cdb);
 void cdb_assist_print_status(struct device *dev);
 void cdb_set_voltage(struct cdb_assist *cdb, unsigned mV);
+void cdb_fastboot_key(struct device *dev, bool on);
 
 #endif

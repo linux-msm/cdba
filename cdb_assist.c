@@ -583,3 +583,10 @@ void cdb_set_voltage(struct cdb_assist *cdb, unsigned mV)
 	n = sprintf(buf, "u%d\r\n", mV);
 	cdb_ctrl_write(cdb, buf, n);
 }
+
+void cdb_fastboot_key(struct device *dev, bool on)
+{
+	struct cdb_assist *cdb = dev->cdb;
+
+	cdb_gpio(cdb, 1, on);
+}

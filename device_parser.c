@@ -99,6 +99,7 @@ static void parse_board(struct device_parser *dp)
 			dev->print_status = cdb_assist_print_status;
 			dev->vbus = cdb_assist_vbus;
 			dev->write = cdb_target_write;
+			dev->fastboot_key = cdb_fastboot_key;
 		} else if (!strcmp(key, "conmux")) {
 			dev->cdb_serial = strdup(value);
 
@@ -111,9 +112,13 @@ static void parse_board(struct device_parser *dp)
 		} else if (!strcmp(key, "fastboot")) {
 			dev->serial = strdup(value);
 
-			dev->boot = device_fastboot_boot;
+			if (!dev->boot)
+				dev->boot = device_fastboot_boot;
 		} else if (!strcmp(key, "fastboot_set_active")) {
 			dev->set_active = !strcmp(value, "true");
+		} else if (!strcmp(key, "broken_fastboot_boot")) {
+			if (!strcmp(value, "true"))
+				dev->boot = device_fastboot_flash_reboot;
 		} else {
 			fprintf(stderr, "device parser: unknown key \"%s\"\n", key);
 			exit(1);

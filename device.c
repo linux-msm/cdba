@@ -138,3 +138,9 @@ void device_boot(struct device *device, const void *data, size_t len)
 	fastboot_download(device->fastboot, data, len);
 	device->boot(device);
 }
+
+void device_fastboot_key(struct device *device, bool on)
+{
+	if (device->fastboot_key)
+		device->fastboot_key(device, on);
+}
