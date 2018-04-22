@@ -28,10 +28,12 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+#include <sys/file.h>
 #include <sys/stat.h>
 
 #include <assert.h>
 #include <err.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -50,6 +52,31 @@ void device_add(struct device *device)
 	list_add(&devices, &device->node);
 }
 
+static void device_lock(struct device *device)
+{
+	char lock[PATH_MAX];
+	int fd;
+	int n;
+
+	n = snprintf(lock, sizeof(lock), "/tmp/cdba-%s.lock", device->board);
+	if (n >= sizeof(lock))
+		errx(1, "failed to build lockfile path");
+
+	fd = open(lock, O_RDONLY | O_CREAT | O_CLOEXEC, 0666);
+	if (fd < 0)
+		err(1, "failed to open lockfile %s", lock);
+
+	n = flock(fd, LOCK_EX | LOCK_NB);
+	if (!n)
+		return;
+
+	warnx("board is in use, waiting...");
+
+	n = flock(fd, LOCK_EX);
+	if (n < 0)
+		err(1, "failed to lock lockfile %s", lock);
+}
+
 struct device *device_open(const char *board,
 			   struct fastboot_ops *fastboot_ops)
 {
@@ -64,6 +91,8 @@ struct device *device_open(const char *board,
 
 found:
 	assert(device->open);
+
+	device_lock(device);
 
 	device->cdb = device->open(device);
 	if (!device->cdb)
