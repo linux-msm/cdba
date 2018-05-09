@@ -47,19 +47,23 @@
 #include "circ_buf.h"
 #include "list.h"
 
-static struct termios orig_tios;
 static bool quit;
 
 static const char *fastboot_file;
 
-static int tty_unbuffer(void)
+static struct termios *tty_unbuffer(void)
 {
+	static struct termios orig_tios;
 	struct termios tios;
 	int ret;
 
 	ret = tcgetattr(STDIN_FILENO, &orig_tios);
-	if (ret < 0)
+	if (ret < 0) {
+		/* stdin is not a tty */
+		if (errno == ENOTTY)
+			return NULL;
 		err(1, "unable to retrieve tty tios");
+	}
 
 	memcpy(&tios, &orig_tios, sizeof(struct termios));
 	tios.c_lflag &= ~(ICANON | ECHO | ISIG);
@@ -70,17 +74,20 @@ static int tty_unbuffer(void)
 	if (ret)
 		err(1, "unable to update tty tios");
 
-	return 0;
+	return &orig_tios;
 }
 
-static void tty_reset(void)
+static void tty_reset(struct termios *orig_tios)
 {
 	int ret;
 
+	if (!orig_tios)
+		return;
+
 	tcflush(STDIN_FILENO, TCIFLUSH);
-	ret = tcsetattr(STDIN_FILENO, TCSANOW, &orig_tios);
+	ret = tcsetattr(STDIN_FILENO, TCSANOW, orig_tios);
 	if (ret < 0)
-		err(1, "unable to reset tty tios");
+		warn("unable to reset tty tios");
 }
 
 static int fork_ssh(const char *host, const char *cmd, int *pipes)
@@ -457,6 +464,7 @@ static void usage(void)
 
 int main(int argc, char **argv)
 {
+	struct termios *orig_tios;
 	struct work *next;
 	struct work *work;
 	struct circ_buf recv_buf = { 0 };
@@ -514,7 +522,7 @@ int main(int argc, char **argv)
 	tv.tv_sec = timeout;
 	tv.tv_usec = 0;
 
-	tty_unbuffer();
+	orig_tios = tty_unbuffer();
 
 	while (!quit) {
 		if (received_power_off) {
@@ -610,7 +618,7 @@ int main(int argc, char **argv)
 
 	wait(NULL);
 
-	tty_reset();
+	tty_reset(orig_tios);
 
 	return 0;
 }
