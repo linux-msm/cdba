@@ -143,7 +143,7 @@ static int registry_lookup(const char *service, struct conmux_lookup *result)
 {
 	struct conmux_response resp = {};
 	struct sockaddr_in saddr;
-	char buf[128];
+	char buf[256];
 	ssize_t n;
 	char *p;
 	int ret;
@@ -232,7 +232,7 @@ void *conmux_open(struct device *dev)
 	struct hostent *hent;
 	const char *service = dev->cdb_serial;
 	ssize_t n;
-	char req[128];
+	char req[256];
 	int ret;
 	int fd;
 
