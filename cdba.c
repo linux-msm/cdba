@@ -459,12 +459,15 @@ static void usage(void)
 {
 	extern const char *__progname;
 
-	fprintf(stderr, "usage: %s -b <board> -h <host> boot.img\n", __progname);
+	fprintf(stderr, "usage: %s -b <board> -h <host> [-t <timeout>] "
+			"[-T <inactivity-timeout>] boot.img\n",
+			__progname);
 	exit(1);
 }
 
 int main(int argc, char **argv)
 {
+	bool timeout_on_inactivity = false;
 	struct termios *orig_tios;
 	struct work *next;
 	struct work *work;
@@ -484,7 +487,7 @@ int main(int argc, char **argv)
 	int opt;
 	int ret;
 
-	while ((opt = getopt(argc, argv, "b:c:h:t:")) != -1) {
+	while ((opt = getopt(argc, argv, "b:c:h:t:T:")) != -1) {
 		switch (opt) {
 		case 'b':
 			board = optarg;
@@ -497,6 +500,10 @@ int main(int argc, char **argv)
 			break;
 		case 't':
 			timeout = atoi(optarg);
+			break;
+		case 'T':
+			timeout = atoi(optarg);
+			timeout_on_inactivity = true;
 			break;
 		default:
 			usage();
@@ -568,7 +575,11 @@ int main(int argc, char **argv)
 		if (ret < 0) {
 			err(1, "select");
 		} else if (ret == 0) {
-			warnx("timeout reached");
+			if (timeout_on_inactivity)
+				warnx("timeout due to inactivity");
+			else
+				warnx("timeout reached");
+
 			reached_timeout = true;
 		}
 
@@ -605,6 +616,12 @@ int main(int argc, char **argv)
 			n = handle_message(&recv_buf);
 			if (n < 0)
 				break;
+
+			/* Reset inactivity timeout on activity */
+			if (timeout_on_inactivity) {
+				tv.tv_sec = timeout;
+				tv.tv_usec = 0;
+			}
 		}
 
 		if (FD_ISSET(ssh_fds[0], &wfds)) {
