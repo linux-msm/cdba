@@ -231,10 +231,15 @@ void *conmux_open(struct device *dev)
 	struct conmux *conmux;
 	struct hostent *hent;
 	const char *service = dev->cdb_serial;
+	const char *user;
 	ssize_t n;
 	char req[256];
 	int ret;
 	int fd;
+
+	user = getenv("USER");
+	if (!user)
+		user = "unknown";
 
 	ret = registry_lookup(service, &lookup);
 	if (ret)
@@ -262,7 +267,7 @@ void *conmux_open(struct device *dev)
 	if (ret < 0)
 		err(1, "failed to connect to conmux instance");
 
-	ret = snprintf(req, sizeof(req), "CONNECT id=bjorn to=console\n");
+	ret = snprintf(req, sizeof(req), "CONNECT id=cdba:%s to=console\n", user);
 	if (ret >= sizeof(req))
 		errx(1, "unable to fit connect request in buffer");
 
