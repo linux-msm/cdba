@@ -364,6 +364,7 @@ static void handle_status_update(const void *data, size_t len)
 }
 
 static bool received_power_off;
+static bool reached_timeout;
 
 static void handle_console(const void *data, size_t len)
 {
@@ -525,7 +526,7 @@ int main(int argc, char **argv)
 	orig_tios = tty_unbuffer();
 
 	while (!quit) {
-		if (received_power_off) {
+		if (received_power_off || reached_timeout) {
 			if (!power_cycles)
 				break;
 
@@ -535,6 +536,7 @@ int main(int argc, char **argv)
 			auto_power_on = true;
 			power_cycles--;
 			received_power_off = false;
+			reached_timeout = false;
 
 			request_power_off();
 
@@ -542,12 +544,16 @@ int main(int argc, char **argv)
 			tv.tv_usec = 0;
 		}
 
-		nfds = MAX(STDIN_FILENO, MAX(ssh_fds[1], ssh_fds[2]));
-
 		FD_ZERO(&rfds);
-		FD_SET(STDIN_FILENO, &rfds);
 		FD_SET(ssh_fds[1], &rfds);
 		FD_SET(ssh_fds[2], &rfds);
+		nfds = MAX(ssh_fds[1], ssh_fds[2]);
+
+		if (orig_tios) {
+			FD_SET(STDIN_FILENO, &rfds);
+
+			nfds = MAX(nfds, STDIN_FILENO);
+		}
 
 		FD_ZERO(&wfds);
 		if (!list_empty(&work_items))
@@ -563,7 +569,7 @@ int main(int argc, char **argv)
 			err(1, "select");
 		} else if (ret == 0) {
 			warnx("timeout reached");
-			received_power_off = true;
+			reached_timeout = true;
 		}
 
 		if (FD_ISSET(STDIN_FILENO, &rfds))
@@ -620,5 +626,8 @@ int main(int argc, char **argv)
 
 	tty_reset(orig_tios);
 
-	return 0;
+	if (reached_timeout)
+		return 110;
+
+	return (quit || received_power_off) ? 0 : 1;
 }
