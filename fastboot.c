@@ -407,7 +407,7 @@ int fastboot_boot(struct fastboot *fb)
 
 	n = fastboot_read(fb, buf, sizeof(buf));
 	if (n >= 0)
-		printf("%s\n", buf);
+		fprintf(stderr, "%s\n", buf);
 
 	return 0;
 }
