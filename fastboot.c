@@ -375,8 +375,10 @@ int fastboot_download(struct fastboot *fb, const void *data, size_t len)
 	fastboot_write(fb, cmd, n);
 
 	n = fastboot_read(fb, buf, MAX_USBFS_BULK_SIZE);
-	if (n < 0)
-		errx(1, "remote rejected download request");
+	if (n < 0) {
+		fprintf(stderr, "remote rejected download request\n");
+		return -1;
+	}
 
 	while (len > 0) {
 		xfer = MIN(len, MAX_USBFS_BULK_SIZE);
