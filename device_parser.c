@@ -37,6 +37,8 @@
 #include "cdb_assist.h"
 #include "conmux.h"
 
+#define TOKEN_LENGTH	256
+
 struct device_parser {
 	yaml_parser_t parser;
 	yaml_event_t event;
@@ -54,8 +56,8 @@ static int accept(struct device_parser *dp, int type, char *scalar)
 {
 	if (dp->event.type == type) {
 		if (scalar) {
-			strncpy(scalar, (char *)dp->event.data.scalar.value, 79);
-			scalar[79] = '\0';
+			strncpy(scalar, (char *)dp->event.data.scalar.value, TOKEN_LENGTH - 1);
+			scalar[TOKEN_LENGTH - 1] = '\0';
 		}
 
 		yaml_event_delete(&dp->event);
@@ -79,8 +81,8 @@ static bool expect(struct device_parser *dp, int type, char *scalar)
 static void parse_board(struct device_parser *dp)
 {
 	struct device *dev;
-	char value[80];
-	char key[80];
+	char value[TOKEN_LENGTH];
+	char key[TOKEN_LENGTH];
 
 	dev = calloc(1, sizeof(*dev));
 
