@@ -33,6 +33,7 @@
 #include <yaml.h>
 
 #include "device.h"
+#include "alpaca.h"
 #include "cdb_assist.h"
 #include "conmux.h"
 
@@ -107,6 +108,15 @@ static void parse_board(struct device_parser *dp)
 			dev->power_on = conmux_power_on;
 			dev->power_off = conmux_power_off;
 			dev->write = conmux_write;
+		} else if (!strcmp(key, "alpaca")) {
+			dev->alpaca_dev = strdup(value);
+
+			dev->open = alpaca_open;
+			dev->power_on = alpaca_power_on;
+			dev->power_off = alpaca_power_off;
+			dev->write = alpaca_write;
+		} else if (!strcmp(key, "console")) {
+			dev->console_dev = strdup(value);
 		} else if (!strcmp(key, "voltage")) {
 			dev->voltage = strtoul(value, NULL, 10);
 		} else if (!strcmp(key, "fastboot")) {
