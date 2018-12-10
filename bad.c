@@ -228,6 +228,13 @@ void watch_add_readfd(int fd, int (*cb)(int, void*), void *data)
 	list_add(&read_watches, &w->node);
 }
 
+static bool quit_invoked;
+
+void watch_quit(void)
+{
+	quit_invoked = true;
+}
+
 int main(int argc, char **argv)
 {
 	struct watch *w;
@@ -243,7 +250,7 @@ int main(int argc, char **argv)
 	flags = fcntl(STDIN_FILENO, F_GETFL, 0);
 	fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
 
-	for (;;) {
+	while (!quit_invoked) {
 		nfds = 0;
 
 		list_for_each_entry(w, &read_watches, node) {

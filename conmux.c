@@ -215,10 +215,15 @@ static int conmux_data(int fd, void *data)
 	if (n < 0)
 		return n;
 
-	hdr.type = MSG_CONSOLE;
-	hdr.len = n;
-	write(STDOUT_FILENO, &hdr, sizeof(hdr));
-	write(STDOUT_FILENO, buf, n);
+	if (!n) {
+		fprintf(stderr, "Received EOF from conmux\n");
+		watch_quit();
+	} else {
+		hdr.type = MSG_CONSOLE;
+		hdr.len = n;
+		write(STDOUT_FILENO, &hdr, sizeof(hdr));
+		write(STDOUT_FILENO, buf, n);
+	}
 
 	return 0;
 }
