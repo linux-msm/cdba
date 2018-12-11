@@ -2,6 +2,9 @@
 The CDBA control tool is used for remotely booting images on development boards
 attached using a CDB Assist or Conmux.
 
+= Dependencies
+sudo apt-get install libudev-dev libyaml-dev
+
 = Device side
 On the host with the CDB Assist or Conmux attached the "bad" executable is run
 from sandbox/cdba/bad. Available devices are read from $HOME/.cdba
