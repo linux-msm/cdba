@@ -467,7 +467,7 @@ static void usage(void)
 
 int main(int argc, char **argv)
 {
-	bool timeout_on_inactivity = false;
+	bool timeout_on_inactivity = true;
 	struct termios *orig_tios;
 	struct work *next;
 	struct work *work;
@@ -481,7 +481,7 @@ int main(int argc, char **argv)
 	char buf[128];
 	fd_set rfds;
 	fd_set wfds;
-	int timeout = 0;
+	int timeout = 600;
 	ssize_t n;
 	int nfds;
 	int opt;
@@ -500,10 +500,11 @@ int main(int argc, char **argv)
 			break;
 		case 't':
 			timeout = atoi(optarg);
+			if (timeout == 0)
+				timeout_on_inactivity = false;
 			break;
 		case 'T':
 			timeout = atoi(optarg);
-			timeout_on_inactivity = true;
 			break;
 		default:
 			usage();
