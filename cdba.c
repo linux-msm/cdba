@@ -500,8 +500,7 @@ int main(int argc, char **argv)
 			break;
 		case 't':
 			timeout = atoi(optarg);
-			if (timeout == 0)
-				timeout_on_inactivity = false;
+			timeout_on_inactivity = false;
 			break;
 		case 'T':
 			timeout = atoi(optarg);
