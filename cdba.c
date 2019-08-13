@@ -467,6 +467,7 @@ static void usage(void)
 
 int main(int argc, char **argv)
 {
+	bool power_cycle_on_timeout = true;
 	bool timeout_on_inactivity = true;
 	struct termios *orig_tios;
 	struct work *next;
@@ -487,11 +488,14 @@ int main(int argc, char **argv)
 	int opt;
 	int ret;
 
-	while ((opt = getopt(argc, argv, "b:c:h:t:T:")) != -1) {
+	while ((opt = getopt(argc, argv, "b:c:C:h:t:T:")) != -1) {
 		switch (opt) {
 		case 'b':
 			board = optarg;
 			break;
+		case 'C':
+			power_cycle_on_timeout = false;
+			/* FALLTHROUGH */
 		case 'c':
 			power_cycles = atoi(optarg);
 			break;
@@ -535,6 +539,9 @@ int main(int argc, char **argv)
 	while (!quit) {
 		if (received_power_off || reached_timeout) {
 			if (!power_cycles)
+				break;
+
+			if (reached_timeout && !power_cycle_on_timeout)
 				break;
 
 			printf("power cycle (%d left)\n", power_cycles);
