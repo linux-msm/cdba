@@ -195,6 +195,9 @@ static int handle_stdin(int fd, void *buf)
 		case MSG_VBUS_OFF:
 			device_vbus(selected_device, false);
 			break;
+		case MSG_SEND_BREAK:
+			device_send_break(selected_device);
+			break;
 		default:
 			fprintf(stderr, "unk %d len %d\n", msg->type, msg->len);
 			exit(1);

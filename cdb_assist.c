@@ -542,8 +542,10 @@ int cdb_target_write(struct device *dev, const void *buf, size_t len)
 	return write(cdb->target_tty, buf, len);
 }
 
-void cdb_target_break(struct cdb_assist *cdb)
+void cdb_send_break(struct device *dev)
 {
+	struct cdb_assist *cdb = dev->cdb;
+
 	tcsendbreak(cdb->target_tty, 0);
 }
 

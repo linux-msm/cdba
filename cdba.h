@@ -27,6 +27,7 @@ enum {
 	MSG_VBUS_ON,
 	MSG_VBUS_OFF,
 	MSG_FASTBOOT_REBOOT,
+	MSG_SEND_BREAK,
 };
 
 #endif

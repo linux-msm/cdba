@@ -103,6 +103,7 @@ static void parse_board(struct device_parser *dp)
 			dev->vbus = cdb_assist_vbus;
 			dev->write = cdb_target_write;
 			dev->fastboot_key = cdb_fastboot_key;
+			dev->send_break = cdb_send_break;
 		} else if (!strcmp(key, "conmux")) {
 			dev->cdb_serial = strdup(value);
 

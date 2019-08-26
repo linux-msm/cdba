@@ -28,6 +28,7 @@ struct device {
 	void (*vbus)(struct device *dev, bool on);
 	int (*write)(struct device *dev, const void *buf, size_t len);
 	void (*fastboot_key)(struct device *dev, bool on);
+	void (*send_break)(struct device *dev);
 	bool set_active;
 
 	void *cdb;
@@ -50,5 +51,6 @@ void device_boot(struct device *device, const void *data, size_t len);
 void device_fastboot_boot(struct device *device);
 void device_fastboot_flash_reboot(struct device *device);
 void device_fastboot_key(struct device *device, bool on);
+void device_send_break(struct device *device);
 
 #endif

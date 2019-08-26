@@ -193,11 +193,11 @@ static int tty_callback(int *ssh_fds)
 				write(ssh_fds[0], &hdr, sizeof(hdr));
 				write(ssh_fds[0], "\001", 1);
 				break;
-#if 0
-			case 'b':
-				device_break(device);
+			case 'B':
+				hdr.type = MSG_SEND_BREAK;
+				hdr.len = 0;
+				write(ssh_fds[0], &hdr, sizeof(hdr));
 				break;
-#endif
 			}
 
 			special = false;

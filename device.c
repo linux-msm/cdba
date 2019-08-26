@@ -173,3 +173,9 @@ void device_fastboot_key(struct device *device, bool on)
 	if (device->fastboot_key)
 		device->fastboot_key(device, on);
 }
+
+void device_send_break(struct device *device)
+{
+	if (device->send_break)
+		device->send_break(device);
+}
