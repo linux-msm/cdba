@@ -95,8 +95,10 @@ static void msg_select_board(const void *param)
 	struct msg reply = { MSG_SELECT_BOARD, 0 };
 
 	selected_device = device_open(param, &fastboot_ops);
-	if (!selected_device)
+	if (!selected_device) {
 		fprintf(stderr, "failed to open %s\n", (const char *)param);
+		quit_invoked = true;
+	}
 
 	write(STDOUT_FILENO, &reply, sizeof(reply));
 }
