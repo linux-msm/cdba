@@ -32,6 +32,7 @@
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -43,6 +44,8 @@
 #include "device_parser.h"
 #include "fastboot.h"
 #include "list.h"
+
+static bool quit_invoked;
 
 struct device *selected_device;
 
@@ -231,7 +234,10 @@ void watch_add_readfd(int fd, int (*cb)(int, void*), void *data)
 	list_add(&read_watches, &w->node);
 }
 
-static bool quit_invoked;
+static void sigpipe_handler(int signo)
+{
+	quit_invoked = true;
+}
 
 void watch_quit(void)
 {
@@ -245,6 +251,8 @@ int main(int argc, char **argv)
 	int flags;
 	int nfds;
 	int ret;
+
+	signal(SIGPIPE, sigpipe_handler);
 
 	device_parser(".cdba");
 
