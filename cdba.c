@@ -358,9 +358,9 @@ static void handle_status_update(const void *data, size_t len)
 	char *str = alloca(len + 1);
 
 	memcpy(str, data, len);
-	str[len] = '\0';
+	str[len] = '\n';
 
-	printf("%s\n", str);
+	write(STDOUT_FILENO, str, len + 1);
 }
 
 static bool received_power_off;
