@@ -48,6 +48,8 @@
 #include "list.h"
 
 static bool quit;
+static bool fastboot_repeat;
+static bool fastboot_done;
 
 static const char *fastboot_file;
 
@@ -430,8 +432,12 @@ static int handle_message(struct circ_buf *buf)
 		case MSG_FASTBOOT_PRESENT:
 			if (*(uint8_t*)msg->data) {
 				// printf("======================================== MSG_FASTBOOT_PRESENT(on)\n");
-				request_fastboot_files();
+				if (!fastboot_done || fastboot_repeat)
+					request_fastboot_files();
+				else
+					quit = true;
 			} else {
+				fastboot_done = true;
 				// printf("======================================== MSG_FASTBOOT_PRESENT(off)\n");
 			}
 			break;
@@ -488,7 +494,7 @@ int main(int argc, char **argv)
 	int opt;
 	int ret;
 
-	while ((opt = getopt(argc, argv, "b:c:C:h:t:T:")) != -1) {
+	while ((opt = getopt(argc, argv, "b:c:C:h:Rt:T:")) != -1) {
 		switch (opt) {
 		case 'b':
 			board = optarg;
@@ -501,6 +507,9 @@ int main(int argc, char **argv)
 			break;
 		case 'h':
 			host = optarg;
+			break;
+		case 'R':
+			fastboot_repeat = true;
 			break;
 		case 't':
 			timeout = atoi(optarg);
