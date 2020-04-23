@@ -1,6 +1,6 @@
 = CDBA control tool
 The CDBA control tool is used for remotely booting images on development boards
-attached using a CDB Assist or Conmux.
+attached using a CDB Assist [https://github.com/sonyxperiadev/CDB-Assist] or Conmux.
 
 = Dependencies
 sudo apt-get install libudev-dev libyaml-dev for debian systems
