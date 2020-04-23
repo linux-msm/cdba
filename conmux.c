@@ -40,7 +40,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "bad.h"
+#include "cdba-server.h"
 #include "conmux.h"
 
 extern int h_errno;
