@@ -41,7 +41,7 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include "bad.h"
+#include "cdba-server.h"
 #include "alpaca.h"
 
 struct alpaca {

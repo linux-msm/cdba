@@ -7,8 +7,8 @@ sudo apt-get install libudev-dev libyaml-dev for debian systems
 dnf install systemd-devel libyaml-devel for fedora systems
 
 = Device side
-On the host with the CDB Assist or Conmux attached the "bad" executable is run
-from sandbox/cdba/bad. Available devices are read from $HOME/.cdba
+On the host with the CDB Assist or Conmux attached the "cdba-server" executable is run
+from sandbox/cdba/cdba-server. Available devices are read from $HOME/.cdba
 
 = Client side
 The client is invoked as:

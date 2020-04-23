@@ -44,7 +44,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "bad.h"
+#include "cdba-server.h"
 #include "fastboot.h"
 
 #define MAX_USBFS_BULK_SIZE (16*1024)

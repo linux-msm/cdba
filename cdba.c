@@ -525,7 +525,7 @@ int main(int argc, char **argv)
 
 	request_select_board(board);
 
-	ret = fork_ssh(host, "sandbox/cdba/bad", ssh_fds);
+	ret = fork_ssh(host, "sandbox/cdba/cdba-server", ssh_fds);
 	if (ret)
 		err(1, "failed to connect to \"%s\"", host);
 

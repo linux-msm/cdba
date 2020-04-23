@@ -38,7 +38,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "bad.h"
+#include "cdba-server.h"
 #include "circ_buf.h"
 #include "device.h"
 #include "device_parser.h"
