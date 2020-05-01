@@ -30,6 +30,7 @@
  */
 #include <sys/select.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <alloca.h>
@@ -461,6 +462,18 @@ static int handle_message(struct circ_buf *buf)
 	return 0;
 }
 
+static struct timeval get_timeout(int sec)
+{
+	struct timeval delta = { .tv_sec = sec };
+	struct timeval now;
+	struct timeval tv;
+
+	gettimeofday(&now, NULL);
+	timeradd(&now, &delta, &tv);
+
+	return tv;
+}
+
 static void usage(void)
 {
 	extern const char *__progname;
@@ -474,13 +487,17 @@ static void usage(void)
 int main(int argc, char **argv)
 {
 	bool power_cycle_on_timeout = true;
-	bool timeout_on_inactivity = true;
+	struct timeval timeout_inactivity_tv;
+	struct timeval timeout_total_tv;
 	struct termios *orig_tios;
+	int timeout_inactivity = 0;
+	int timeout_total = 600;
 	struct work *next;
 	struct work *work;
 	struct circ_buf recv_buf = { 0 };
 	const char *board = NULL;
 	const char *host = NULL;
+	struct timeval now;
 	struct timeval tv;
 	int power_cycles = 0;
 	struct stat sb;
@@ -488,7 +505,6 @@ int main(int argc, char **argv)
 	char buf[128];
 	fd_set rfds;
 	fd_set wfds;
-	int timeout = 600;
 	ssize_t n;
 	int nfds;
 	int opt;
@@ -512,11 +528,10 @@ int main(int argc, char **argv)
 			fastboot_repeat = true;
 			break;
 		case 't':
-			timeout = atoi(optarg);
-			timeout_on_inactivity = false;
+			timeout_total = atoi(optarg);
 			break;
 		case 'T':
-			timeout = atoi(optarg);
+			timeout_inactivity = atoi(optarg);
 			break;
 		default:
 			usage();
@@ -538,12 +553,10 @@ int main(int argc, char **argv)
 	if (ret)
 		err(1, "failed to connect to \"%s\"", host);
 
-	//sleep(5);
-
-	tv.tv_sec = timeout;
-	tv.tv_usec = 0;
-
 	orig_tios = tty_unbuffer();
+
+	timeout_total_tv = get_timeout(timeout_total);
+	timeout_inactivity_tv = get_timeout(timeout_inactivity);
 
 	while (!quit) {
 		if (received_power_off || reached_timeout) {
@@ -563,8 +576,7 @@ int main(int argc, char **argv)
 
 			request_power_off();
 
-			tv.tv_sec = timeout;
-			tv.tv_usec = 0;
+			timeout_inactivity_tv = get_timeout(timeout_inactivity);
 		}
 
 		FD_ZERO(&rfds);
@@ -582,7 +594,14 @@ int main(int argc, char **argv)
 		if (!list_empty(&work_items))
 			FD_SET(ssh_fds[0], &wfds);
 
-		ret = select(nfds + 1, &rfds, &wfds, NULL, timeout ? &tv : NULL);
+		gettimeofday(&now, NULL);
+		if (timeout_inactivity && timercmp(&timeout_inactivity_tv, &timeout_total_tv, <)) {
+			timersub(&timeout_inactivity_tv, &now, &tv);
+		} else {
+			timersub(&timeout_total_tv, &now, &tv);
+		}
+
+		ret = select(nfds + 1, &rfds, &wfds, NULL, &tv);
 #if 0
 		printf("select: %d (%c%c%c)\n", ret, FD_ISSET(STDIN_FILENO, &rfds) ? 'X' : '-',
 						     FD_ISSET(ssh_fds[1], &rfds) ? 'X' : '-',
@@ -591,7 +610,7 @@ int main(int argc, char **argv)
 		if (ret < 0) {
 			err(1, "select");
 		} else if (ret == 0) {
-			if (timeout_on_inactivity)
+			if (timeout_inactivity && timercmp(&timeout_inactivity_tv, &timeout_total_tv, <))
 				warnx("timeout due to inactivity");
 			else
 				warnx("timeout reached");
@@ -634,10 +653,8 @@ int main(int argc, char **argv)
 				break;
 
 			/* Reset inactivity timeout on activity */
-			if (timeout_on_inactivity) {
-				tv.tv_sec = timeout;
-				tv.tv_usec = 0;
-			}
+			if (timeout_inactivity)
+				timeout_inactivity_tv = get_timeout(timeout_inactivity);
 		}
 
 		if (FD_ISSET(ssh_fds[0], &wfds)) {
