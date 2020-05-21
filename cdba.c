@@ -677,7 +677,7 @@ int main(int argc, char **argv)
 	tty_reset(orig_tios);
 
 	if (reached_timeout)
-		return 110;
+		return fastboot_done ? 110 : 2;
 
 	return (quit || received_power_off) ? 0 : 1;
 }
