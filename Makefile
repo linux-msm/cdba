@@ -21,7 +21,7 @@ $(SERVER): $(SERVER_OBJS)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 clean:
-	rm -f $(CLIENT) $(CLIENT_OBJS) $(SERVER_OBJS)
+	rm -f $(CLIENT) $(CLIENT_OBJS) $(SERVER) $(SERVER_OBJS)
 
 install: $(CLIENT) $(SERVER)
 	install -D -m 755 $(CLIENT) $(DESTDIR)$(prefix)/bin/$(CLIENT)
