@@ -70,45 +70,17 @@ static int alpaca_console_data(int fd, void *data)
 	return 0;
 }
 
-static int alpaca_open_tty(const char *tty, struct termios *old)
-{
-	struct termios tios;
-	int ret;
-	int fd;
-
-	fd = open(tty, O_RDWR | O_NOCTTY | O_EXCL);
-	if (fd < 0)
-		err(1, "unable to open \"%s\"", tty);
-
-	ret = tcgetattr(fd, old);
-	if (ret < 0)
-		err(1, "unable to retrieve \"%s\" tios", tty);
-
-	memset(&tios, 0, sizeof(tios));
-	tios.c_cflag = B115200 | CS8 | CLOCAL | CREAD;
-	tios.c_iflag = IGNPAR;
-	tios.c_oflag = 0;
-
-	tcflush(fd, TCIFLUSH);
-
-	ret = tcsetattr(fd, TCSANOW, &tios);
-	if (ret < 0)
-		err(1, "unable to update \"%s\" tios", tty);
-
-	return fd;
-}
-
 void *alpaca_open(struct device *dev)
 {
 	struct alpaca *alpaca;
 
 	alpaca = calloc(1, sizeof(*alpaca));
 
-	alpaca->alpaca_fd = alpaca_open_tty(dev->alpaca_dev, &alpaca->alpaca_tios);
+	alpaca->alpaca_fd = tty_open(dev->alpaca_dev, &alpaca->alpaca_tios);
 	if (alpaca->alpaca_fd < 0)
 		err(1, "failed to open %s", dev->alpaca_dev);
 
-	alpaca->console_fd = alpaca_open_tty(dev->console_dev, &alpaca->console_tios);
+	alpaca->console_fd = tty_open(dev->console_dev, &alpaca->console_tios);
 	if (alpaca->console_fd < 0)
 		err(1, "failed to open %s", dev->console_dev);
 
