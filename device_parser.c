@@ -117,7 +117,6 @@ static void parse_board(struct device_parser *dp)
 			dev->open = alpaca_open;
 			dev->power_on = alpaca_power_on;
 			dev->power_off = alpaca_power_off;
-			dev->write = alpaca_write;
 		} else if (!strcmp(key, "console")) {
 			dev->console_dev = strdup(value);
 		} else if (!strcmp(key, "voltage")) {

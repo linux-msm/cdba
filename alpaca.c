@@ -46,29 +46,9 @@
 
 struct alpaca {
 	int alpaca_fd;
-	int console_fd;
 
 	struct termios alpaca_tios;
-	struct termios console_tios;
 };
-
-static int alpaca_console_data(int fd, void *data)
-{
-	struct msg hdr;
-	char buf[128];
-	ssize_t n;
-
-	n = read(fd, buf, sizeof(buf));
-	if (n < 0)
-		return n;
-
-	hdr.type = MSG_CONSOLE;
-	hdr.len = n;
-	write(STDOUT_FILENO, &hdr, sizeof(hdr));
-	write(STDOUT_FILENO, buf, n);
-
-	return 0;
-}
 
 void *alpaca_open(struct device *dev)
 {
@@ -79,12 +59,6 @@ void *alpaca_open(struct device *dev)
 	alpaca->alpaca_fd = tty_open(dev->alpaca_dev, &alpaca->alpaca_tios);
 	if (alpaca->alpaca_fd < 0)
 		err(1, "failed to open %s", dev->alpaca_dev);
-
-	alpaca->console_fd = tty_open(dev->console_dev, &alpaca->console_tios);
-	if (alpaca->console_fd < 0)
-		err(1, "failed to open %s", dev->console_dev);
-
-	watch_add_readfd(alpaca->console_fd, alpaca_console_data, alpaca);
 
 	return alpaca;
 }
@@ -139,11 +113,4 @@ int alpaca_power_off(struct device *dev)
 	alpaca_usb_device_power(dev->cdb, 0);
 
 	return 0;
-}
-
-int alpaca_write(struct device *dev, const void *buf, size_t len)
-{
-	struct alpaca *alpaca = dev->cdb;
-
-	return write(alpaca->console_fd, buf, len);;
 }

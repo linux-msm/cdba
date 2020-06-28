@@ -39,6 +39,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "cdba-server.h"
 #include "device.h"
 #include "fastboot.h"
 #include "list.h"
@@ -77,6 +78,33 @@ static void device_lock(struct device *device)
 		err(1, "failed to lock lockfile %s", lock);
 }
 
+static int device_console_data(int fd, void *data)
+{
+	struct msg hdr;
+	char buf[128];
+	ssize_t n;
+
+	n = read(fd, buf, sizeof(buf));
+	if (n < 0)
+		return n;
+
+	hdr.type = MSG_CONSOLE;
+	hdr.len = n;
+	write(STDOUT_FILENO, &hdr, sizeof(hdr));
+	write(STDOUT_FILENO, buf, n);
+
+	return 0;
+}
+
+static void console_open(struct device *device)
+{
+	device->console_fd = tty_open(device->console_dev, &device->console_tios);
+	if (device->console_fd < 0)
+		err(1, "failed to open %s", device->console_dev);
+
+	watch_add_readfd(device->console_fd, device_console_data, device);
+}
+
 struct device *device_open(const char *board,
 			   struct fastboot_ops *fastboot_ops)
 {
@@ -97,6 +125,9 @@ found:
 	device->cdb = device->open(device);
 	if (!device->cdb)
 		errx(1, "failed to open device controller");
+
+	if (device->console_dev)
+		console_open(device);
 
 	device->fastboot = fastboot_open(device->serial, fastboot_ops, NULL);
 
@@ -144,9 +175,13 @@ int device_write(struct device *device, const void *buf, size_t len)
 	if (!device)
 		return 0;
 
-	assert(device->write);
+	if (device->console_fd) {
+		return write(device->console_fd, buf, len);;
+	} else {
+		assert(device->write);
 
-	return device->write(device, buf, len);
+		return device->write(device, buf, len);
+	}
 }
 
 void device_fastboot_boot(struct device *device)

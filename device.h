@@ -1,6 +1,7 @@
 #ifndef __DEVICE_H__
 #define __DEVICE_H__
 
+#include <termios.h>
 #include "list.h"
 
 struct cdb_assist;
@@ -32,6 +33,9 @@ struct device {
 	bool set_active;
 
 	void *cdb;
+
+	int console_fd;
+	struct termios console_tios;
 
 	struct list_head node;
 };
