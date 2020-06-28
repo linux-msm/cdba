@@ -47,8 +47,8 @@
 struct cdb_assist {
 	char serial[9];
 
-	char control_uart[20];
-	char target_uart[20];
+	char control_uart[32];
+	char target_uart[32];
 
 	int control_tty;
 	int target_tty;
@@ -158,12 +158,15 @@ static struct cdb_assist *enumerate_cdb_assists()
 			}
 		}
 
-		if (strcmp(interface, "Control UART") == 0)
-			strcpy(cdb->control_uart, de->d_name);
-		else if (strcmp(interface, "Target UART") == 0)
-			strcpy(cdb->target_uart, de->d_name);
-		else
+		if (strcmp(interface, "Control UART") == 0) {
+			strcpy(cdb->control_uart, "/dev/");
+			strcat(cdb->control_uart, de->d_name);
+		} else if (strcmp(interface, "Target UART") == 0) {
+			strcpy(cdb->target_uart, "/dev/");
+			strcat(cdb->target_uart, de->d_name);
+		} else {
 			errx(1, "tty is neither control nor target\n");
+		}
 
 close_fd:
 		close(fd);
@@ -188,36 +191,6 @@ static struct cdb_assist *cdb_assist_find(const char *serial)
 	}
 
 	return NULL;
-}
-
-static int tty_open(const char *tty, struct termios *old)
-{
-	struct termios tios;
-	char buf[80] = "/dev/";
-	int ret;
-	int fd;
-
-	strcat(buf, tty);
-	fd = open(buf, O_RDWR | O_NOCTTY | O_EXCL);
-	if (fd < 0)
-		err(1, "unable to open \"%s\"", tty);
-
-	ret = tcgetattr(fd, old);
-	if (ret < 0)
-		err(1, "unable to retrieve \"%s\" tios", tty);
-
-	memset(&tios, 0, sizeof(tios));
-	tios.c_cflag = B115200 | CRTSCTS | CS8 | CLOCAL | CREAD;
-	tios.c_iflag = IGNPAR;
-	tios.c_oflag = 0;
-
-	tcflush(fd, TCIFLUSH);
-
-	ret = tcsetattr(fd, TCSANOW, &tios);
-	if (ret < 0)
-		err(1, "unable to update \"%s\" tios", tty);
-
-	return fd;
 }
 
 enum {
