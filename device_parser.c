@@ -154,10 +154,8 @@ int device_parser(const char *path)
 	FILE *fh;
 
 	fh = fopen(path, "r");
-	if (!fh) {
-		fprintf(stderr, "device parser: unable to open %s\n", path);
+	if (!fh)
 		return -1;
-	}
 
 	if(!yaml_parser_initialize(&dp.parser)) {
 		fprintf(stderr, "device parser: failed to initialize parser\n");
