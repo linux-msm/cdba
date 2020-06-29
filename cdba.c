@@ -797,7 +797,8 @@ int main(int argc, char **argv)
 	close(ssh_fds[1]);
 	close(ssh_fds[2]);
 
-	printf("Waiting for ssh to finish\n");
+	if (verb == CDBA_BOOT)
+		printf("Waiting for ssh to finish\n");
 
 	wait(NULL);
 
