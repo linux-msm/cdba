@@ -238,3 +238,25 @@ void device_list_devices(void)
 	hdr.len = 0;
 	write(STDOUT_FILENO, &hdr, sizeof(hdr));
 }
+
+void device_info(const void *data, size_t dlen)
+{
+	struct device *device;
+	struct msg hdr;
+	char *description;
+	size_t len = 0;
+
+	list_for_each_entry(device, &devices, node) {
+		if (!strncmp(device->board, data, dlen) && device->description) {
+			description = device->description;
+			len = strlen(device->description);
+			break;
+		}
+	}
+
+	hdr.type = MSG_BOARD_INFO;
+	hdr.len = len;
+	write(STDOUT_FILENO, &hdr, sizeof(hdr));
+	if (len)
+		write(STDOUT_FILENO, description, len);
+}

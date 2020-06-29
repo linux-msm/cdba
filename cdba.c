@@ -249,6 +249,41 @@ static void request_board_list(void)
 	list_add(&work_items, &work->node);
 }
 
+struct board_info_request {
+	struct work work;
+	const char *board;
+};
+
+static void board_info_fn(struct work *work, int ssh_stdin)
+{
+	struct board_info_request *board = container_of(work, struct board_info_request, work);
+	size_t blen = strlen(board->board) + 1;
+	struct msg *msg;
+	ssize_t n;
+
+	msg = alloca(sizeof(*msg) + blen);
+	msg->type = MSG_BOARD_INFO;
+	msg->len = blen;
+	memcpy(msg->data, board->board, blen);
+
+	n = write(ssh_stdin, msg, sizeof(*msg) + blen);
+	if (n < 0)
+		err(1, "failed to send board info request");
+
+	free(work);
+}
+
+static void request_board_info(const char *board)
+{
+	struct board_info_request *work;
+
+	work = malloc(sizeof(*work));
+	work->work.fn = board_info_fn;
+	work->board = board;
+
+	list_add(&work_items, &work->work.node);
+}
+
 struct select_board {
 	struct work work;
 
@@ -406,6 +441,18 @@ static void handle_list_devices(const void *data, size_t len)
 	write(STDOUT_FILENO, board, len + 1);
 }
 
+static void handle_board_info(const void *data, size_t len)
+{
+	char *info;
+
+	info = alloca(len + 1);
+	memcpy(info, data, len);
+	info[len] = '\n';
+	write(STDOUT_FILENO, info, len + 1);
+
+	quit = true;
+}
+
 static bool received_power_off;
 static bool reached_timeout;
 
@@ -494,6 +541,10 @@ static int handle_message(struct circ_buf *buf)
 		case MSG_LIST_DEVICES:
 			handle_list_devices(msg->data, msg->len);
 			break;
+		case MSG_BOARD_INFO:
+			handle_board_info(msg->data, msg->len);
+			return -1;
+			break;
 		default:
 			fprintf(stderr, "unk %d len %d\n", msg->type, msg->len);
 			return -1;
@@ -524,10 +575,18 @@ static void usage(void)
 	fprintf(stderr, "usage: %s -b <board> -h <host> [-t <timeout>] "
 			"[-T <inactivity-timeout>] boot.img\n",
 			__progname);
+	fprintf(stderr, "usage: %s -i -b <board> -h <host>\n",
+			__progname);
 	fprintf(stderr, "usage: %s -l -h <host>\n",
 			__progname);
 	exit(1);
 }
+
+enum {
+	CDBA_BOOT,
+	CDBA_LIST,
+	CDBA_INFO,
+};
 
 int main(int argc, char **argv)
 {
@@ -546,17 +605,17 @@ int main(int argc, char **argv)
 	struct timeval tv;
 	int power_cycles = 0;
 	struct stat sb;
-	bool list_only = false;
 	int ssh_fds[3];
 	char buf[128];
 	fd_set rfds;
 	fd_set wfds;
 	ssize_t n;
 	int nfds;
+	int verb = CDBA_BOOT;
 	int opt;
 	int ret;
 
-	while ((opt = getopt(argc, argv, "b:c:C:h:lRt:T:")) != -1) {
+	while ((opt = getopt(argc, argv, "b:c:C:h:ilRt:T:")) != -1) {
 		switch (opt) {
 		case 'b':
 			board = optarg;
@@ -570,8 +629,11 @@ int main(int argc, char **argv)
 		case 'h':
 			host = optarg;
 			break;
+		case 'i':
+			verb = CDBA_INFO;
+			break;
 		case 'l':
-			list_only = true;
+			verb = CDBA_LIST;
 			break;
 		case 'R':
 			fastboot_repeat = true;
@@ -589,12 +651,12 @@ int main(int argc, char **argv)
 
 	if (!host)
 		usage();
-	else if (!list_only && (optind >= argc || !board))
-		usage();
 
-	if (list_only) {
-		request_board_list();
-	} else {
+	switch (verb) {
+	case CDBA_BOOT:
+		if (optind >= argc || !board)
+			usage();
+
 		fastboot_file = argv[optind];
 		if (lstat(fastboot_file, &sb))
 			err(1, "unable to read \"%s\"", fastboot_file);
@@ -602,6 +664,16 @@ int main(int argc, char **argv)
 			errx(1, "\"%s\" is not a regular file", fastboot_file);
 
 		request_select_board(board);
+		break;
+	case CDBA_LIST:
+		request_board_list();
+		break;
+	case CDBA_INFO:
+		if (!board)
+			usage();
+
+		request_board_info(board);
+		break;
 	}
 
 	ret = fork_ssh(host, "cdba-server", ssh_fds);

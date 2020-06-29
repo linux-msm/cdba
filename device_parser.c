@@ -37,7 +37,7 @@
 #include "cdb_assist.h"
 #include "conmux.h"
 
-#define TOKEN_LENGTH	256
+#define TOKEN_LENGTH	16384
 
 struct device_parser {
 	yaml_parser_t parser;
@@ -131,6 +131,8 @@ static void parse_board(struct device_parser *dp)
 		} else if (!strcmp(key, "broken_fastboot_boot")) {
 			if (!strcmp(value, "true"))
 				dev->boot = device_fastboot_flash_reboot;
+		} else if (!strcmp(key, "description")) {
+			dev->description = strdup(value);
 		} else {
 			fprintf(stderr, "device parser: unknown key \"%s\"\n", key);
 			exit(1);
