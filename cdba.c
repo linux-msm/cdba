@@ -224,10 +224,6 @@ struct work {
 
 static struct list_head work_items = LIST_INIT(work_items);
 
-struct board_list_request {
-	struct work work;
-};
-
 static void list_boards_fn(struct work *work, int ssh_stdin)
 {
 	struct msg msg;
