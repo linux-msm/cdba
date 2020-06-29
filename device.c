@@ -214,3 +214,24 @@ void device_send_break(struct device *device)
 	if (device->send_break)
 		device->send_break(device);
 }
+
+void device_list_devices(void)
+{
+	struct device *device;
+	struct msg hdr;
+	size_t len;
+	char buf[80];
+
+	list_for_each_entry(device, &devices, node) {
+		len = snprintf(buf, sizeof(buf), "%-20s %s", device->board, device->name);
+
+		hdr.type = MSG_LIST_DEVICES;
+		hdr.len = len;
+		write(STDOUT_FILENO, &hdr, sizeof(hdr));
+		write(STDOUT_FILENO, buf, len);
+	}
+
+	hdr.type = MSG_LIST_DEVICES;
+	hdr.len = 0;
+	write(STDOUT_FILENO, &hdr, sizeof(hdr));
+}

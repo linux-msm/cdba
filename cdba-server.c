@@ -231,6 +231,9 @@ static int handle_stdin(int fd, void *buf)
 		case MSG_SEND_BREAK:
 			device_send_break(selected_device);
 			break;
+		case MSG_LIST_DEVICES:
+			device_list_devices();
+			break;
 		default:
 			fprintf(stderr, "unk %d len %d\n", msg->type, msg->len);
 			exit(1);
