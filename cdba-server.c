@@ -287,7 +287,14 @@ int main(int argc, char **argv)
 
 	signal(SIGPIPE, sigpipe_handler);
 
-	device_parser(".cdba");
+	ret = device_parser(".cdba");
+	if (ret) {
+		ret = device_parser("/etc/cdba");
+		if (ret) {
+			fprintf(stderr, "device parser: unable to open config file\n");
+			exit(1);
+		}
+	}
 
 	watch_add_readfd(STDIN_FILENO, handle_stdin, NULL);
 

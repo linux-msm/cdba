@@ -145,7 +145,7 @@ static void parse_board(struct device_parser *dp)
 	device_add(dev);
 }
 
-void device_parser(const char *path)
+int device_parser(const char *path)
 {
 	struct device_parser dp;
 	char key[TOKEN_LENGTH];
@@ -154,11 +154,13 @@ void device_parser(const char *path)
 	fh = fopen(path, "r");
 	if (!fh) {
 		fprintf(stderr, "device parser: unable to open %s\n", path);
-		exit(1);
+		return -1;
 	}
 
-	if(!yaml_parser_initialize(&dp.parser))
+	if(!yaml_parser_initialize(&dp.parser)) {
 		fprintf(stderr, "device parser: failed to initialize parser\n");
+		return -1;
+	}
 
 	yaml_parser_set_input_file(&dp.parser, fh);
 
@@ -188,4 +190,6 @@ void device_parser(const char *path)
 	yaml_parser_delete(&dp.parser);
 
 	fclose(fh);
+
+	return 0;
 }
