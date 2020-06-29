@@ -148,7 +148,7 @@ static void parse_board(struct device_parser *dp)
 void device_parser(const char *path)
 {
 	struct device_parser dp;
-	char key[80];
+	char key[TOKEN_LENGTH];
 	FILE *fh;
 
 	fh = fopen(path, "r");
