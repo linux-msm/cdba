@@ -223,7 +223,10 @@ void device_list_devices(void)
 	char buf[80];
 
 	list_for_each_entry(device, &devices, node) {
-		len = snprintf(buf, sizeof(buf), "%-20s %s", device->board, device->name);
+		if (device->name)
+			len = snprintf(buf, sizeof(buf), "%-20s %s", device->board, device->name);
+		else
+			len = snprintf(buf, sizeof(buf), "%s", device->board);
 
 		hdr.type = MSG_LIST_DEVICES;
 		hdr.len = len;
