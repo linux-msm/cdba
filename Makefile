@@ -22,3 +22,7 @@ $(SERVER): $(SERVER_OBJS)
 
 clean:
 	rm -f $(CLIENT) $(CLIENT_OBJS) $(SERVER_OBJS)
+
+install: $(CLIENT) $(SERVER)
+	install -D -m 755 $(CLIENT) $(DESTDIR)$(prefix)/bin/$(CLIENT)
+	install -D -m 755 $(SERVER) $(DESTDIR)$(prefix)/bin/$(SERVER)
