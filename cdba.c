@@ -453,7 +453,7 @@ static int handle_message(struct circ_buf *buf)
 			break;
 		default:
 			fprintf(stderr, "unk %d len %d\n", msg->type, msg->len);
-			exit(1);
+			return -1;
 		}
 
 		free(msg);
