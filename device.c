@@ -92,13 +92,15 @@ struct device *device_open(const char *board,
 	return NULL;
 
 found:
-	assert(device->open);
+	assert(device->open || device->console_dev);
 
 	device_lock(device);
 
-	device->cdb = device->open(device);
-	if (!device->cdb)
-		errx(1, "failed to open device controller");
+	if (device->open) {
+		device->cdb = device->open(device);
+		if (!device->cdb)
+			errx(1, "failed to open device controller");
+	}
 
 	if (device->console_dev)
 		console_open(device);
@@ -117,10 +119,8 @@ static void device_release_fastboot_key(void *data)
 
 int device_power_on(struct device *device)
 {
-	if (!device)
+	if (!device || !device->power_on)
 		return 0;
-
-	assert(device->power_on);
 
 	if (device->fastboot_key_timeout)
 		device->fastboot_key(device, true);
@@ -135,10 +135,8 @@ int device_power_on(struct device *device)
 
 int device_power_off(struct device *device)
 {
-	if (!device)
+	if (!device || !device->power_off)
 		return 0;
-
-	assert(device->power_off);
 
 	device->power_off(device);
 
