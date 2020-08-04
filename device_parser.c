@@ -36,6 +36,7 @@
 #include "alpaca.h"
 #include "cdb_assist.h"
 #include "conmux.h"
+#include "console.h"
 
 #define TOKEN_LENGTH	16384
 
@@ -119,6 +120,7 @@ static void parse_board(struct device_parser *dp)
 			dev->power_off = alpaca_power_off;
 		} else if (!strcmp(key, "console")) {
 			dev->console_dev = strdup(value);
+			dev->write = console_write;
 		} else if (!strcmp(key, "voltage")) {
 			dev->voltage = strtoul(value, NULL, 10);
 		} else if (!strcmp(key, "fastboot")) {

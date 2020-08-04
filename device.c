@@ -42,6 +42,7 @@
 #include "cdba-server.h"
 #include "device.h"
 #include "fastboot.h"
+#include "console.h"
 #include "list.h"
 
 #define ARRAY_SIZE(x) ((sizeof(x)/sizeof((x)[0])))
@@ -76,33 +77,6 @@ static void device_lock(struct device *device)
 	n = flock(fd, LOCK_EX);
 	if (n < 0)
 		err(1, "failed to lock lockfile %s", lock);
-}
-
-static int device_console_data(int fd, void *data)
-{
-	struct msg hdr;
-	char buf[128];
-	ssize_t n;
-
-	n = read(fd, buf, sizeof(buf));
-	if (n < 0)
-		return n;
-
-	hdr.type = MSG_CONSOLE;
-	hdr.len = n;
-	write(STDOUT_FILENO, &hdr, sizeof(hdr));
-	write(STDOUT_FILENO, buf, n);
-
-	return 0;
-}
-
-static void console_open(struct device *device)
-{
-	device->console_fd = tty_open(device->console_dev, &device->console_tios);
-	if (device->console_fd < 0)
-		err(1, "failed to open %s", device->console_dev);
-
-	watch_add_readfd(device->console_fd, device_console_data, device);
 }
 
 struct device *device_open(const char *board,
@@ -175,13 +149,9 @@ int device_write(struct device *device, const void *buf, size_t len)
 	if (!device)
 		return 0;
 
-	if (device->console_fd) {
-		return write(device->console_fd, buf, len);;
-	} else {
-		assert(device->write);
+	assert(device->write);
 
-		return device->write(device, buf, len);
-	}
+	return device->write(device, buf, len);
 }
 
 void device_fastboot_boot(struct device *device)
