@@ -41,3 +41,8 @@ devices:
     conmux: mtp2k
     fastboot: abcdef2
     fastboot_set_active: true
+
+  - board: evb2k
+    console: /dev/ttyUSB0
+    fastboot: abcdef3
+    fastboot_set_active: true
