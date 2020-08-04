@@ -92,13 +92,15 @@ struct device *device_open(const char *board,
 	return NULL;
 
 found:
-	assert(device->open);
+	assert(device->open || device->console_dev);
 
 	device_lock(device);
 
-	device->cdb = device->open(device);
-	if (!device->cdb)
-		errx(1, "failed to open device controller");
+	if (device->open) {
+		device->cdb = device->open(device);
+		if (!device->cdb)
+			errx(1, "failed to open device controller");
+	}
 
 	if (device->console_dev)
 		console_open(device);
@@ -113,9 +115,8 @@ int device_power_on(struct device *device)
 	if (!device)
 		return 0;
 
-	assert(device->power_on);
-
-	device->power_on(device);
+	if (device->power_on)
+		device->power_on(device);
 
 	return 0;
 }
@@ -125,9 +126,8 @@ int device_power_off(struct device *device)
 	if (!device)
 		return 0;
 
-	assert(device->power_off);
-
-	device->power_off(device);
+	if (device->power_off)
+		device->power_off(device);
 
 	return 0;
 }
