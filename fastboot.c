@@ -248,54 +248,63 @@ static int parse_usb_desc(int usbfd, unsigned *ep_in, unsigned *ep_out)
 	return -ENOENT;
 }
 
-static int handle_udev_event(int fd, void *data)
+static int handle_fastboot_add(struct fastboot *fastboot, struct udev_device *dev)
 {
-	struct fastboot *fastboot = data;
-	struct udev_device* dev;
 	const char *dev_path;
 	const char *dev_node;
-	const char *action;
-	const char *serial;
 	unsigned ep_out;
 	unsigned ep_in;
 	int usbfd;
 	int ret;
 
+	dev_path = udev_device_get_devpath(dev);
+	dev_node = udev_device_get_devnode(dev);
+
+	usbfd = open(dev_node, O_RDWR);
+	if (usbfd < 0)
+		return usbfd;
+
+	ret = parse_usb_desc(usbfd, &ep_in, &ep_out);
+	if (ret < 0) {
+		close(usbfd);
+		return ret;
+	}
+
+	fastboot->ep_in = ep_in;
+	fastboot->ep_out = ep_out;
+	fastboot->fd = usbfd;
+	fastboot->dev_path = strdup(dev_path);
+
+	fastboot->state = FASTBOOT_STATE_OPENED;
+
+	if (fastboot->ops && fastboot->ops->opened)
+		fastboot->ops->opened(fastboot, fastboot->data);
+
+	return 0;
+}
+
+static int handle_udev_event(int fd, void *data)
+{
+	struct fastboot *fastboot = data;
+	struct udev_device* dev;
+	const char *dev_path;
+	const char *action;
+	const char *serial;
+
 	dev = udev_monitor_receive_device(fastboot->mon);
 
 	action = udev_device_get_action(dev);
-	dev_node = udev_device_get_devnode(dev);
 	dev_path = udev_device_get_devpath(dev);
-	// vid = udev_device_get_sysattr_value(dev, "idVendor");
-	// pid = udev_device_get_sysattr_value(dev, "idProduct");
-	serial = udev_device_get_sysattr_value(dev, "serial");
 
 	if (!action || !dev_path)
 		goto unref_dev;
 
 	if (!strcmp(action, "add")) {
+		serial = udev_device_get_sysattr_value(dev, "serial");
 		if (!serial || strcmp(serial, fastboot->serial))
 			goto unref_dev;
 
-		usbfd = open(dev_node, O_RDWR);
-		if (usbfd < 0)
-			goto unref_dev;
-
-		ret = parse_usb_desc(usbfd, &ep_in, &ep_out);
-		if (ret < 0) {
-			close(usbfd);
-			goto unref_dev;
-		}
-
-		fastboot->ep_in = ep_in;
-		fastboot->ep_out = ep_out;
-		fastboot->fd = usbfd;
-		fastboot->dev_path = strdup(dev_path);
-
-		fastboot->state = FASTBOOT_STATE_OPENED;
-
-		if (fastboot->ops && fastboot->ops->opened)
-			fastboot->ops->opened(fastboot, fastboot->data);
+		handle_fastboot_add(fastboot, dev);
 	} else if (!strcmp(action, "remove")) {
 		if (!fastboot->dev_path || strcmp(dev_path, fastboot->dev_path))
 			goto unref_dev;
@@ -321,6 +330,8 @@ struct fastboot *fastboot_open(const char *serial, struct fastboot_ops *ops, voi
 	struct fastboot *fb;
 	struct udev* udev;
 	int fd;
+	struct udev_enumerate* udev_enum;
+	struct udev_list_entry* first, *item;
 
 	udev = udev_new();
 	if (!udev)
@@ -343,6 +354,23 @@ struct fastboot *fastboot_open(const char *serial, struct fastboot_ops *ops, voi
 	fd = udev_monitor_get_fd(fb->mon);
 
 	watch_add_readfd(fd, handle_udev_event, fb);
+
+	udev_enum = udev_enumerate_new(udev);
+	udev_enumerate_add_match_subsystem(udev_enum, "usb");
+	udev_enumerate_add_match_sysattr(udev_enum, "serial", serial);
+	udev_enumerate_scan_devices(udev_enum);
+
+	first = udev_enumerate_get_list_entry(udev_enum);
+	udev_list_entry_foreach(item, first) {
+		const char *path;
+		struct udev_device *dev;
+
+		path = udev_list_entry_get_name(item);
+		dev = udev_device_new_from_syspath(udev, path);
+		handle_fastboot_add(fb, dev);
+	}
+
+	udev_enumerate_unref(udev_enum);
 
 	return fb;
 }
