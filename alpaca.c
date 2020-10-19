@@ -98,6 +98,9 @@ int alpaca_power_on(struct device *dev)
 	alpaca_device_power(dev->cdb, 1);
 	alpaca_usb_device_power(dev->cdb, 1);
 
+	/* Volume down */
+	alpaca_output_bit(dev->cdb, 2, 1);
+
 	alpaca_output_bit(dev->cdb, 1, 0);
 	sleep(1);
 	alpaca_output_bit(dev->cdb, 1, 1);
@@ -113,4 +116,9 @@ int alpaca_power_off(struct device *dev)
 	alpaca_usb_device_power(dev->cdb, 0);
 
 	return 0;
+}
+
+void alpaca_fastboot_key(struct device *dev, bool on)
+{
+	alpaca_output_bit(dev->cdb, 2, 0);
 }
