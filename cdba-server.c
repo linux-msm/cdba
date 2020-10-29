@@ -28,6 +28,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+#include <sys/time.h>
 #include <alloca.h>
 #include <err.h>
 #include <errno.h>
@@ -256,7 +257,16 @@ struct watch {
 	void *data;
 };
 
+struct timer {
+	struct list_head node;
+	struct timeval tv;
+
+	void (*cb)(void *);
+	void *data;
+};
+
 static struct list_head read_watches = LIST_INIT(read_watches);
+static struct list_head timer_watches = LIST_INIT(timer_watches);
 
 void watch_add_readfd(int fd, int (*cb)(int, void*), void *data)
 {
@@ -268,6 +278,70 @@ void watch_add_readfd(int fd, int (*cb)(int, void*), void *data)
 	w->data = data;
 
 	list_add(&read_watches, &w->node);
+}
+
+void watch_timer_add(int timeout, void (*cb)(void *), void *data)
+{
+	struct timeval tv_timeout = { timeout, };
+	struct timeval now;
+	struct timer *t;
+
+	t = calloc(1, sizeof(*t));
+
+	gettimeofday(&now, NULL);
+
+	t->cb = cb;
+	t->data = data;
+	timeradd(&now, &tv_timeout, &t->tv);
+
+	list_add(&timer_watches, &t->node);
+}
+
+static struct timeval *watch_timer_next(void)
+{
+	static struct timeval timeout;
+	struct timeval now;
+	struct timer *next;
+	struct timer *t;
+	int count = 0;
+
+	if (list_empty(&timer_watches))
+		return NULL;
+
+	next = list_entry_first(&timer_watches, struct timer, node);
+
+	list_for_each_entry(t, &timer_watches, node) {
+		if (timercmp(&t->tv, &next->tv, <))
+			next = t;
+		count++;
+	}
+
+	gettimeofday(&now, NULL);
+	timersub(&next->tv, &now, &timeout);
+	if (timeout.tv_sec < 0) {
+		timeout.tv_sec = 0;
+		timeout.tv_usec = 0;
+	}
+
+	return &timeout;
+}
+
+static void watch_timer_invoke(void)
+{
+	struct timeval now;
+	struct timer *tmp;
+	struct timer *t;
+
+	gettimeofday(&now, NULL);
+
+	list_for_each_entry_safe(t, tmp, &timer_watches, node) {
+		if (timercmp(&t->tv, &now, <)) {
+			t->cb(t->data);
+
+			list_del(&t->node);
+			free(t);
+		}
+	}
 }
 
 static void sigpipe_handler(int signo)
@@ -282,6 +356,7 @@ void watch_quit(void)
 
 int main(int argc, char **argv)
 {
+	struct timeval *timeoutp;
 	struct watch *w;
 	fd_set rfds;
 	int flags;
@@ -317,9 +392,14 @@ int main(int argc, char **argv)
 			goto done;
 		}
 
-		ret = select(nfds + 1, &rfds, NULL, NULL, NULL);
-		if (ret < 0)
+		timeoutp = watch_timer_next();
+		ret = select(nfds + 1, &rfds, NULL, NULL, timeoutp);
+		if (ret < 0 && errno == EINTR)
 			continue;
+		else if (ret < 0)
+			break;
+
+		watch_timer_invoke();
 
 		list_for_each_entry(w, &read_watches, node) {
 			if (FD_ISSET(w->fd, &rfds)) {
