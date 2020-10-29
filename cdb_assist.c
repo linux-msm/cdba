@@ -164,8 +164,6 @@ static struct cdb_assist *enumerate_cdb_assists()
 		} else if (strcmp(interface, "Target UART") == 0) {
 			strcpy(cdb->target_uart, "/dev/");
 			strcat(cdb->target_uart, de->d_name);
-		} else {
-			errx(1, "tty is neither control nor target\n");
 		}
 
 close_fd:
