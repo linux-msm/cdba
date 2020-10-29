@@ -108,6 +108,13 @@ found:
 	return device;
 }
 
+static void device_release_fastboot_key(void *data)
+{
+	struct device *device = data;
+
+	device->fastboot_key(device, false);
+}
+
 int device_power_on(struct device *device)
 {
 	if (!device)
@@ -115,7 +122,13 @@ int device_power_on(struct device *device)
 
 	assert(device->power_on);
 
+	if (device->fastboot_key_timeout)
+		device->fastboot_key(device, true);
+
 	device->power_on(device);
+
+	if (device->fastboot_key_timeout)
+		watch_timer_add(device->fastboot_key_timeout, device_release_fastboot_key, device);
 
 	return 0;
 }
@@ -171,12 +184,6 @@ void device_boot(struct device *device, const void *data, size_t len)
 		fastboot_set_active(device->fastboot, "a");
 	fastboot_download(device->fastboot, data, len);
 	device->boot(device);
-}
-
-void device_fastboot_key(struct device *device, bool on)
-{
-	if (device->fastboot_key)
-		device->fastboot_key(device, on);
 }
 
 void device_send_break(struct device *device)

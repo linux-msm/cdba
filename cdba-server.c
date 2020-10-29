@@ -89,10 +89,6 @@ static void fastboot_opened(struct fastboot *fb, void *data)
 	memcpy(msg->data, &one, 1);
 
 	write(STDOUT_FILENO, msg, sizeof(*msg) + 1);
-
-	/* We've reached fastboot, release the fastboot key */
-	if (selected_device)
-		device_fastboot_key(selected_device, false);
 }
 
 static void fastboot_info(struct fastboot *fb, const void *buf, size_t len)

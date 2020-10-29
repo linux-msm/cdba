@@ -136,6 +136,8 @@ static void parse_board(struct device_parser *dp)
 				dev->boot = device_fastboot_flash_reboot;
 		} else if (!strcmp(key, "description")) {
 			dev->description = strdup(value);
+		} else if (!strcmp(key, "fastboot_key_timeout")) {
+			dev->fastboot_key_timeout = strtoul(value, NULL, 10);
 		} else {
 			fprintf(stderr, "device parser: unknown key \"%s\"\n", key);
 			exit(1);

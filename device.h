@@ -20,6 +20,7 @@ struct device {
 	bool tickle_mmc;
 	bool pshold_shutdown;
 	struct fastboot *fastboot;
+	unsigned int fastboot_key_timeout;
 
 	void (*boot)(struct device *);
 
@@ -55,7 +56,6 @@ void device_boot(struct device *device, const void *data, size_t len);
 
 void device_fastboot_boot(struct device *device);
 void device_fastboot_flash_reboot(struct device *device);
-void device_fastboot_key(struct device *device, bool on);
 void device_send_break(struct device *device);
 void device_list_devices(void);
 void device_info(const void *data, size_t dlen);
