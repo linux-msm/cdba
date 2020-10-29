@@ -475,7 +475,6 @@ int cdb_assist_power_on(struct device *dev)
 
 	cdb_power(cdb, true);
 
-	cdb_gpio(cdb, 1, true);
 	cdb_vbus(cdb, true);
 
 	return 0;
