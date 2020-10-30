@@ -276,15 +276,18 @@ void watch_add_readfd(int fd, int (*cb)(int, void*), void *data)
 	list_add(&read_watches, &w->node);
 }
 
-void watch_timer_add(int timeout, void (*cb)(void *), void *data)
+void watch_timer_add(int timeout_ms, void (*cb)(void *), void *data)
 {
-	struct timeval tv_timeout = { timeout, };
+	struct timeval tv_timeout;
 	struct timeval now;
 	struct timer *t;
 
 	t = calloc(1, sizeof(*t));
 
 	gettimeofday(&now, NULL);
+
+	tv_timeout.tv_sec = timeout_ms / 1000;
+	tv_timeout.tv_usec = (timeout_ms % 1000) * 1000;
 
 	t->cb = cb;
 	t->data = data;

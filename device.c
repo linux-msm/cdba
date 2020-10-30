@@ -128,7 +128,7 @@ int device_power_on(struct device *device)
 	device->power_on(device);
 
 	if (device->fastboot_key_timeout)
-		watch_timer_add(device->fastboot_key_timeout, device_release_fastboot_key, device);
+		watch_timer_add(device->fastboot_key_timeout * 1000, device_release_fastboot_key, device);
 
 	return 0;
 }
