@@ -178,6 +178,7 @@ void device_fastboot_flash_reboot(struct device *device)
 
 void device_boot(struct device *device, const void *data, size_t len)
 {
+	warnx("booting the board...");
 	if (device->set_active)
 		fastboot_set_active(device->fastboot, "a");
 	fastboot_download(device->fastboot, data, len);
