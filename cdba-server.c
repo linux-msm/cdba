@@ -83,6 +83,8 @@ static void fastboot_opened(struct fastboot *fb, void *data)
 	const uint8_t one = 1;
 	struct msg *msg;
 
+	warnx("fastboot connection opened");
+
 	msg = alloca(sizeof(*msg) + 1);
 	msg->type = MSG_FASTBOOT_PRESENT;
 	msg->len = 1;
