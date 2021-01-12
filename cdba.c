@@ -660,7 +660,7 @@ int main(int argc, char **argv)
 		fastboot_file = argv[optind];
 		if (lstat(fastboot_file, &sb))
 			err(1, "unable to read \"%s\"", fastboot_file);
-		if (!S_ISREG(sb.st_mode))
+		if (!S_ISREG(sb.st_mode) && !S_ISLNK(sb.st_mode))
 			errx(1, "\"%s\" is not a regular file", fastboot_file);
 
 		request_select_board(board);
