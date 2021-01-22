@@ -138,6 +138,8 @@ static void parse_board(struct device_parser *dp)
 			dev->description = strdup(value);
 		} else if (!strcmp(key, "fastboot_key_timeout")) {
 			dev->fastboot_key_timeout = strtoul(value, NULL, 10);
+		} else if (!strcmp(key, "usb_always_on")) {
+			dev->usb_always_on = !strcmp(value, "true");
 		} else {
 			fprintf(stderr, "device parser: unknown key \"%s\"\n", key);
 			exit(1);

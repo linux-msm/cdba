@@ -73,7 +73,11 @@ void *alpaca_open(struct device *dev)
 		err(1, "failed to open %s", dev->alpaca_dev);
 
 	alpaca_device_power(alpaca, 0);
-	alpaca_usb_device_power(alpaca, 0);
+
+	if (dev->usb_always_on)
+		alpaca_usb_device_power(alpaca, 1);
+	else
+		alpaca_usb_device_power(alpaca, 0);
 
 	usleep(500000);
 
@@ -156,7 +160,9 @@ int alpaca_power_on(struct device *dev)
 int alpaca_power_off(struct device *dev)
 {
 	alpaca_device_power(dev->cdb, 0);
-	alpaca_usb_device_power(dev->cdb, 0);
+
+	if (!dev->usb_always_on)
+		alpaca_usb_device_power(dev->cdb, 0);
 
 	return 0;
 }
