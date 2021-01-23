@@ -110,11 +110,79 @@ found:
 	return device;
 }
 
-static void device_release_fastboot_key(void *data)
+static void device_impl_power(struct device *device, bool on)
+{
+	device->power(device, on);
+}
+
+static void device_key(struct device *device, int key, bool asserted)
+{
+	if (device->key)
+		device->key(device, key, asserted);
+}
+
+enum {
+	DEVICE_STATE_START,
+	DEVICE_STATE_CONNECT,
+	DEVICE_STATE_PRESS,
+	DEVICE_STATE_RELEASE_PWR,
+	DEVICE_STATE_RELEASE_FASTBOOT,
+	DEVICE_STATE_RUNNING,
+};
+
+static void device_tick(void *data)
 {
 	struct device *device = data;
 
-	device->fastboot_key(device, false);
+	switch (device->state) {
+	case DEVICE_STATE_START:
+		/* Make sure power key is not engaged */
+		if (device->fastboot_key_timeout)
+			device_key(device, DEVICE_KEY_FASTBOOT, true);
+		if (device->has_power_key)
+			device_key(device, DEVICE_KEY_POWER, false);
+
+		device->state = DEVICE_STATE_CONNECT;
+		watch_timer_add(10, device_tick, device);
+		break;
+	case DEVICE_STATE_CONNECT:
+		/* Connect power and USB */
+		device_impl_power(device, true);
+		device_usb(device, true);
+
+		if (device->has_power_key) {
+			device->state = DEVICE_STATE_PRESS;
+			watch_timer_add(250, device_tick, device);
+		} else if (device->fastboot_key_timeout) {
+			device->state = DEVICE_STATE_RELEASE_FASTBOOT;
+			watch_timer_add(device->fastboot_key_timeout * 1000, device_tick, device);
+		} else {
+			device->state = DEVICE_STATE_RUNNING;
+		}
+		break;
+	case DEVICE_STATE_PRESS:
+		/* Press power key */
+		device_key(device, DEVICE_KEY_POWER, true);
+
+		device->state = DEVICE_STATE_RELEASE_PWR;
+		watch_timer_add(100, device_tick, device);
+		break;
+	case DEVICE_STATE_RELEASE_PWR:
+		/* Release power key */
+		device_key(device, DEVICE_KEY_POWER, false);
+
+		if (device->fastboot_key_timeout) {
+			device->state = DEVICE_STATE_RELEASE_FASTBOOT;
+			watch_timer_add(device->fastboot_key_timeout * 1000, device_tick, device);
+		} else {
+			device->state = DEVICE_STATE_RUNNING;
+		}
+		break;
+	case DEVICE_STATE_RELEASE_FASTBOOT:
+		device_key(device, DEVICE_KEY_FASTBOOT, false);
+		device->state = DEVICE_STATE_RUNNING;
+		break;
+	}
 }
 
 static int device_power_on(struct device *device)
@@ -122,13 +190,8 @@ static int device_power_on(struct device *device)
 	if (!device || !device->power)
 		return 0;
 
-	if (device->fastboot_key_timeout)
-		device->fastboot_key(device, true);
-
-	device->power(device, true);
-
-	if (device->fastboot_key_timeout)
-		watch_timer_add(device->fastboot_key_timeout * 1000, device_release_fastboot_key, device);
+	device->state = DEVICE_STATE_START;
+	device_tick(device);
 
 	return 0;
 }

@@ -20,6 +20,8 @@ struct device {
 	bool usb_always_on;
 	struct fastboot *fastboot;
 	unsigned int fastboot_key_timeout;
+	int state;
+	bool has_power_key;
 
 	void (*boot)(struct device *);
 
@@ -29,6 +31,8 @@ struct device {
 	void (*print_status)(struct device *dev);
 	int (*write)(struct device *dev, const void *buf, size_t len);
 	void (*fastboot_key)(struct device *dev, bool on);
+	void (*key)(struct device *device, int key, bool asserted);
+
 	void (*send_break)(struct device *dev);
 	bool set_active;
 
@@ -56,5 +60,10 @@ void device_fastboot_flash_reboot(struct device *device);
 void device_send_break(struct device *device);
 void device_list_devices(void);
 void device_info(const void *data, size_t dlen);
+
+enum {
+	DEVICE_KEY_FASTBOOT,
+	DEVICE_KEY_POWER,
+};
 
 #endif

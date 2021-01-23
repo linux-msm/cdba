@@ -101,7 +101,7 @@ static void parse_board(struct device_parser *dp)
 			dev->power = cdb_assist_power;
 			dev->print_status = cdb_assist_print_status;
 			dev->usb = cdb_assist_usb;
-			dev->fastboot_key = cdb_fastboot_key;
+			dev->key = cdb_assist_key;
 		} else if (!strcmp(key, "conmux")) {
 			dev->control_dev = strdup(value);
 
@@ -113,7 +113,8 @@ static void parse_board(struct device_parser *dp)
 
 			dev->open = alpaca_open;
 			dev->power = alpaca_power;
-			dev->fastboot_key = alpaca_fastboot_key;
+			dev->usb = alpaca_usb;
+			dev->key = alpaca_key;
 		} else if (!strcmp(key, "console")) {
 			dev->console_dev = strdup(value);
 			dev->write = console_write;

@@ -314,33 +314,13 @@ void cdb_vbus(struct cdb_assist *cdb, bool on)
 	cdb_ctrl_write(cdb, &cmd[on], 1);
 }
 
-static int cdb_assist_power_on(struct device *dev)
-{
-	struct cdb_assist *cdb = dev->cdb;
-
-	cdb_power(cdb, true);
-
-	cdb_vbus(cdb, true);
-
-	return 0;
-}
-
-static int cdb_assist_power_off(struct device *dev)
-{
-	struct cdb_assist *cdb = dev->cdb;
-
-	cdb_vbus(cdb, false);
-	cdb_power(cdb, false);
-
-	return 0;
-}
-
 int cdb_assist_power(struct device *dev, bool on)
 {
-	if (on)
-		return cdb_assist_power_on(dev);
-	else
-		return cdb_assist_power_off(dev);
+	struct cdb_assist *cdb = dev->cdb;
+
+	cdb_power(cdb, on);
+
+	return 0;
 }
 
 void cdb_assist_usb(struct device *dev, bool on)
@@ -391,9 +371,16 @@ void cdb_set_voltage(struct cdb_assist *cdb, unsigned mV)
 	cdb_ctrl_write(cdb, buf, n);
 }
 
-void cdb_fastboot_key(struct device *dev, bool on)
+void cdb_assist_key(struct device *dev, int key, bool asserted)
 {
 	struct cdb_assist *cdb = dev->cdb;
 
-	cdb_gpio(cdb, 1, on);
+	switch (key) {
+	case DEVICE_KEY_FASTBOOT:
+		cdb_gpio(cdb, 1, asserted);
+		break;
+	case DEVICE_KEY_POWER:
+		cdb_gpio(cdb, 0, asserted);
+		break;
+	}
 }

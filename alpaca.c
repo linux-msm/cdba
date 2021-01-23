@@ -44,17 +44,8 @@
 #include "cdba-server.h"
 #include "alpaca.h"
 
-enum {
-	ALPACA_POWER_ON_START,
-	ALPACA_POWER_ON_CONNECT,
-	ALPACA_POWER_ON_PRESS,
-	ALPACA_POWER_ON_RELEASE,
-	ALPACA_POWER_ON_DONE
-};
-
 struct alpaca {
 	int alpaca_fd;
-	int state;
 
 	struct termios alpaca_tios;
 };
@@ -65,6 +56,8 @@ static int alpaca_usb_device_power(struct alpaca *alpaca, int on);
 void *alpaca_open(struct device *dev)
 {
 	struct alpaca *alpaca;
+
+	dev->has_power_key = true;
 
 	alpaca = calloc(1, sizeof(*alpaca));
 
@@ -114,45 +107,9 @@ static int alpaca_output_bit(struct alpaca *alpaca, int bit, int value)
 	return write(alpaca->alpaca_fd, buf, n);
 }
 
-static void alpaca_tick(void *data)
-{
-	struct alpaca *alpaca = data;
-
-	switch (alpaca->state) {
-	case ALPACA_POWER_ON_START:
-		/* Make sure power key is not engaged */
-		alpaca_output_bit(alpaca, 1, 0);
-		alpaca->state = ALPACA_POWER_ON_CONNECT;
-		watch_timer_add(10, alpaca_tick, alpaca);
-		break;
-	case ALPACA_POWER_ON_CONNECT:
-		/* Connect power and USB */
-		alpaca_device_power(alpaca, 1);
-		alpaca_usb_device_power(alpaca, 1);
-
-		alpaca->state = ALPACA_POWER_ON_PRESS;
-		watch_timer_add(250, alpaca_tick, alpaca);
-		break;
-	case ALPACA_POWER_ON_PRESS:
-		/* Press power key */
-		alpaca_output_bit(alpaca, 1, 1);
-		alpaca->state = ALPACA_POWER_ON_RELEASE;
-		watch_timer_add(100, alpaca_tick, alpaca);
-		break;
-	case ALPACA_POWER_ON_RELEASE:
-		/* Release power key */
-		alpaca_output_bit(alpaca, 1, 0);
-		alpaca->state = ALPACA_POWER_ON_DONE;
-		break;
-	}
-}
-
 static int alpaca_power_on(struct device *dev)
 {
-	struct alpaca *alpaca = dev->cdb;
-
-	alpaca->state = ALPACA_POWER_ON_START;
-	alpaca_tick(alpaca);
+	alpaca_device_power(dev->cdb, 1);
 
 	return 0;
 }
@@ -160,9 +117,6 @@ static int alpaca_power_on(struct device *dev)
 static int alpaca_power_off(struct device *dev)
 {
 	alpaca_device_power(dev->cdb, 0);
-
-	if (!dev->usb_always_on)
-		alpaca_usb_device_power(dev->cdb, 0);
 
 	return 0;
 }
@@ -175,7 +129,25 @@ int alpaca_power(struct device *dev, bool on)
 		return alpaca_power_off(dev);
 }
 
+void alpaca_usb(struct device *dev, bool on)
+{
+	struct alpaca *alpaca = dev->cdb;
+
+	alpaca_usb_device_power(alpaca, on);
+}
+
 void alpaca_fastboot_key(struct device *dev, bool on)
 {
-	alpaca_output_bit(dev->cdb, 2, on);
+}
+
+void alpaca_key(struct device *dev, int key, bool asserted)
+{
+	switch (key) {
+	case DEVICE_KEY_FASTBOOT:
+		alpaca_output_bit(dev->cdb, 2, asserted);
+		break;
+	case DEVICE_KEY_POWER:
+		alpaca_output_bit(dev->cdb, 1, asserted);
+		break;
+	}
 }

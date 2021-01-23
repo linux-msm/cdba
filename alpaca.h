@@ -7,6 +7,7 @@ struct alpaca;
 
 void *alpaca_open(struct device *dev);
 int alpaca_power(struct device *dev, bool on);
-void alpaca_fastboot_key(struct device *dev, bool on);
+void alpaca_usb(struct device *dev, bool on);
+void alpaca_key(struct device *dev, int key, bool on);
 
 #endif
