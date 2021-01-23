@@ -106,7 +106,7 @@ static void parse_board(struct device_parser *dp)
 			dev->fastboot_key = cdb_fastboot_key;
 			dev->send_break = cdb_send_break;
 		} else if (!strcmp(key, "conmux")) {
-			dev->cdb_serial = strdup(value);
+			dev->control_dev = strdup(value);
 
 			dev->open = conmux_open;
 			dev->power_on = conmux_power_on;

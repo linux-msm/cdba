@@ -235,7 +235,7 @@ void *conmux_open(struct device *dev)
 	struct sockaddr_in saddr;
 	struct conmux *conmux;
 	struct hostent *hent;
-	const char *service = dev->cdb_serial;
+	const char *service = dev->control_dev;
 	const char *user;
 	ssize_t n;
 	char req[256];
