@@ -5,5 +5,6 @@
 
 void console_open(struct device *device);
 int console_write(struct device *device, const void *buf, size_t len);
+void console_send_break(struct device *device);
 
 #endif

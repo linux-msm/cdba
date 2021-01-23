@@ -68,3 +68,8 @@ int console_write(struct device *device, const void *buf, size_t len)
 {
 	return write(device->console_fd, buf, len);;
 }
+
+void console_send_break(struct device *device)
+{
+	tcsendbreak(device->console_fd, 0);
+}

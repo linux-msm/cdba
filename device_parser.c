@@ -122,6 +122,7 @@ static void parse_board(struct device_parser *dp)
 		} else if (!strcmp(key, "console")) {
 			dev->console_dev = strdup(value);
 			dev->write = console_write;
+			dev->send_break = console_send_break;
 		} else if (!strcmp(key, "voltage")) {
 			dev->voltage = strtoul(value, NULL, 10);
 		} else if (!strcmp(key, "fastboot")) {
