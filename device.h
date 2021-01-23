@@ -17,7 +17,6 @@ struct device {
 	char *description;
 	unsigned voltage;
 	bool tickle_mmc;
-	bool pshold_shutdown;
 	bool usb_always_on;
 	struct fastboot *fastboot;
 	unsigned int fastboot_key_timeout;

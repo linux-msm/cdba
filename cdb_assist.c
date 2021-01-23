@@ -332,12 +332,6 @@ int cdb_assist_power_off(struct device *dev)
 	cdb_vbus(cdb, false);
 	cdb_power(cdb, false);
 
-	if (dev->pshold_shutdown) {
-		cdb_gpio(cdb, 2, true);
-		sleep(2);
-		cdb_gpio(cdb, 2, false);
-	}
-
 	return 0;
 }
 
