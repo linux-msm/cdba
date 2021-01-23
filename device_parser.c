@@ -37,6 +37,7 @@
 #include "cdb_assist.h"
 #include "conmux.h"
 #include "console.h"
+#include "qcomlt_dbg.h"
 
 #define TOKEN_LENGTH	16384
 
@@ -115,6 +116,13 @@ static void parse_board(struct device_parser *dp)
 			dev->power = alpaca_power;
 			dev->usb = alpaca_usb;
 			dev->key = alpaca_key;
+		} else if (!strcmp(key, "qcomlt_debug_board")) {
+			dev->control_dev = strdup(value);
+
+			dev->open = qcomlt_dbg_open;
+			dev->power = qcomlt_dbg_power;
+			dev->usb = qcomlt_dbg_usb;
+			dev->key = qcomlt_dbg_key;
 		} else if (!strcmp(key, "console")) {
 			dev->console_dev = strdup(value);
 			dev->write = console_write;
