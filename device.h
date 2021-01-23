@@ -10,7 +10,6 @@ struct fastboot_ops;
 
 struct device {
 	char *board;
-	char *cdb_serial;
 	char *control_dev;
 	char *console_dev;
 	char *name;

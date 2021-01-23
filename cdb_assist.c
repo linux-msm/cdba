@@ -47,11 +47,7 @@
 struct cdb_assist {
 	char serial[9];
 
-	char control_uart[32];
-	char target_uart[32];
-
 	int control_tty;
-	int target_tty;
 
 	struct termios control_tios;
 	struct termios target_tios;
@@ -76,120 +72,6 @@ struct cdb_assist {
 	bool vbus;
 	unsigned vref;
 };
-
-static int readat(int dir, const char *name, char *buf, size_t len)
-{
-	ssize_t n;
-	int fd;
-	int ret = 0;
-
-	fd = openat(dir, name, O_RDONLY);
-	if (fd < 0)
-		return fd;
-
-	n = read(fd, buf, len - 1);
-	if (n < 0) {
-		warn("failed to read %s", name);
-		ret = -EINVAL;
-		goto close_fd;
-	}
-	buf[n] = '\0';
-
-	buf[strcspn(buf, "\n")] = '\0';
-
-close_fd:
-	close(fd);
-	return ret;
-}
-
-static struct cdb_assist *enumerate_cdb_assists()
-{
-	struct cdb_assist *cdb;
-	struct cdb_assist *all = NULL;
-	struct cdb_assist *last = NULL;
-	struct dirent *de;
-	char interface[30];
-	char serial[9];
-	DIR *dir;
-	int tty;
-	int fd;
-	int ret;
-
-	tty = open("/sys/class/tty", O_DIRECTORY);
-	if (tty < 0)
-		err(1, "failed to open /sys/class/tty");
-
-	dir = fdopendir(tty);
-	if (!dir)
-		err(1, "failed to opendir /sys/class/tty");
-
-	while ((de = readdir(dir)) != NULL) {
-		if (strncmp(de->d_name, "ttyACM", 6) != 0)
-			continue;
-
-		fd = openat(tty, de->d_name, O_DIRECTORY);
-		if (fd < 0)
-			continue;
-
-		ret = readat(fd, "../../interface", interface, sizeof(interface));
-		if (ret < 0)
-			goto close_fd;
-
-		ret = readat(fd, "../../../serial", serial, sizeof(serial));
-		if (ret < 0)
-			goto close_fd;
-
-		for (cdb = all; cdb; cdb = cdb->next) {
-			if (strcmp(cdb->serial, serial) == 0)
-				break;
-		}
-
-		if (!cdb) {
-			cdb = calloc(1, sizeof(*cdb));
-
-			strcpy(cdb->serial, serial);
-
-			if (last) {
-				last->next = cdb;
-				last = cdb;
-			} else {
-				last = cdb;
-				all = cdb;
-			}
-		}
-
-		if (strcmp(interface, "Control UART") == 0) {
-			strcpy(cdb->control_uart, "/dev/");
-			strcat(cdb->control_uart, de->d_name);
-		} else if (strcmp(interface, "Target UART") == 0) {
-			strcpy(cdb->target_uart, "/dev/");
-			strcat(cdb->target_uart, de->d_name);
-		}
-
-close_fd:
-		close(fd);
-	}
-
-	closedir(dir);
-	close(tty);
-
-	return all;
-}
-
-static struct cdb_assist *cdb_assist_find(const char *serial)
-{
-	struct cdb_assist *cdb;
-	struct cdb_assist *all;
-
-	all = enumerate_cdb_assists();
-
-	for (cdb = all; cdb; cdb = cdb->next) {
-		if (strcmp(cdb->serial, serial) == 0)
-			return cdb;
-	}
-
-	return NULL;
-}
 
 enum {
 	STATE_,
@@ -384,24 +266,6 @@ static int cdb_assist_ctrl_data(int fd, void *data)
 	return 0;
 }
 
-static int cdb_assist_target_data(int fd, void *data)
-{
-	struct msg hdr;
-	char buf[128];
-	ssize_t n;
-
-	n = read(fd, buf, sizeof(buf));
-	if (n < 0)
-		return n;
-
-	hdr.type = MSG_CONSOLE;
-	hdr.len = n;
-	write(STDOUT_FILENO, &hdr, sizeof(hdr));
-	write(STDOUT_FILENO, buf, n);
-
-	return 0;
-}
-
 static int cdb_ctrl_write(struct cdb_assist *cdb, const char *buf, size_t len)
 {
 	return write(cdb->control_tty, buf, len);
@@ -409,26 +273,16 @@ static int cdb_ctrl_write(struct cdb_assist *cdb, const char *buf, size_t len)
 
 void *cdb_assist_open(struct device *dev)
 {
-	const char *serial = dev->cdb_serial;
 	struct cdb_assist *cdb;
 	int ret;
 
-	cdb = cdb_assist_find(serial);
-	if (!cdb) {
-		fprintf(stderr, "unable to find cdb assist with serial %s\n", serial);
-		return NULL;
-	}
+	cdb = calloc(1, sizeof(*cdb));
 
-	cdb->control_tty = tty_open(cdb->control_uart, &cdb->control_tios);
+	cdb->control_tty = tty_open(dev->control_dev, &cdb->control_tios);
 	if (cdb->control_tty < 0)
 		return NULL;
 
-	cdb->target_tty = tty_open(cdb->target_uart, &cdb->target_tios);
-	if (cdb->target_tty < 0)
-		return NULL;
-
 	watch_add_readfd(cdb->control_tty, cdb_assist_ctrl_data, cdb);
-	watch_add_readfd(cdb->target_tty, cdb_assist_target_data, cdb);
 
 	ret = cdb_ctrl_write(cdb, "vpabc", 5);
 	if (ret < 0)
@@ -441,16 +295,9 @@ void *cdb_assist_open(struct device *dev)
 
 void cdb_assist_close(struct cdb_assist *cdb)
 {
-	int ret;
-
 	tcflush(cdb->control_tty, TCIFLUSH);
 
-	ret = tcsetattr(cdb->target_tty, TCSAFLUSH, &cdb->target_tios);
-	if (ret < 0)
-		warn("unable to restore tios of \"%s\"", cdb->target_uart);
-
 	close(cdb->control_tty);
-	close(cdb->target_tty);
 }
 
 static void cdb_power(struct cdb_assist *cdb, bool on)
@@ -503,20 +350,6 @@ void cdb_gpio(struct cdb_assist *cdb, int gpio, bool on)
 {
 	const char *cmd[] = { "aA", "bB", "cC" };
 	cdb_ctrl_write(cdb, &cmd[gpio][on], 1);
-}
-
-int cdb_target_write(struct device *dev, const void *buf, size_t len)
-{
-	struct cdb_assist *cdb = dev->cdb;
-
-	return write(cdb->target_tty, buf, len);
-}
-
-void cdb_send_break(struct device *dev)
-{
-	struct cdb_assist *cdb = dev->cdb;
-
-	tcsendbreak(cdb->target_tty, 0);
 }
 
 unsigned int cdb_vref(struct cdb_assist *cdb)

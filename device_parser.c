@@ -95,16 +95,14 @@ static void parse_board(struct device_parser *dp)
 		} else if (!strcmp(key, "name")) {
 			dev->name = strdup(value);
 		} else if (!strcmp(key, "cdba")) {
-			dev->cdb_serial = strdup(value);
+			dev->control_dev = strdup(value);
 
 			dev->open = cdb_assist_open;
 			dev->power_on = cdb_assist_power_on;
 			dev->power_off = cdb_assist_power_off;
 			dev->print_status = cdb_assist_print_status;
 			dev->vbus = cdb_assist_vbus;
-			dev->write = cdb_target_write;
 			dev->fastboot_key = cdb_fastboot_key;
-			dev->send_break = cdb_send_break;
 		} else if (!strcmp(key, "conmux")) {
 			dev->control_dev = strdup(value);
 
