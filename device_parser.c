@@ -98,24 +98,21 @@ static void parse_board(struct device_parser *dp)
 			dev->control_dev = strdup(value);
 
 			dev->open = cdb_assist_open;
-			dev->power_on = cdb_assist_power_on;
-			dev->power_off = cdb_assist_power_off;
+			dev->power = cdb_assist_power;
 			dev->print_status = cdb_assist_print_status;
-			dev->vbus = cdb_assist_vbus;
+			dev->usb = cdb_assist_usb;
 			dev->fastboot_key = cdb_fastboot_key;
 		} else if (!strcmp(key, "conmux")) {
 			dev->control_dev = strdup(value);
 
 			dev->open = conmux_open;
-			dev->power_on = conmux_power_on;
-			dev->power_off = conmux_power_off;
+			dev->power = conmux_power;
 			dev->write = conmux_write;
 		} else if (!strcmp(key, "alpaca")) {
 			dev->control_dev = strdup(value);
 
 			dev->open = alpaca_open;
-			dev->power_on = alpaca_power_on;
-			dev->power_off = alpaca_power_off;
+			dev->power = alpaca_power;
 			dev->fastboot_key = alpaca_fastboot_key;
 		} else if (!strcmp(key, "console")) {
 			dev->console_dev = strdup(value);

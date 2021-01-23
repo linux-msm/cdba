@@ -6,8 +6,7 @@
 struct conmux;
 
 void *conmux_open(struct device *dev);
-int conmux_power_on(struct device *dev);
-int conmux_power_off(struct device *dev);
+int conmux_power(struct device *dev, bool on);
 int conmux_write(struct device *dev, const void *buf, size_t len);
 
 #endif

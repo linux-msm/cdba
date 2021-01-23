@@ -24,10 +24,9 @@ struct device {
 	void (*boot)(struct device *);
 
 	void *(*open)(struct device *dev);
-	int (*power_on)(struct device *dev);
-	int (*power_off)(struct device *dev);
+	int (*power)(struct device *dev, bool on);
+	void (*usb)(struct device *dev, bool on);
 	void (*print_status)(struct device *dev);
-	void (*vbus)(struct device *dev, bool on);
 	int (*write)(struct device *dev, const void *buf, size_t len);
 	void (*fastboot_key)(struct device *dev, bool on);
 	void (*send_break)(struct device *dev);
@@ -44,11 +43,10 @@ struct device {
 void device_add(struct device *device);
 
 struct device *device_open(const char *board, struct fastboot_ops *fastboot_ops);
-int device_power_on(struct device *device);
-int device_power_off(struct device *device);
+int device_power(struct device *device, bool on);
 
 void device_print_status(struct device *device);
-void device_vbus(struct device *device, bool enable);
+void device_usb(struct device *device, bool on);
 int device_write(struct device *device, const void *buf, size_t len);
 
 void device_boot(struct device *device, const void *data, size_t len);

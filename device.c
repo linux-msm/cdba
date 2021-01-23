@@ -117,15 +117,15 @@ static void device_release_fastboot_key(void *data)
 	device->fastboot_key(device, false);
 }
 
-int device_power_on(struct device *device)
+static int device_power_on(struct device *device)
 {
-	if (!device || !device->power_on)
+	if (!device || !device->power)
 		return 0;
 
 	if (device->fastboot_key_timeout)
 		device->fastboot_key(device, true);
 
-	device->power_on(device);
+	device->power(device, true);
 
 	if (device->fastboot_key_timeout)
 		watch_timer_add(device->fastboot_key_timeout * 1000, device_release_fastboot_key, device);
@@ -133,14 +133,22 @@ int device_power_on(struct device *device)
 	return 0;
 }
 
-int device_power_off(struct device *device)
+static int device_power_off(struct device *device)
 {
-	if (!device || !device->power_off)
+	if (!device || !device->power)
 		return 0;
 
-	device->power_off(device);
+	device->power(device, false);
 
 	return 0;
+}
+
+int device_power(struct device *device, bool on)
+{
+	if (on)
+		return device_power_on(device);
+	else
+		return device_power_off(device);
 }
 
 void device_print_status(struct device *device)
@@ -149,10 +157,10 @@ void device_print_status(struct device *device)
 		device->print_status(device);
 }
 
-void device_vbus(struct device *device, bool enable)
+void device_usb(struct device *device, bool on)
 {
-	if (device->vbus)
-		device->vbus(device, enable);
+	if (device->usb)
+		device->usb(device, on);
 }
 
 int device_write(struct device *device, const void *buf, size_t len)

@@ -147,7 +147,7 @@ static void alpaca_tick(void *data)
 	}
 }
 
-int alpaca_power_on(struct device *dev)
+static int alpaca_power_on(struct device *dev)
 {
 	struct alpaca *alpaca = dev->cdb;
 
@@ -157,7 +157,7 @@ int alpaca_power_on(struct device *dev)
 	return 0;
 }
 
-int alpaca_power_off(struct device *dev)
+static int alpaca_power_off(struct device *dev)
 {
 	alpaca_device_power(dev->cdb, 0);
 
@@ -165,6 +165,14 @@ int alpaca_power_off(struct device *dev)
 		alpaca_usb_device_power(dev->cdb, 0);
 
 	return 0;
+}
+
+int alpaca_power(struct device *dev, bool on)
+{
+	if (on)
+		return alpaca_power_on(dev);
+	else
+		return alpaca_power_off(dev);
 }
 
 void alpaca_fastboot_key(struct device *dev, bool on)

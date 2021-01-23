@@ -308,7 +308,7 @@ int conmux_power_on(struct device *dev)
 	return write(conmux->fd, sz, sizeof(sz));
 }
 
-int conmux_power_off(struct device *dev)
+static int conmux_power_off(struct device *dev)
 {
 	struct conmux *conmux = dev->cdb;
 	char sz[] = "~$off\n";
@@ -316,6 +316,14 @@ int conmux_power_off(struct device *dev)
 	fprintf(stderr, "power off\n");
 
 	return write(conmux->fd, sz, sizeof(sz));
+}
+
+int conmux_power(struct device *dev, bool on)
+{
+	if (on)
+		return conmux_power_on(dev);
+	else
+		return conmux_power_off(dev);
 }
 
 int conmux_write(struct device *dev, const void *buf, size_t len)

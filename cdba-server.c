@@ -201,12 +201,12 @@ static int handle_stdin(int fd, void *buf)
 			// fprintf(stderr, "hard reset\n");
 			break;
 		case MSG_POWER_ON:
-			device_power_on(selected_device);
+			device_power(selected_device, true);
 
 			invoke_reply(MSG_POWER_ON);
 			break;
 		case MSG_POWER_OFF:
-			device_power_off(selected_device);
+			device_power(selected_device, false);
 
 			invoke_reply(MSG_POWER_OFF);
 			break;
@@ -220,10 +220,10 @@ static int handle_stdin(int fd, void *buf)
 			device_print_status(selected_device);
 			break;
 		case MSG_VBUS_ON:
-			device_vbus(selected_device, true);
+			device_usb(selected_device, true);
 			break;
 		case MSG_VBUS_OFF:
-			device_vbus(selected_device, false);
+			device_usb(selected_device, false);
 			break;
 		case MSG_SEND_BREAK:
 			device_send_break(selected_device);
@@ -413,7 +413,7 @@ int main(int argc, char **argv)
 
 done:
 
-	device_power_off(selected_device);
+	device_power(selected_device, false);
 
 	return 0;
 }

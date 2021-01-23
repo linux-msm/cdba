@@ -314,7 +314,7 @@ void cdb_vbus(struct cdb_assist *cdb, bool on)
 	cdb_ctrl_write(cdb, &cmd[on], 1);
 }
 
-int cdb_assist_power_on(struct device *dev)
+static int cdb_assist_power_on(struct device *dev)
 {
 	struct cdb_assist *cdb = dev->cdb;
 
@@ -325,7 +325,7 @@ int cdb_assist_power_on(struct device *dev)
 	return 0;
 }
 
-int cdb_assist_power_off(struct device *dev)
+static int cdb_assist_power_off(struct device *dev)
 {
 	struct cdb_assist *cdb = dev->cdb;
 
@@ -335,7 +335,15 @@ int cdb_assist_power_off(struct device *dev)
 	return 0;
 }
 
-void cdb_assist_vbus(struct device *dev, bool on)
+int cdb_assist_power(struct device *dev, bool on)
+{
+	if (on)
+		return cdb_assist_power_on(dev);
+	else
+		return cdb_assist_power_off(dev);
+}
+
+void cdb_assist_usb(struct device *dev, bool on)
 {
 	cdb_vbus(dev->cdb, on);
 }
