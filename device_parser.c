@@ -113,7 +113,7 @@ static void parse_board(struct device_parser *dp)
 			dev->power_off = conmux_power_off;
 			dev->write = conmux_write;
 		} else if (!strcmp(key, "alpaca")) {
-			dev->alpaca_dev = strdup(value);
+			dev->control_dev = strdup(value);
 
 			dev->open = alpaca_open;
 			dev->power_on = alpaca_power_on;
