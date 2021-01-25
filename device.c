@@ -306,3 +306,9 @@ void device_info(const void *data, size_t dlen)
 	if (len)
 		write(STDOUT_FILENO, description, len);
 }
+
+void device_close(struct device *dev)
+{
+	device_usb(dev, false);
+	device_power(dev, false);
+}

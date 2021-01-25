@@ -413,7 +413,7 @@ int main(int argc, char **argv)
 
 done:
 
-	device_power(selected_device, false);
+	device_close(selected_device);
 
 	return 0;
 }

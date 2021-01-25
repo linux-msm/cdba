@@ -47,6 +47,7 @@ struct device {
 void device_add(struct device *device);
 
 struct device *device_open(const char *board, struct fastboot_ops *fastboot_ops);
+void device_close(struct device *dev);
 int device_power(struct device *device, bool on);
 
 void device_print_status(struct device *device);
