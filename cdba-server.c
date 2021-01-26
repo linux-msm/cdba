@@ -413,7 +413,8 @@ int main(int argc, char **argv)
 
 done:
 
-	device_close(selected_device);
+	if (selected_device)
+		device_close(selected_device);
 
 	return 0;
 }
