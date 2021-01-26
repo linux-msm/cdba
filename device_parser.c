@@ -99,6 +99,7 @@ static void parse_board(struct device_parser *dp)
 			dev->control_dev = strdup(value);
 
 			dev->open = cdb_assist_open;
+			dev->close = cdb_assist_close;
 			dev->power = cdb_assist_power;
 			dev->print_status = cdb_assist_print_status;
 			dev->usb = cdb_assist_usb;

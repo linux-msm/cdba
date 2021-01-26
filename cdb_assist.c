@@ -293,8 +293,10 @@ void *cdb_assist_open(struct device *dev)
 	return cdb;
 }
 
-void cdb_assist_close(struct cdb_assist *cdb)
+void cdb_assist_close(struct device *dev)
 {
+	struct cdb_assist *cdb = dev->cdb;
+
 	tcflush(cdb->control_tty, TCIFLUSH);
 
 	close(cdb->control_tty);

@@ -26,6 +26,7 @@ struct device {
 	void (*boot)(struct device *);
 
 	void *(*open)(struct device *dev);
+	void (*close)(struct device *dev);
 	int (*power)(struct device *dev, bool on);
 	void (*usb)(struct device *dev, bool on);
 	void (*print_status)(struct device *dev);

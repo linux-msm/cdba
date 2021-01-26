@@ -8,7 +8,7 @@
 struct cdb_assist;
 
 void *cdb_assist_open(struct device *dev);
-void cdb_assist_close(struct cdb_assist *cdb);
+void cdb_assist_close(struct device *dev);
 
 int cdb_assist_power(struct device *dev, bool on);
 void cdb_assist_usb(struct device *dev, bool on);

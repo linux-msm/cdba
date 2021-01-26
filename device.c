@@ -311,4 +311,7 @@ void device_close(struct device *dev)
 {
 	device_usb(dev, false);
 	device_power(dev, false);
+
+	if (dev->close)
+		dev->close(dev);
 }
