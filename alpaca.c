@@ -136,10 +136,6 @@ void alpaca_usb(struct device *dev, bool on)
 	alpaca_usb_device_power(alpaca, on);
 }
 
-void alpaca_fastboot_key(struct device *dev, bool on)
-{
-}
-
 void alpaca_key(struct device *dev, int key, bool asserted)
 {
 	switch (key) {
