@@ -594,6 +594,7 @@ int main(int argc, char **argv)
 	struct timeval timeout_inactivity_tv;
 	struct timeval timeout_total_tv;
 	struct termios *orig_tios;
+	const char *server_binary = "cdba-server";
 	int timeout_inactivity = 0;
 	int timeout_total = 600;
 	struct work *next;
@@ -615,7 +616,7 @@ int main(int argc, char **argv)
 	int opt;
 	int ret;
 
-	while ((opt = getopt(argc, argv, "b:c:C:h:ilRt:T:")) != -1) {
+	while ((opt = getopt(argc, argv, "b:c:C:h:ilRt:S:T:")) != -1) {
 		switch (opt) {
 		case 'b':
 			board = optarg;
@@ -637,6 +638,9 @@ int main(int argc, char **argv)
 			break;
 		case 'R':
 			fastboot_repeat = true;
+			break;
+		case 'S':
+			server_binary = optarg;
 			break;
 		case 't':
 			timeout_total = atoi(optarg);
@@ -676,7 +680,7 @@ int main(int argc, char **argv)
 		break;
 	}
 
-	ret = fork_ssh(host, "cdba-server", ssh_fds);
+	ret = fork_ssh(host, server_binary, ssh_fds);
 	if (ret)
 		err(1, "failed to connect to \"%s\"", host);
 
