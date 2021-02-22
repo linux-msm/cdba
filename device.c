@@ -105,6 +105,9 @@ found:
 	if (device->console_dev)
 		console_open(device);
 
+	if (device->usb_always_on)
+		device_usb(device, true);
+
 	device->fastboot = fastboot_open(device->serial, fastboot_ops, NULL);
 
 	return device;
@@ -309,7 +312,8 @@ void device_info(const void *data, size_t dlen)
 
 void device_close(struct device *dev)
 {
-	device_usb(dev, false);
+	if (!dev->usb_always_on)
+		device_usb(dev, false);
 	device_power(dev, false);
 
 	if (dev->close)
