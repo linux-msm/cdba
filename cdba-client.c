@@ -54,20 +54,22 @@ struct list_head work_items = LIST_INIT(work_items);
 struct select_board {
 	struct work work;
 
+	uint8_t device_lock;
 	const char *board;
 };
 
 static void select_board_fn(struct work *work, int ssh_stdin)
 {
 	struct select_board *board = container_of(work, struct select_board, work);
-	size_t blen = strlen(board->board) + 1;
+	size_t blen = sizeof(board->device_lock) + strlen(board->board) + 1;
 	struct msg *msg;
 	ssize_t n;
 
 	msg = alloca(sizeof(*msg) + blen);
 	msg->type = MSG_SELECT_BOARD;
 	msg->len = blen;
-	memcpy(msg->data, board->board, blen);
+	memcpy(msg->data, &(board->device_lock), sizeof(board->device_lock));
+	memcpy(msg->data + sizeof(board->device_lock), board->board, blen);
 
 	n = write(ssh_stdin, msg, sizeof(*msg) + blen);
 	if (n < 0)
@@ -76,12 +78,13 @@ static void select_board_fn(struct work *work, int ssh_stdin)
 	free(work);
 }
 
-void cdba_client_request_select_board(const char *board)
+void cdba_client_request_select_board(const char *board, uint8_t device_lock)
 {
 	struct select_board *work;
 
 	work = malloc(sizeof(*work));
 	work->work.fn = select_board_fn;
+	work->device_lock = device_lock;
 	work->board = board;
 
 	list_add(&work_items, &work->work.node);

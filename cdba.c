@@ -148,7 +148,7 @@ void cdba_handle_verb(int argc, char **argv, int optind, const char *board)
 		if (!S_ISREG(sb.st_mode) && !S_ISLNK(sb.st_mode))
 			errx(1, "\"%s\" is not a regular file", fastboot_file);
 
-		cdba_client_request_select_board(board);
+		cdba_client_request_select_board(board, 1);
 		break;
 	}
 }

@@ -79,10 +79,12 @@ static void device_lock(struct device *device)
 		err(1, "failed to lock lockfile %s", lock);
 }
 
-struct device *device_open(const char *board,
+struct device *device_open(const void *msg,
 			   struct fastboot_ops *fastboot_ops)
 {
 	struct device *device;
+	const uint8_t *lock = msg;
+	const char *board = msg + sizeof(uint8_t);
 
 	list_for_each_entry(device, &devices, node) {
 		if (!strcmp(device->board, board))
@@ -94,7 +96,10 @@ struct device *device_open(const char *board,
 found:
 	assert(device->open || device->console_dev);
 
-	device_lock(device);
+	device->locked = *lock;
+
+	if (device->locked)
+		device_lock(device);
 
 	if (device->open) {
 		device->cdb = device->open(device);

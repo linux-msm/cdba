@@ -54,7 +54,7 @@ int cdba_handle_message(struct msg *msg);
 void cdba_end(void);
 
 void cdba_client_usage(void);
-void cdba_client_request_select_board(const char *board);
+void cdba_client_request_select_board(const char *board, uint8_t device_lock);
 void cdba_client_request_power_on(void);
 void cdba_client_request_power_off(void);
 int cdba_client_reached_timeout(void);
