@@ -46,6 +46,30 @@
 static int cdba_server_standalone_data(int fd, void *data)
 {
 	struct device *device = data;
+	struct msg msg;
+	int dsocket;
+	int res;
+
+	dsocket = accept(device->standalone_channel, NULL, NULL);
+	if (dsocket == -1)
+		return dsocket;
+
+	if (read(dsocket, &msg, sizeof(msg)) == -1) {
+		close(dsocket);
+		return -1;
+	}
+
+	switch (msg.type) {
+	case MSG_POWER_ON:
+		res = device_power(device, true);
+		break;
+	case MSG_POWER_OFF:
+		res = device_power(device, false);
+		break;
+	}
+	write(dsocket, &res, sizeof(res));
+
+	close(dsocket);
 
 	return 0;
 }
@@ -107,4 +131,24 @@ int cdba_server_standalone_create(struct device *device)
 int cdba_server_standalone_end(struct device *device)
 {
 	return close(device->standalone_channel);
+}
+
+void cdba_server_standalone_device_power(struct device *device, bool on)
+{
+	struct msg msg;
+	int n;
+	int res;
+
+	if (on)
+		msg.type = MSG_POWER_ON;
+	else
+		msg.type = MSG_POWER_OFF;
+
+	n = write(device->standalone_channel, &msg, sizeof(msg));
+	if (n < 0)
+		err(1, "failed to write on cdba-server-standalone channel");
+
+	n = read(device->standalone_channel, &res, sizeof(res));
+	if (n < 0)
+		err(1, "failed to read on cdba-server-standalone channel");
 }
