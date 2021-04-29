@@ -43,6 +43,8 @@ struct device {
 	int console_fd;
 	struct termios console_tios;
 
+	int standalone_channel;
+
 	struct list_head node;
 };
 

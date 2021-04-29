@@ -38,8 +38,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include "cdba-server.h"
+#include "cdba-server-standalone.h"
 #include "device.h"
 #include "fastboot.h"
 #include "console.h"
@@ -106,6 +108,9 @@ found:
 		if (!device->cdb)
 			errx(1, "failed to open device controller");
 	}
+
+	if (cdba_server_standalone_create(device) == -1)
+		errx(1, "failed to open standalone server");
 
 	if (device->console_dev)
 		console_open(device);
@@ -320,6 +325,8 @@ void device_close(struct device *dev)
 	if (!dev->usb_always_on)
 		device_usb(dev, false);
 	device_power(dev, false);
+
+	cdba_server_standalone_end(dev);
 
 	if (dev->close)
 		dev->close(dev);
