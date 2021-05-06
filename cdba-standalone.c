@@ -88,11 +88,11 @@ void cdba_handle_verb(int argc, char **argv, int optind, const char *board)
 
 	switch (verb) {
 	case CDBA_CONSOLE:
-		cdba_client_request_select_board(board, 1);
+		cdba_client_request_select_board(board, 1, 1);
 		break;
 	case CDBA_POWER_ON:
 	case CDBA_POWER_OFF:
-		cdba_client_request_select_board(board, 0);
+		cdba_client_request_select_board(board, 1, 0);
 		break;
 	}
 }

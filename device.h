@@ -22,6 +22,7 @@ struct device {
 	unsigned int fastboot_key_timeout;
 	int state;
 	bool has_power_key;
+	int standalone;
 	int locked;
 
 	void (*boot)(struct device *);
