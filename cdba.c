@@ -213,5 +213,5 @@ int cdba_client_reached_timeout(void)
 
 int main(int argc, char **argv)
 {
-	cdba_client_main(argc, argv, cdba_opts);
+	return cdba_client_main(argc, argv, cdba_opts);
 }
