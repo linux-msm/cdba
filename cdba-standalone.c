@@ -42,18 +42,19 @@
 
 #include "cdba-standalone.h"
 
+int lock = 1;
 int verb = -1;
 extern bool cdba_client_quit;
 
-static const char *cdba_standalone_opts = "a:p:";
+static const char *cdba_standalone_opts = "a:e:p:";
 
 void cdba_usage(const char *__progname)
 {
 	fprintf(stderr, "usage: %s -b <board> -h <host> [-t <timeout>] "
-			"[-T <inactivity-timeout>] <-a console>\n",
+			"[-T <inactivity-timeout>] <-a console> [-e on/off]\n",
 			__progname);
 	fprintf(stderr, "usage: %s -b <board> -h <host> [-t <timeout>] "
-			"[-T <inactivity-timeout>] <-p <on/off>>\n",
+			"[-T <inactivity-timeout>] <-p <on/off> [-e on/off]>\n",
 			__progname);
 }
 
@@ -66,6 +67,14 @@ int cdba_handle_opt(int opt, const char *optarg)
 		else
 			cdba_client_usage();
 
+		return 0;
+	case 'e':
+		if (strcmp(optarg, "on") == 0)
+			lock = 1;
+		else if (strcmp(optarg, "off") == 0)
+			lock = 0;
+		else
+			cdba_client_usage();
 		return 0;
 	case 'p':
 		if (strcmp(optarg, "on") == 0)
@@ -88,11 +97,11 @@ void cdba_handle_verb(int argc, char **argv, int optind, const char *board)
 
 	switch (verb) {
 	case CDBA_CONSOLE:
-		cdba_client_request_select_board(board, 1, 1);
+		cdba_client_request_select_board(board, 1, lock);
 		break;
 	case CDBA_POWER_ON:
 	case CDBA_POWER_OFF:
-		cdba_client_request_select_board(board, 1, 0);
+		cdba_client_request_select_board(board, 1, lock);
 		break;
 	}
 }
