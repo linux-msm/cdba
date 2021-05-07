@@ -74,7 +74,10 @@ static void device_lock(struct device *device)
 	if (!n)
 		return;
 
-	warnx("board is in use, waiting...");
+	if (device->standalone)
+		err(1, "board is in use, exiting...");
+	else
+		warnx("board is in use, waiting...");
 
 	n = flock(fd, LOCK_EX);
 	if (n < 0)
