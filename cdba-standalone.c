@@ -45,6 +45,7 @@
 int lock = 1;
 int verb = -1;
 extern bool cdba_client_quit;
+static bool selected_board = false;
 
 static const char *cdba_standalone_opts = "a:e:p:";
 
@@ -112,6 +113,7 @@ int cdba_handle_message(struct msg *msg)
 
 	switch (msg->type) {
         case MSG_SELECT_BOARD:
+		selected_board = true;
 		switch (verb) {
 		case CDBA_CONSOLE:
 			break;
@@ -133,6 +135,8 @@ int cdba_handle_message(struct msg *msg)
 void cdba_end(void)
 {	if (verb == CDBA_CONSOLE)
 		printf("Waiting for ssh to finish\n");
+	else if (selected_board)
+		cdba_client_quit = true;
 }
 
 int cdba_client_reached_timeout(void)
