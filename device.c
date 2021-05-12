@@ -114,7 +114,7 @@ found:
 			errx(1, "failed to open device controller");
 	}
 
-	if (cdba_server_standalone_create(device) == -1)
+	if (device->standalone && cdba_server_standalone_create(device) == -1)
 		errx(1, "failed to open standalone server");
 
 	if (device->console_dev)
@@ -332,7 +332,8 @@ void device_close(struct device *dev)
 		device_usb(dev, false);
 	device_power(dev, false);
 
-	cdba_server_standalone_end(dev);
+	if (dev->standalone)
+		cdba_server_standalone_end(dev);
 
 	if (dev->close)
 		dev->close(dev);
