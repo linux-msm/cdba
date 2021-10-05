@@ -64,7 +64,11 @@ static void device_lock(struct device *device)
 	if (n >= sizeof(lock))
 		errx(1, "failed to build lockfile path");
 
-	fd = open(lock, O_RDONLY | O_CREAT | O_CLOEXEC, 0666);
+	fd = open(lock, O_RDONLY | O_CREAT, 0666);
+	if (fd >= 0)
+		close(fd);
+
+	fd = open(lock, O_RDONLY | O_CLOEXEC);
 	if (fd < 0)
 		err(1, "failed to open lockfile %s", lock);
 
