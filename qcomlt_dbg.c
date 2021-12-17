@@ -50,7 +50,7 @@ struct qcomlt_dbg {
 	struct termios orig_tios;
 };
 
-void *qcomlt_dbg_open(struct device *dev)
+static void *qcomlt_dbg_open(struct device *dev)
 {
 	struct qcomlt_dbg *dbg;
 
@@ -68,7 +68,7 @@ void *qcomlt_dbg_open(struct device *dev)
 	return dbg;
 }
 
-int qcomlt_dbg_power(struct device *dev, bool on)
+static int qcomlt_dbg_power(struct device *dev, bool on)
 {
 	struct qcomlt_dbg *dbg = dev->cdb;	
 
@@ -76,7 +76,7 @@ int qcomlt_dbg_power(struct device *dev, bool on)
 	return write(dbg->fd, &("pP"[on]), 1);
 }
 
-void qcomlt_dbg_usb(struct device *dev, bool on)
+static void qcomlt_dbg_usb(struct device *dev, bool on)
 {
 	struct qcomlt_dbg *dbg = dev->cdb;	
 
@@ -84,7 +84,7 @@ void qcomlt_dbg_usb(struct device *dev, bool on)
 	write(dbg->fd, &("uU"[on]), 1);
 }
 
-void qcomlt_dbg_key(struct device *dev, int key, bool asserted)
+static void qcomlt_dbg_key(struct device *dev, int key, bool asserted)
 {
 	struct qcomlt_dbg *dbg = dev->cdb;	
 

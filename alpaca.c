@@ -53,7 +53,7 @@ struct alpaca {
 static int alpaca_device_power(struct alpaca *alpaca, int on);
 static int alpaca_usb_device_power(struct alpaca *alpaca, int on);
 
-void *alpaca_open(struct device *dev)
+static void *alpaca_open(struct device *dev)
 {
 	struct alpaca *alpaca;
 
@@ -121,7 +121,7 @@ static int alpaca_power_off(struct device *dev)
 	return 0;
 }
 
-int alpaca_power(struct device *dev, bool on)
+static int alpaca_power(struct device *dev, bool on)
 {
 	if (on)
 		return alpaca_power_on(dev);
@@ -129,14 +129,14 @@ int alpaca_power(struct device *dev, bool on)
 		return alpaca_power_off(dev);
 }
 
-void alpaca_usb(struct device *dev, bool on)
+static void alpaca_usb(struct device *dev, bool on)
 {
 	struct alpaca *alpaca = dev->cdb;
 
 	alpaca_usb_device_power(alpaca, on);
 }
 
-void alpaca_key(struct device *dev, int key, bool asserted)
+static void alpaca_key(struct device *dev, int key, bool asserted)
 {
 	switch (key) {
 	case DEVICE_KEY_FASTBOOT:

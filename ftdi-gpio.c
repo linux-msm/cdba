@@ -159,7 +159,7 @@ static void ftdi_gpio_parse_config(struct ftdi_gpio *ftdi_gpio, char *control_de
 	}
 }
 
-void *ftdi_gpio_open(struct device *dev)
+static void *ftdi_gpio_open(struct device *dev)
 {
 	struct ftdi_gpio *ftdi_gpio;
 	int ret;
@@ -224,21 +224,21 @@ static void ftdi_gpio_device_usb(struct ftdi_gpio *ftdi_gpio, bool on)
 	ftdi_gpio_toggle_io(ftdi_gpio, GPIO_USB_DISCONNECT, on);
 }
 
-int ftdi_gpio_power(struct device *dev, bool on)
+static int ftdi_gpio_power(struct device *dev, bool on)
 {
 	struct ftdi_gpio *ftdi_gpio = dev->cdb;
 
 	return ftdi_gpio_device_power(ftdi_gpio, on);
 }
 
-void ftdi_gpio_usb(struct device *dev, bool on)
+static void ftdi_gpio_usb(struct device *dev, bool on)
 {
 	struct ftdi_gpio *ftdi_gpio = dev->cdb;
 
 	ftdi_gpio_device_usb(ftdi_gpio, on);
 }
 
-void ftdi_gpio_key(struct device *dev, int key, bool asserted)
+static void ftdi_gpio_key(struct device *dev, int key, bool asserted)
 {
 	struct ftdi_gpio *ftdi_gpio = dev->cdb;
 

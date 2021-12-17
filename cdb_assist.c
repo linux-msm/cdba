@@ -273,7 +273,7 @@ static int cdb_ctrl_write(struct cdb_assist *cdb, const char *buf, size_t len)
 	return write(cdb->control_tty, buf, len);
 }
 
-void *cdb_assist_open(struct device *dev)
+static void *cdb_assist_open(struct device *dev)
 {
 	struct cdb_assist *cdb;
 	int ret;
@@ -295,7 +295,7 @@ void *cdb_assist_open(struct device *dev)
 	return cdb;
 }
 
-void cdb_assist_close(struct device *dev)
+static void cdb_assist_close(struct device *dev)
 {
 	struct cdb_assist *cdb = dev->cdb;
 
@@ -311,14 +311,14 @@ static void cdb_power(struct cdb_assist *cdb, bool on)
 	cdb_ctrl_write(cdb, &cmd[on], 1);
 }
 
-void cdb_vbus(struct cdb_assist *cdb, bool on)
+static void cdb_vbus(struct cdb_assist *cdb, bool on)
 {
 	const char cmd[] = "vV";
 
 	cdb_ctrl_write(cdb, &cmd[on], 1);
 }
 
-int cdb_assist_power(struct device *dev, bool on)
+static int cdb_assist_power(struct device *dev, bool on)
 {
 	struct cdb_assist *cdb = dev->cdb;
 
@@ -327,23 +327,18 @@ int cdb_assist_power(struct device *dev, bool on)
 	return 0;
 }
 
-void cdb_assist_usb(struct device *dev, bool on)
+static void cdb_assist_usb(struct device *dev, bool on)
 {
 	cdb_vbus(dev->cdb, on);
 }
 
-void cdb_gpio(struct cdb_assist *cdb, int gpio, bool on)
+static void cdb_gpio(struct cdb_assist *cdb, int gpio, bool on)
 {
 	const char *cmd[] = { "aA", "bB", "cC" };
 	cdb_ctrl_write(cdb, &cmd[gpio][on], 1);
 }
 
-unsigned int cdb_vref(struct cdb_assist *cdb)
-{
-	return cdb->vref;
-}
-
-void cdb_assist_print_status(struct device *dev)
+static void cdb_assist_print_status(struct device *dev)
 {
 	struct cdb_assist *cdb = dev->cdb;
 	char buf[128];
@@ -371,7 +366,7 @@ static void cdb_set_voltage(struct cdb_assist *cdb, unsigned mV)
 	cdb_ctrl_write(cdb, buf, n);
 }
 
-void cdb_assist_key(struct device *dev, int key, bool asserted)
+static void cdb_assist_key(struct device *dev, int key, bool asserted)
 {
 	struct cdb_assist *cdb = dev->cdb;
 

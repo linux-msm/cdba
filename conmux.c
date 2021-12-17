@@ -224,7 +224,7 @@ static int conmux_data(int fd, void *data)
 	return 0;
 }
 
-void *conmux_open(struct device *dev)
+static void *conmux_open(struct device *dev)
 {
 	struct addrinfo hints = {0}, *addrs, *addr;
 	struct conmux_response resp = {};
@@ -297,7 +297,7 @@ void *conmux_open(struct device *dev)
 	return conmux;
 }
 
-int conmux_power_on(struct device *dev)
+static int conmux_power_on(struct device *dev)
 {
 	struct conmux *conmux = dev->cdb;
 	char sz[] = "~$hardreset\n";
@@ -317,7 +317,7 @@ static int conmux_power_off(struct device *dev)
 	return write(conmux->fd, sz, sizeof(sz));
 }
 
-int conmux_power(struct device *dev, bool on)
+static int conmux_power(struct device *dev, bool on)
 {
 	if (on)
 		return conmux_power_on(dev);
@@ -325,14 +325,14 @@ int conmux_power(struct device *dev, bool on)
 		return conmux_power_off(dev);
 }
 
-int conmux_write(struct device *dev, const void *buf, size_t len)
+static int conmux_write(struct device *dev, const void *buf, size_t len)
 {
 	struct conmux *conmux = dev->cdb;
 
 	return write(conmux->fd, buf, len);
 }
 
-void *conmux_console_open(struct device *dev)
+static void *conmux_console_open(struct device *dev)
 {
 	return dev->cdb;
 }

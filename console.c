@@ -57,7 +57,7 @@ static int console_data(int fd, void *data)
 	return 0;
 }
 
-void *console_open(struct device *device)
+static void *console_open(struct device *device)
 {
 	struct console *console;
 
@@ -71,14 +71,14 @@ void *console_open(struct device *device)
 	return console;
 }
 
-int console_write(struct device *device, const void *buf, size_t len)
+static int console_write(struct device *device, const void *buf, size_t len)
 {
 	struct console *console = device->console;
 
 	return write(console->console_fd, buf, len);;
 }
 
-void console_send_break(struct device *device)
+static void console_send_break(struct device *device)
 {
 	struct console *console = device->console;
 
