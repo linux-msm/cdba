@@ -43,7 +43,6 @@
 #include <unistd.h>
 
 #include "cdba-server.h"
-#include "qcomlt_dbg.h"
 #include "device.h"
 
 struct qcomlt_dbg {

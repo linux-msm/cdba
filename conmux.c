@@ -41,7 +41,6 @@
 #include <unistd.h>
 
 #include "cdba-server.h"
-#include "conmux.h"
 #include "device.h"
 
 extern int h_errno;

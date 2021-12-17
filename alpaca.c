@@ -42,7 +42,6 @@
 #include <unistd.h>
 
 #include "cdba-server.h"
-#include "alpaca.h"
 #include "device.h"
 
 struct alpaca {

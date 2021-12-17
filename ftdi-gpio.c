@@ -41,7 +41,7 @@
 #include <unistd.h>
 
 #include "cdba-server.h"
-#include "ftdi-gpio.h"
+#include "device.h"
 
 #include <ftdi.h>
 

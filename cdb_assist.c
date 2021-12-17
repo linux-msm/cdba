@@ -42,7 +42,6 @@
 #include <unistd.h>
 
 #include "cdba-server.h"
-#include "cdb_assist.h"
 #include "device.h"
 
 struct cdb_assist {
@@ -89,6 +88,8 @@ enum {
 	STATE_num_mX_,
 	STATE_num_num_m,
 };
+
+static void cdb_set_voltage(struct cdb_assist *cdb, unsigned mV);
 
 static void cdb_parser_bool(struct cdb_assist *cdb, const char *key, bool set)
 {
@@ -361,7 +362,7 @@ void cdb_assist_print_status(struct device *dev)
 	cdba_send_buf(MSG_STATUS_UPDATE, n, buf);
 }
 
-void cdb_set_voltage(struct cdb_assist *cdb, unsigned mV)
+static void cdb_set_voltage(struct cdb_assist *cdb, unsigned mV)
 {
 	char buf[20];
 	int n;
