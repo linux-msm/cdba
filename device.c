@@ -94,6 +94,8 @@ static bool device_check_access(struct device *device,
 	return false;
 }
 
+static int device_power_off(struct device *device);
+
 struct device *device_open(const char *board,
 			   const char *username)
 {
@@ -131,6 +133,18 @@ found:
 	device->console = device_console(device, open);
 	if (!device->console)
 		errx(1, "failed to open device console");
+
+	/*
+	 * Power off before opening fastboot. Otherwise if the device is
+	 * already in the fastboot state, CDBA will detect it, then power up
+	 * procedure will restart the device causing fastboot to disappear and
+	 * appear again. This will cause CDBA to exit, ending up with the
+	 * unbreakable fastboot-reset-second_fastboot-quit cycle.
+	 * */
+	if (device->power_always_on) {
+		device_power_off(device);
+		sleep(2);
+	}
 
 	if (device->usb_always_on)
 		device_usb(device, true);
@@ -374,7 +388,8 @@ void device_close(struct device *dev)
 {
 	if (!dev->usb_always_on)
 		device_usb(dev, false);
-	device_power(dev, false);
+	if (!dev->power_always_on)
+		device_power(dev, false);
 
 	if (device_has_control(dev, close))
 		device_control(dev, close);
