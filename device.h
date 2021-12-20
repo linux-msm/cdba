@@ -90,6 +90,7 @@ extern const struct control_ops alpaca_ops;
 extern const struct control_ops cdb_assist_ops;
 extern const struct control_ops conmux_ops;
 extern const struct control_ops ftdi_gpio_ops;
+extern const struct control_ops external_ops;
 extern const struct control_ops qcomlt_dbg_ops;
 
 extern const struct console_ops conmux_console_ops;
