@@ -1,0 +1,7 @@
+devices:
+  - board: enchilada0
+    name: "OnePlus 6"
+    fastboot: 5725c671
+    console: /dev/ttyS0
+    local_gpio: 81,80,79,141
+    active_low: 1
