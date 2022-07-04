@@ -18,6 +18,7 @@ struct device {
 	unsigned voltage;
 	bool tickle_mmc;
 	bool usb_always_on;
+	bool active_low;
 	struct fastboot *fastboot;
 	unsigned int fastboot_key_timeout;
 	int state;

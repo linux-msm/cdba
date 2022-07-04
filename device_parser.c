@@ -38,6 +38,7 @@
 #include "conmux.h"
 #include "console.h"
 #include "qcomlt_dbg.h"
+#include "sbc_dbg.h"
 
 #define TOKEN_LENGTH	16384
 
@@ -124,6 +125,24 @@ static void parse_board(struct device_parser *dp)
 			dev->power = qcomlt_dbg_power;
 			dev->usb = qcomlt_dbg_usb;
 			dev->key = qcomlt_dbg_key;
+		} else if (!strcmp(key, "local_gpio")) {
+			/*
+			 * Should be "A,B,C,D"
+			 * Where A,B,C,D are GPIO numbers:
+			 * A = power button
+			 * B = volume up
+			 * C = volume down
+			 * D = vbus toggle
+			 */
+			dev->control_dev = strdup(value);
+
+			dev->open = sbc_dbg_open;
+			dev->close = sbc_dbg_close;
+			dev->power = sbc_dbg_power;
+			dev->usb = sbc_dbg_usb;
+			dev->key = sbc_dbg_key;
+		} else if (!strcmp(key, "active_low")) {
+			dev->active_low = true;
 		} else if (!strcmp(key, "console")) {
 			dev->console_dev = strdup(value);
 			dev->write = console_write;
