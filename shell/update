@@ -1,0 +1,18 @@
+#!/bin/sh
+
+refname="$1"
+oldrev="$2"
+newrev="$3"
+
+if [ "$refname" != "refs/heads/main" ]; then
+	echo "Only refs/heads/main allowed"
+	exit 1
+fi
+
+zero=$(git hash-object --stdin </dev/null | tr '[0-9a-f]' '0')
+if [ "$newrev" = "$zero" ]; then
+	echo "Don't delete main branch"
+	exit 1
+fi
+
+exit 0

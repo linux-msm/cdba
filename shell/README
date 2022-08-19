@@ -1,0 +1,8 @@
+Create an account, such as "cdba" and run ./setup.sh as this user.
+Give the user a password, or setup authorized_keys
+
+Then from the other machine: git clone cdba@host
+
+Add a file "admins" listing the names of the admins, add your cdba config file
+as "cdba" and create a directory "keydir" populated with id_rsa.pub files,
+named <name>.pub - where <name> is referenced against the admins list.

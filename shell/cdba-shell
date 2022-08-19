@@ -1,0 +1,15 @@
+#!/bin/sh
+
+user=$1
+cmd=${SSH_ORIGINAL_COMMAND%% *}
+
+if [ "$cmd" = "git-upload-pack" -o "$cmd" = "git-receive-pack" ]; then
+	if grep -Fxq $user $HOME/admins ; then
+		exec sh -c "$SSH_ORIGINAL_COMMAND"
+	fi
+
+	echo Permission denied
+	exit 1
+fi
+
+exec cdba-server

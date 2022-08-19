@@ -1,0 +1,32 @@
+#!/bin/sh -e
+
+#
+# Generate new authorized_keys
+#
+AUTHORIZED_KEYS=$HOME/.ssh/authorized_keys
+AUTHORIZED_TMP=$HOME/.ssh/authorized_keys.tmp
+
+:> $AUTHORIZED_TMP
+git cat-file -p main:keydir | while read LINE; do
+    TYPE=$(echo $LINE | awk '{ print $2 }')
+    NAME=$(echo $LINE | awk '{ print $4 }')
+
+    if [ "$TYPE" != "blob" ]; then
+        continue
+    fi
+
+    USER=$(basename $NAME .pub)
+    PUBKEY=$(git cat-file blob main:keydir/$NAME)
+    echo "command=\"$HOME/bin/cdba-shell $USER\" $PUBKEY" >> $AUTHORIZED_TMP
+done
+mv $AUTHORIZED_TMP $AUTHORIZED_KEYS
+
+#
+# Install .cdba
+#
+git cat-file blob main:cdba > $HOME/.cdba
+
+#
+# Install admins list
+#
+git cat-file blob main:admins > $HOME/admins
