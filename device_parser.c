@@ -34,6 +34,7 @@
 
 #include "device.h"
 #include "alpaca.h"
+#include "ftdi-gpio.h"
 #include "cdb_assist.h"
 #include "conmux.h"
 #include "console.h"
@@ -117,6 +118,13 @@ static void parse_board(struct device_parser *dp)
 			dev->power = alpaca_power;
 			dev->usb = alpaca_usb;
 			dev->key = alpaca_key;
+		} else if (!strcmp(key, "ftdi_gpio")) {
+			dev->control_dev = strdup(value);
+
+			dev->open = ftdi_gpio_open;
+			dev->power = ftdi_gpio_power;
+			dev->usb = ftdi_gpio_usb;
+			dev->key = ftdi_gpio_key;
 		} else if (!strcmp(key, "qcomlt_debug_board")) {
 			dev->control_dev = strdup(value);
 
