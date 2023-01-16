@@ -6,12 +6,12 @@ SERVER := cdba-server
 all: $(CLIENT) $(SERVER)
 
 CFLAGS := -Wall -g -O2
-LDFLAGS := -ludev -lyaml
+LDFLAGS := -ludev -lyaml -lftdi -lusb
 
 CLIENT_SRCS := cdba.c circ_buf.c
 CLIENT_OBJS := $(CLIENT_SRCS:.c=.o)
 
-SERVER_SRCS := cdba-server.c cdb_assist.c circ_buf.c conmux.c device.c device_parser.c fastboot.c alpaca.c console.c qcomlt_dbg.c
+SERVER_SRCS := cdba-server.c cdb_assist.c circ_buf.c conmux.c device.c device_parser.c fastboot.c alpaca.c ftdi-gpio.c console.c qcomlt_dbg.c
 SERVER_OBJS := $(SERVER_SRCS:.c=.o)
 
 $(CLIENT): $(CLIENT_OBJS)
