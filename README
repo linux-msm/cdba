@@ -46,3 +46,11 @@ devices:
     console: /dev/ttyUSB0
     fastboot: abcdef3
     fastboot_set_active: true
+
+  - board: qrd8550
+    alpaca: /dev/serial/by-id/usb-QUALCOMM_Inc._Embedded_Power_Measurement__EPM__device_6E02020620151F14-if01
+    console: /dev/serial/by-id/usb-QUALCOMM_MTP_Debug_Board_MT77TGG2-if00-port0
+    name: QRD8550
+    fastboot: 91671140
+    fastboot_set_active: true
+    fastboot_key_timeout: 2
