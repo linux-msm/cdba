@@ -3,12 +3,20 @@ The CDBA control tool is used for remotely booting images on development boards
 attached using a CDB Assist [https://github.com/sonyxperiadev/CDB-Assist] or Conmux.
 
 = Dependencies
-sudo apt-get install libudev-dev libyaml-dev for debian systems
-dnf install systemd-devel libyaml-devel for fedora systems
+sudo apt-get install libudev-dev libyaml-dev libftdi1-dev for debian systems
+dnf install systemd-devel libyaml-devel libftdi1-devel for fedora systems
 
 = Device side
 On the host with the CDB Assist or Conmux attached the "cdba-server" executable is run
 from sandbox/cdba/cdba-server. Available devices are read from $HOME/.cdba
+
+= Build instructions
+
+Either use make directly:
+# make
+or use the Meson build system:
+# meson . build
+# ninja -C build
 
 = Client side
 The client is invoked as:
