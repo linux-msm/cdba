@@ -38,6 +38,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "cdba-server.h"
 #include "ftdi-gpio.h"
@@ -188,7 +189,7 @@ void *ftdi_gpio_open(struct device *dev)
 	else
 		ftdi_gpio_device_usb(ftdi_gpio, 0);
 
-	usleep(500000);
+	sleep(0.5);
 
 	return ftdi_gpio;
 }
