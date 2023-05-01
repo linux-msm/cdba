@@ -1,0 +1,179 @@
+# SPDX-License-Identifier: GPL-2.0
+#
+# Copyright (c) 2021 Canonical Ltd.
+# Copyright (c) 2023 Linaro Ltd
+# Author: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+#                             <krzk@kernel.org>
+#
+# Loosely based on: https://github.com/linux-test-project/ltp
+#                   https://github.com/linux-nfc/neard
+#
+name: "Builds"
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  job:
+    name: Build
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x86-64]
+        compiler: [gcc, clang]
+        container:
+          - archlinux:latest
+          - debian:testing
+          - debian:stable
+          - debian:bookworm
+          - debian:bullseye
+          - debian:buster
+          # Fails on configure on GCC and clang (process restrictions?)
+          # - fedora:rawhide
+          - fedora:latest
+          - fedora:39
+          - fedora:38
+          - fedora:37
+          - fedora:36
+          - fedora:35
+          - fedora:34
+          - ubuntu:lunar
+          - ubuntu:kinetic
+          - ubuntu:jammy
+          - ubuntu:focal
+          - ubuntu:bionic
+          - ubuntu:xenial
+        cross_compile: [""]
+        variant: [""]
+        include:
+          # Debian 32-bit builds
+          - container: "debian:testing"
+            arch: i386
+            compiler: gcc -m32
+            cross_compile: i686-linux-gnu
+            variant: i386
+
+          - container: "debian:stable"
+            arch: i386
+            compiler: gcc -m32
+            cross_compile: i686-linux-gnu
+            variant: i386
+
+          - container: "debian:bookworm"
+            arch: i386
+            compiler: gcc -m32
+            cross_compile: i686-linux-gnu
+            variant: i386
+
+          - container: "debian:buster"
+            arch: i386
+            compiler: gcc -m32
+            cross_compile: i686-linux-gnu
+            variant: i386
+
+          # Debian cross compilation builds
+          - container: "debian:testing"
+            arch: armel
+            compiler: arm-linux-gnueabi-gcc
+            cross_compile: arm-linux-gnueabi
+            variant: cross-compile
+
+          - container: "debian:testing"
+            arch: arm64
+            compiler: aarch64-linux-gnu-gcc
+            cross_compile: aarch64-linux-gnu
+            variant: cross-compile
+
+          - container: "debian:testing"
+            arch: ppc64el
+            compiler: powerpc64le-linux-gnu-gcc
+            cross_compile: powerpc64le-linux-gnu
+            variant: cross-compile
+
+          - container: "debian:testing"
+            arch: s390x
+            compiler: s390x-linux-gnu-gcc
+            cross_compile: s390x-linux-gnu
+            variant: cross-compile
+
+          - container: "debian:stable"
+            arch: armel
+            compiler: arm-linux-gnueabi-gcc
+            cross_compile: arm-linux-gnueabi
+            variant: cross-compile
+
+          - container: "debian:stable"
+            arch: arm64
+            compiler: aarch64-linux-gnu-gcc
+            cross_compile: aarch64-linux-gnu
+            variant: cross-compile
+
+          - container: "debian:stable"
+            arch: ppc64el
+            compiler: powerpc64le-linux-gnu-gcc
+            cross_compile: powerpc64le-linux-gnu
+            variant: cross-compile
+
+          - container: "debian:stable"
+            arch: s390x
+            compiler: s390x-linux-gnu-gcc
+            cross_compile: s390x-linux-gnu
+            variant: cross-compile
+
+    container:
+      image: ${{ matrix.container }}
+      env:
+        ARCH: ${{ matrix.arch }}
+        CC: ${{ matrix.compiler }}
+        CROSS_COMPILE: ${{ matrix.cross_compile }}
+        MODE: ${{ matrix.mode }}
+        VARIANT: ${{ matrix.variant }}
+
+    steps:
+    - name: Show OS
+      run: cat /etc/os-release
+
+    - name: Show env (matrix settings)
+      run: |
+        echo "ARCH: $ARCH"
+        echo "CC: $CC"
+        echo "CROSS_COMPILE: $CROSS_COMPILE"
+        echo "MODE: $MODE"
+        echo "VARIANT: $VARIANT"
+
+    - name: Git checkout
+      uses: actions/checkout@v3
+
+    - name: Install additional packages
+      run: |
+        INSTALL=${{ matrix.container }}
+        INSTALL="${INSTALL%%:*}"
+        INSTALL="${INSTALL%%/*}"
+        ./ci/$INSTALL.sh
+        if [ "$VARIANT" ]; then ./ci/$INSTALL.$VARIANT.sh; fi
+
+    - name: Compiler version
+      run: $CC --version
+
+    - name: Display environment and Linux version
+      run: |
+        test -f /etc/issue && cat /etc/issue
+        echo "############################################"
+        lsb_release -a || true
+        echo "############################################"
+        cat /usr/include/linux/version.h
+        echo "############################################"
+        uname -a
+        echo "############################################"
+        cat /proc/cmdline
+        echo "############################################"
+        printenv
+
+    - name: Compile
+      run: make -j$(nproc)
+
+    - name: Install
+      run: make install
