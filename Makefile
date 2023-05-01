@@ -6,7 +6,7 @@ SERVER := cdba-server
 all: $(CLIENT) $(SERVER)
 
 CFLAGS := -Wall -g -O2
-LDFLAGS := -ludev -lyaml -lftdi -lusb
+LDFLAGS := -ludev -lyaml -lftdi1 -lusb
 
 CLIENT_SRCS := cdba.c circ_buf.c
 CLIENT_OBJS := $(CLIENT_SRCS:.c=.o)
