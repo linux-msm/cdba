@@ -61,7 +61,7 @@ static void device_lock(struct device *device)
 	int n;
 
 	n = snprintf(lock, sizeof(lock), "/tmp/cdba-%s.lock", device->board);
-	if (n >= sizeof(lock))
+	if (n >= (int)sizeof(lock))
 		errx(1, "failed to build lockfile path");
 
 	fd = open(lock, O_RDONLY | O_CREAT, 0666);
