@@ -374,7 +374,7 @@ static void fastboot_work_fn(struct work *_work, int ssh_stdin)
 	msg = alloca(sizeof(*msg) + left);
 	msg->type = MSG_FASTBOOT_DOWNLOAD;
 	msg->len = left;
-	memcpy(msg->data, work->data + work->offset, left);
+	memcpy(msg->data, (char *)work->data + work->offset, left);
 
 	n = write(ssh_stdin, msg, sizeof(*msg) + msg->len);
 	if (n < 0 && errno == EAGAIN) {
