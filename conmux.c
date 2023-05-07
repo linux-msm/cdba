@@ -166,7 +166,7 @@ static int registry_lookup(const char *service, struct conmux_lookup *result)
 		err(1, "failed to connect to registry");
 
 	ret = snprintf(buf, sizeof(buf), "LOOKUP service=%s\n", service);
-	if (ret >= sizeof(buf))
+	if (ret >= (int)sizeof(buf))
 		errx(1, "service name too long for registry lookup request");
 
 	n = write(fd, buf, ret + 1);
@@ -273,7 +273,7 @@ void *conmux_open(struct device *dev)
 		err(1, "failed to connect to conmux instance");
 
 	ret = snprintf(req, sizeof(req), "CONNECT id=cdba:%s to=console\n", user);
-	if (ret >= sizeof(req))
+	if (ret >= (int)sizeof(req))
 		errx(1, "unable to fit connect request in buffer");
 
 	n = write(fd, req, ret + 1);
