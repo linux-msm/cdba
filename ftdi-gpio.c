@@ -144,7 +144,7 @@ static void ftdi_gpio_parse_config(struct ftdi_gpio *ftdi_gpio, char *control_de
 
 		gpio_offset = strtoul(off, NULL, 0);
 		if (gpio_offset > 7)
-			errx(1, "GPIOs offset invalid: '%d'", gpio_offset);
+			errx(1, "GPIOs offset invalid: '%u'", gpio_offset);
 
 		if (strncmp("ACTIVE_HIGH", pol, c - pol - 1) == 0)
 			gpio_polarity = GPIO_ACTIVE_HIGH;
