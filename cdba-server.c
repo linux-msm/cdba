@@ -95,7 +95,7 @@ static void fastboot_opened(struct fastboot *fb, void *data)
 
 static void fastboot_info(struct fastboot *fb, const void *buf, size_t len)
 {
-	fprintf(stderr, "%s\n", (char *)buf);
+	fprintf(stderr, "%s\n", (const char *)buf);
 }
 
 static void fastboot_disconnect(void *data)
