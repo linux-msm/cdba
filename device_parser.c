@@ -50,7 +50,7 @@ struct device_parser {
 static void nextsym(struct device_parser *dp)
 {
 	if (!yaml_parser_parse(&dp->parser, &dp->event)) {
-		fprintf(stderr, "device parser: error %d\n", dp->parser.error);
+		fprintf(stderr, "device parser: error %u\n", dp->parser.error);
 		exit(1);
 	}
 }
@@ -77,7 +77,7 @@ static bool expect(struct device_parser *dp, int type, char *scalar)
 		return true;
 	}
 
-	fprintf(stderr, "device parser: expected %d got %d\n", type, dp->event.type);
+	fprintf(stderr, "device parser: expected %d got %u\n", type, dp->event.type);
 	exit(1);
 }
 
