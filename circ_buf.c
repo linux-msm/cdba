@@ -46,7 +46,6 @@
 ssize_t circ_fill(int fd, struct circ_buf *circ)
 {
 	ssize_t space;
-	size_t count = 0;
 	ssize_t n = 0;
 
 	do {
@@ -62,8 +61,6 @@ ssize_t circ_fill(int fd, struct circ_buf *circ)
 			return -1;
 		} else if (n < 0)
 			return -1;
-
-		count += n;
 
 		circ->head = (circ->head + n) & (CIRC_BUF_SIZE - 1);
 	} while (n != space);
