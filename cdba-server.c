@@ -137,7 +137,7 @@ static void msg_fastboot_download(const void *data, size_t len)
 {
 	struct msg reply = { MSG_FASTBOOT_DOWNLOAD, };
 	size_t new_size = fastboot_size + len;
-	void *newp;
+	char *newp;
 
 	newp = realloc(fastboot_payload, new_size);
 	if (!newp)
