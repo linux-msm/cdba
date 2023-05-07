@@ -121,12 +121,13 @@ static int fastboot_write(struct fastboot *fb, const void *data, size_t len)
 {
 	struct usbdevfs_bulktransfer bulk = {0};
 	size_t count = 0;
+	char *buf = (char *)data;
 	int n;
 
 	do {
 		bulk.ep = fb->ep_out;
 		bulk.len = MIN(len, MAX_USBFS_BULK_SIZE);
-		bulk.data = (void*)data;
+		bulk.data = buf;
 		bulk.timeout = 1000;
 
 		n = ioctl(fb->fd, USBDEVFS_BULK, &bulk);
@@ -135,7 +136,7 @@ static int fastboot_write(struct fastboot *fb, const void *data, size_t len)
 			return -1;
 		}
 
-		data += n;
+		buf += n;
 		len -= n;
 		count += n;
 	} while (len > 0);
@@ -156,8 +157,8 @@ static int parse_usb_desc(int usbfd, unsigned *ep_in, unsigned *ep_out)
 	unsigned k;
 	unsigned l;
 	ssize_t n;
-	void *ptr;
-	void *end;
+	char *ptr;
+	char *end;
 	char desc[1024];
 	int ret;
 	int id;
@@ -166,15 +167,15 @@ static int parse_usb_desc(int usbfd, unsigned *ep_in, unsigned *ep_out)
 	if (n < 0)
 		return n;
 
-	ptr = (void*)desc;
+	ptr = desc;
 	end = ptr + n;
 
-	dev = ptr;
+	dev = (void *)ptr;
 	ptr += dev->bLength;
 	if (ptr >= end || dev->bDescriptorType != USB_DT_DEVICE)
 		return -EINVAL;
 
-	cfg = ptr;
+	cfg = (void *)ptr;
 	ptr += cfg->bLength;
 	if (ptr >= end || cfg->bDescriptorType != USB_DT_CONFIG)
 		return -EINVAL;
@@ -184,7 +185,7 @@ static int parse_usb_desc(int usbfd, unsigned *ep_in, unsigned *ep_out)
 			return -EINVAL;
 
 		do {
-			ifc = ptr;
+			ifc = (void *)ptr;
 			if (ifc->bLength < USB_DT_INTERFACE_SIZE)
 				return -EINVAL;
 
@@ -199,7 +200,7 @@ static int parse_usb_desc(int usbfd, unsigned *ep_in, unsigned *ep_out)
 				return -EINVAL;
 
 			do {
-				ept = ptr;
+				ept = (void *)ptr;
 				if (ept->bLength < USB_DT_ENDPOINT_SIZE)
 					return -EINVAL;
 
@@ -218,7 +219,7 @@ static int parse_usb_desc(int usbfd, unsigned *ep_in, unsigned *ep_out)
 			if (ptr >= end)
 				break;
 
-			hdr = ptr;
+			hdr = (void *)ptr;
 			if (hdr->bDescriptorType == USB_DT_SS_ENDPOINT_COMP)
 				ptr += USB_DT_SS_EP_COMP_SIZE;
 		}
@@ -411,7 +412,7 @@ int fastboot_download(struct fastboot *fb, const void *data, size_t len)
 	while (len > 0) {
 		xfer = MIN(len, MAX_USBFS_BULK_SIZE);
 
-		ret = fastboot_write(fb, data + offset, xfer);
+		ret = fastboot_write(fb, (const char *)data + offset, xfer);
 		if (ret < 0)
 			goto out;
 
