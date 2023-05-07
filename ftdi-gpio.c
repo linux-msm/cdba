@@ -102,7 +102,7 @@ static void ftdi_gpio_parse_config(struct ftdi_gpio *ftdi_gpio, char *control_de
 	// Interface
 	interface = c + 1;
 	if (*interface != 'A' &&
-	    *interface != 'A' &&
+	    *interface != 'B' &&
 	    *interface != 'C' &&
 	    *interface != 'D') {
 		errx(1, "Invalid interface '%c'", *interface);
