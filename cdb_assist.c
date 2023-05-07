@@ -348,7 +348,7 @@ void cdb_assist_print_status(struct device *dev)
 	char buf[128];
 	int n;
 
-	n = sprintf(buf, "%dmV %dmA%s%s%s%s%s ref: %dmV",
+	n = sprintf(buf, "%umV %umA%s%s%s%s%s ref: %umV",
 			 cdb->voltage_set,
 			 cdb->current_actual,
 			 cdb->vbat ? " vbat" : "",
@@ -369,7 +369,7 @@ void cdb_set_voltage(struct cdb_assist *cdb, unsigned mV)
 	char buf[20];
 	int n;
 
-	n = sprintf(buf, "u%d\r\n", mV);
+	n = sprintf(buf, "u%u\r\n", mV);
 	cdb_ctrl_write(cdb, buf, n);
 }
 
