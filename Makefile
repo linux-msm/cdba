@@ -6,6 +6,26 @@ SERVER := cdba-server
 all: $(CLIENT) $(SERVER)
 
 CFLAGS := -Wall -g -O2
+# Wextra without few warnings
+CFLAGS := $(CFLAGS) -Wextra -Wno-unused-parameter -Wno-unused-result -Wno-missing-field-initializers -Wno-sign-compare
+
+# Few clang version still have warnings so fail only on GCC
+GCC_CFLAGS := -Werror
+GCC_CFLAGS += -Wformat-signedness -Wnull-dereference -Wduplicated-cond -Wduplicated-branches -Wvla-larger-than=1
+GCC_CFLAGS += -Walloc-zero -Wstringop-truncation -Wdouble-promotion -Wshadow -Wunsafe-loop-optimizations
+GCC_CFLAGS += -Wpointer-arith -Wcast-align -Wwrite-strings -Wlogical-op -Wstrict-overflow=4 -Wundef -Wjump-misses-init
+CLANG_CFLAGS := -Wnull-dereference -Wdouble-promotion -Wshadow -Wpointer-arith -Wwrite-strings -Wstrict-overflow=4 -Wundef
+# TODO:
+# GCC_CFLAGS += -Wcast-qual
+# CLANG_CFLAGS += -Wcast-qual -Wcast-align
+ifeq ($(CC),cc)
+  CFLAGS += $(GCC_CFLAGS)
+else ifeq ($(CC),clang)
+  CFLAGS += $(CLANG_CFLAGS)
+else
+  $(info No compiler flags for: $(CC))
+endif
+
 LDFLAGS := -ludev -lyaml -lftdi -lusb
 
 CLIENT_SRCS := cdba.c circ_buf.c
