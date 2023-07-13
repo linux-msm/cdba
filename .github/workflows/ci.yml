@@ -9,7 +9,13 @@
 #                   https://github.com/linux-nfc/neard
 #
 name: "Builds"
-on: [push, pull_request, workflow_dispatch]
+on:
+  pull_request:
+  push:
+  schedule:
+    # Run at 1:01 PM, every Tuesday
+    - cron: '1 13 * * 2'
+  workflow_dispatch:
 
 jobs:
   job:
