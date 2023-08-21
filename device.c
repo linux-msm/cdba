@@ -192,13 +192,34 @@ static void device_tick(void *data)
 	}
 }
 
+static void device_tick_custom(void *data)
+{
+	struct device *device = data;
+	int step = device->state++;
+
+	// fprintf(stderr, "rst %d: %8s %d %d\n", step,
+	// 		device->reset_sequence[step].key ? "power" : "fastboot",
+	// 		device->reset_sequence[step].asserted,
+	// 		device->reset_sequence[step].sleep_ms);
+
+	device_key(device, device->reset_sequence[step].key, device->reset_sequence[step].asserted);
+	if (device->state < device->reset_sequence_count)
+		watch_timer_add(device->reset_sequence[step].sleep_ms, device_tick_custom, device);
+	else
+		device->state = DEVICE_STATE_RUNNING;
+}
+
 static int device_power_on(struct device *device)
 {
 	if (!device || !device->power)
 		return 0;
 
 	device->state = DEVICE_STATE_START;
-	device_tick(device);
+	if (device->custom_reset_sequence) {
+		device_key(device, DEVICE_KEY_FASTBOOT, false);
+		device_tick_custom(device);
+	} else
+		device_tick(device);
 
 	return 0;
 }

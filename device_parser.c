@@ -81,6 +81,60 @@ static bool expect(struct device_parser *dp, int type, char *scalar)
 	exit(1);
 }
 
+static void parse_reset_sequence(struct device *dev, char *seq)
+{
+	char *p, *pp = seq;
+	int i = 0;
+
+	dev->custom_reset_sequence = true;
+
+	/* Parse a sequence of "<btn>;time_ms" pairs */
+	while(i < MAX_RESET_SEQUENCE) {
+		p = strstr(pp, ";");
+		if (!p)
+			break;
+		*p = '\0';
+
+		switch (*pp) {
+		case 'B':
+			dev->reset_sequence[i].asserted = true;
+			__attribute__ ((fallthrough));
+		case 'b':
+			dev->reset_sequence[i].key = DEVICE_KEY_POWER;
+			break;
+		case 'R':
+			dev->reset_sequence[i].asserted = true;
+			__attribute__ ((fallthrough));
+		case 'r':
+			dev->reset_sequence[i].key = DEVICE_KEY_FASTBOOT;
+			break;
+		default:
+			dev->reset_sequence[i].sleep_ms = strtol(pp, &p, 10);
+			if (*p == *pp) {
+				fprintf(stderr, "device parser: invalid reset sequence: '%s'\n", seq);
+				exit(1);
+			}
+			i++;
+		}
+
+		pp += strlen(pp) + 1;
+	}
+
+	if (i == MAX_RESET_SEQUENCE) {
+		fprintf(stderr, "device parser: too many reset sequence steps\n");
+		exit(1);
+	}
+
+	dev->reset_sequence_count = i;
+
+	// for(i = 0; i < dev->reset_sequence_count; i++) {
+	// 	fprintf(stderr, "rst %d: %8s %d %d\n", i,
+	// 		dev->reset_sequence[i].key ? "power" : "fastboot",
+	// 		dev->reset_sequence[i].asserted,
+	// 		dev->reset_sequence[i].sleep_ms);
+	// }
+}
+
 static void parse_board(struct device_parser *dp)
 {
 	struct device *dev;
@@ -154,6 +208,8 @@ static void parse_board(struct device_parser *dp)
 			dev->fastboot_key_timeout = strtoul(value, NULL, 10);
 		} else if (!strcmp(key, "usb_always_on")) {
 			dev->usb_always_on = !strcmp(value, "true");
+		} else if (!strcmp(key, "reset_sequence")) {
+			parse_reset_sequence(dev, value);
 		} else {
 			fprintf(stderr, "device parser: unknown key \"%s\"\n", key);
 			exit(1);

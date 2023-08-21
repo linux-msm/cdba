@@ -29,6 +29,12 @@ boot.img.
 == Device configuration
 The list of attached devices is read from $HOME/.cdba and is YAML formatted.
 
+== Custom reset sequence
+
+For devices where power-control is nontrivial, a workaround is to use the soft-reset
+feature built into the board, this usually involves pressing some button combination.
+A custom reset sequence can be specified with the "reset_sequence" YAML key.
+
 === Example
 devices:
   - board: db2k
@@ -54,3 +60,11 @@ devices:
     fastboot: 91671140
     fastboot_set_active: true
     fastboot_key_timeout: 2
+
+  - board: sdm845-enchilada
+    qcomlt_debug_board: /dev/serial/by-id/usb-postmarketOS_Test_Device_E6604430430-if00
+    console: /dev/serial/by-id/usb-postmarketOS_Test_Device_E6604430430-if02
+    name: "OnePlus 6"
+    fastboot: 5725c671
+    # Press power; sleep 10.5 seconds; press vol+; sleep 1 second; release power
+    reset_sequence: "B;10500;R;0;b;0;"

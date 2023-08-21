@@ -8,6 +8,13 @@ struct cdb_assist;
 struct fastboot;
 struct fastboot_ops;
 
+enum device_key {
+	DEVICE_KEY_FASTBOOT,
+	DEVICE_KEY_POWER,
+};
+
+#define MAX_RESET_SEQUENCE 6
+
 struct device {
 	char *board;
 	char *control_dev;
@@ -22,6 +29,13 @@ struct device {
 	unsigned int fastboot_key_timeout;
 	int state;
 	bool has_power_key;
+	bool custom_reset_sequence;
+	int reset_sequence_count;
+	struct {
+		enum device_key key;
+		bool asserted;
+		unsigned short sleep_ms;
+	} reset_sequence[MAX_RESET_SEQUENCE];
 
 	void (*boot)(struct device *);
 
@@ -62,10 +76,5 @@ void device_fastboot_flash_reboot(struct device *device);
 void device_send_break(struct device *device);
 void device_list_devices(void);
 void device_info(const void *data, size_t dlen);
-
-enum {
-	DEVICE_KEY_FASTBOOT,
-	DEVICE_KEY_POWER,
-};
 
 #endif
