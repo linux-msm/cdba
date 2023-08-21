@@ -25,6 +25,7 @@ struct device {
 	unsigned voltage;
 	bool tickle_mmc;
 	bool usb_always_on;
+	bool release_key_on_fastboot_detect;
 	struct fastboot *fastboot;
 	unsigned int fastboot_key_timeout;
 	int state;
@@ -71,6 +72,7 @@ int device_write(struct device *device, const void *buf, size_t len);
 
 void device_boot(struct device *device, const void *data, size_t len);
 
+void device_fastboot_open(struct device *device);
 void device_fastboot_boot(struct device *device);
 void device_fastboot_flash_reboot(struct device *device);
 void device_send_break(struct device *device);

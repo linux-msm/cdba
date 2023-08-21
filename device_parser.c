@@ -210,6 +210,8 @@ static void parse_board(struct device_parser *dp)
 			dev->usb_always_on = !strcmp(value, "true");
 		} else if (!strcmp(key, "reset_sequence")) {
 			parse_reset_sequence(dev, value);
+		} else if (!strcmp(key, "release_key_on_fastboot_detect")) {
+			dev->release_key_on_fastboot_detect = true;
 		} else {
 			fprintf(stderr, "device parser: unknown key \"%s\"\n", key);
 			exit(1);

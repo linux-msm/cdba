@@ -112,7 +112,7 @@ found:
 	if (device->usb_always_on)
 		device_usb(device, true);
 
-	device->fastboot = fastboot_open(device->serial, fastboot_ops, NULL);
+	device->fastboot = fastboot_open(device->serial, fastboot_ops, device);
 
 	return device;
 }
@@ -262,6 +262,22 @@ int device_write(struct device *device, const void *buf, size_t len)
 	assert(device->write);
 
 	return device->write(device, buf, len);
+}
+
+void device_fastboot_open(struct device *device)
+{
+	/*
+	 * udev might trigger preemptively or if we're already in fastboot
+	 * in that case just ignore
+	 */
+	if (!device)
+		return;
+
+	// fprintf(stderr, "fastboot opened: %s\n", device->serial);
+
+	/* Release fastboot key if being held */
+	if (device->release_key_on_fastboot_detect)
+		device_key(device, DEVICE_KEY_FASTBOOT, false);
 }
 
 void device_fastboot_boot(struct device *device)
