@@ -417,6 +417,10 @@ int main(int argc, char **argv)
 
 done:
 
+	close(STDIN_FILENO);
+	close(STDOUT_FILENO);
+	close(STDERR_FILENO);
+
 	if (selected_device)
 		device_close(selected_device);
 

@@ -141,6 +141,8 @@ static void device_tick(void *data)
 {
 	struct device *device = data;
 
+	fprintf(stderr, "rst %d\n", device->state);
+
 	switch (device->state) {
 	case DEVICE_STATE_START:
 		/* Make sure power key is not engaged */
@@ -211,7 +213,7 @@ static void device_tick_custom(void *data)
 
 static int device_power_on(struct device *device)
 {
-	if (!device || !device->power)
+	if (!device || !device->power || device->in_fastboot)
 		return 0;
 
 	device->state = DEVICE_STATE_START;
@@ -228,6 +230,8 @@ static int device_power_off(struct device *device)
 {
 	if (!device || !device->power)
 		return 0;
+
+	device->in_fastboot = false;
 
 	device->power(device, false);
 
@@ -273,6 +277,7 @@ void device_fastboot_open(struct device *device)
 	if (!device)
 		return;
 
+	device->in_fastboot = true;
 	// fprintf(stderr, "fastboot opened: %s\n", device->serial);
 
 	/* Release fastboot key if being held */
@@ -282,17 +287,20 @@ void device_fastboot_open(struct device *device)
 
 void device_fastboot_boot(struct device *device)
 {
+	device->in_fastboot = false;
 	fastboot_boot(device->fastboot);
 }
 
 void device_fastboot_flash_reboot(struct device *device)
 {
+	device->in_fastboot = false;
 	fastboot_flash(device->fastboot, "boot");
 	fastboot_reboot(device->fastboot);
 }
 
 void device_boot(struct device *device, const void *data, size_t len)
 {
+	device->in_fastboot = false;
 	warnx("booting the board...");
 	if (device->set_active)
 		fastboot_set_active(device->fastboot, "a");
@@ -356,7 +364,26 @@ void device_close(struct device *dev)
 {
 	if (!dev->usb_always_on)
 		device_usb(dev, false);
-	device_power(dev, false);
+
+	/* Can't use the watch timer because the loop isn't running */
+	if (dev->custom_reset_sequence && dev->power_off_to_fastboot) {
+		/* Fork and return parent to prevent the cdba client from
+		 * blocking
+		 */
+		if (fork()) {
+			return;
+		}
+
+		for (int i = 0; i < dev->reset_sequence_count; i++) {
+			device_key(dev, dev->reset_sequence[i].key, dev->reset_sequence[i].asserted);
+			usleep(dev->reset_sequence[i].sleep_ms * 1000);
+		}
+		/* Release all the keys */
+		usleep(1500 * 1000);
+		device_key(dev, DEVICE_KEY_FASTBOOT, false);
+	} else {
+		device_power(dev, false);
+	}
 
 	if (dev->close)
 		dev->close(dev);

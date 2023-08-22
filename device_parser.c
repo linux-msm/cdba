@@ -212,6 +212,8 @@ static void parse_board(struct device_parser *dp)
 			parse_reset_sequence(dev, value);
 		} else if (!strcmp(key, "release_key_on_fastboot_detect")) {
 			dev->release_key_on_fastboot_detect = true;
+		} else if (!strcmp(key, "power_off_to_fastboot")) {
+			dev->power_off_to_fastboot = true;
 		} else {
 			fprintf(stderr, "device parser: unknown key \"%s\"\n", key);
 			exit(1);

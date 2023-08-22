@@ -26,6 +26,7 @@ struct device {
 	bool tickle_mmc;
 	bool usb_always_on;
 	bool release_key_on_fastboot_detect;
+	bool power_off_to_fastboot;
 	struct fastboot *fastboot;
 	unsigned int fastboot_key_timeout;
 	int state;
@@ -51,6 +52,7 @@ struct device {
 
 	void (*send_break)(struct device *dev);
 	bool set_active;
+	bool in_fastboot;
 
 	void *cdb;
 

@@ -88,7 +88,7 @@ void qcomlt_dbg_key(struct device *dev, int key, bool asserted)
 {
 	struct qcomlt_dbg *dbg = dev->cdb;	
 
-	// fprintf(stderr, "qcomlt_dbg_key(%d, %d)\n", key, asserted);
+	fprintf(stderr, "qcomlt_dbg_key(%d, %d)\n", key, asserted);
 
 	switch (key) {
 	case DEVICE_KEY_FASTBOOT:
