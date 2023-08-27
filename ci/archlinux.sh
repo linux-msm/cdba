@@ -16,7 +16,7 @@ case $CC in
 	;;
 esac
 
-pacman -Sy --noconfirm \
+pacman -Syu --noconfirm \
 	libftdi-compat \
 	libyaml \
 	systemd-libs \
