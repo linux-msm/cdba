@@ -453,6 +453,7 @@ static void handle_board_info(const void *data, size_t len)
 	quit = true;
 }
 
+static int power_cycles = -1;
 static bool received_power_off;
 static bool reached_timeout;
 
@@ -462,7 +463,8 @@ static void handle_console(const void *data, size_t len)
 	const char *p = data;
 	int i;
 
-	for (i = 0; i < len; i++) {
+	/* Don't process the line by default (power_cycles = -1) */
+	for (i = 0; i < len && power_cycles >= 0; i++) {
 		if (*p++ == '~') {
 			if (power_off_chars++ == 19) {
 				received_power_off = true;
@@ -604,7 +606,6 @@ int main(int argc, char **argv)
 	const char *host = NULL;
 	struct timeval now;
 	struct timeval tv;
-	int power_cycles = 0;
 	struct stat sb;
 	int ssh_fds[3];
 	char buf[128];
@@ -691,7 +692,7 @@ int main(int argc, char **argv)
 
 	while (!quit) {
 		if (received_power_off || reached_timeout) {
-			if (!power_cycles)
+			if (power_cycles <= 0)
 				break;
 
 			if (reached_timeout && !power_cycle_on_timeout)
