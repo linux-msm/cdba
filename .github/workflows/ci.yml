@@ -37,8 +37,7 @@ jobs:
           - fedora:39
           - fedora:38
           - fedora:37
-          - ubuntu:lunar
-          - ubuntu:kinetic
+          - ubuntu:lunar # EOL 01.2024
           - ubuntu:jammy
           - ubuntu:focal
           - ubuntu:bionic
