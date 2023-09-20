@@ -43,7 +43,7 @@
 #include "cdba-server.h"
 #include "ftdi-gpio.h"
 
-#include "ftdi.h"
+#include <ftdi.h>
 
 enum {
 	GPIO_POWER = 0,			// Power input enable
