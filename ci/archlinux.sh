@@ -21,6 +21,7 @@ pacman -Sy --noconfirm \
 	libyaml \
 	systemd-libs \
 	make \
+	pkgconf \
 	$PKGS_CC
 
 echo "Install finished: $0"

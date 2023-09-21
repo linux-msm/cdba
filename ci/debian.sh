@@ -28,6 +28,7 @@ case $CC in
 esac
 
 apt install -y --no-install-recommends \
+	pkg-config \
 	libftdi-dev \
 	libudev-dev \
 	libyaml-dev \
