@@ -187,6 +187,16 @@ jobs:
         echo "############################################"
         printenv
 
+    - name: Meson init
+      if: ${{ matrix.arch == 'x86-64' && matrix.container != 'ubuntu:xenial' }}
+      run: |
+        mkdir build
+        meson . build
+
+    - name: Ninja build
+      if: ${{ matrix.arch == 'x86-64' && matrix.container != 'ubuntu:xenial' }}
+      run: ninja -C build
+
     - name: Compile
       run: make -j$(nproc)
 

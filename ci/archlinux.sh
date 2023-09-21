@@ -22,6 +22,7 @@ pacman -Syu --noconfirm \
 	systemd-libs \
 	make \
 	pkgconf \
+	meson \
 	$PKGS_CC
 
 echo "Install finished: $0"

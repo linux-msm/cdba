@@ -2,47 +2,44 @@
 
 project('cdba',
 	'c',
+	license : [ 'BSD-3-Clause'],
+	meson_version : '>= 0.43.0', # for compiler.get_supported_arguments()
 	default_options: [
             'warning_level=2',	# sets -Wextra
             'buildtype=release',
         ])
 
+# Set advanced compiler flags
 compiler = meson.get_compiler('c')
 
-# If compiler variables are detectable, add some selected ones
-if meson.version().version_compare('>=0.43.0')
-	base_cflags = ['-Wno-unused-parameter',
-		       '-Wno-unused-result',
-		       '-Wno-missing-field-initializers',
-		       '-Wno-sign-compare',
-		       '-Wundef',
-		       '-Wnull-dereference',
-		       '-Wdouble-promotion',
-		       '-Wshadow',
-		       '-Wpointer-arith',
-		       '-Wwrite-strings',
-		       '-Wstrict-overflow=4']
+compiler_cflags = ['-Wno-unused-parameter',
+		   '-Wno-unused-result',
+		   '-Wno-missing-field-initializers',
+		   '-Wno-sign-compare',
+		   '-Wundef',
+		   '-Wnull-dereference',
+		   '-Wdouble-promotion',
+		   '-Wshadow',
+		   '-Wpointer-arith',
+		   '-Wwrite-strings',
+		   '-Wstrict-overflow=4']
 
-	if compiler.get_id() == 'gcc'
-		compiler_cflags = ['-Werror',	# Only set it on GCC
-			           '-Wformat-signedness',
-				   '-Wduplicated-cond',
-				   '-Wduplicated-branches',
-				   '-Wvla-larger-than=1',
-				   '-Walloc-zero',
-				   '-Wunsafe-loop-optimizations',
-				   '-Wcast-align',
-				   '-Wlogical-op',
-				   '-Wjump-misses-init']
-	elif compiler.get_id() == 'clang'
-		# TODO add clang specific options
-		compiler_cflags = []
-	endif
-
-	add_global_arguments(compiler.get_supported_arguments(base_cflags),	
-			     compiler.get_supported_arguments(compiler_cflags),
-			     language: 'c')
+# TODO add clang specific options
+if compiler.get_id() == 'gcc'
+	compiler_cflags += ['-Werror',	# Only set it on GCC
+			    '-Wformat-signedness',
+			    '-Wduplicated-cond',
+			    '-Wduplicated-branches',
+			    '-Wvla-larger-than=1',
+			    '-Walloc-zero',
+			    '-Wunsafe-loop-optimizations',
+			    '-Wcast-align',
+			    '-Wlogical-op',
+			    '-Wjump-misses-init']
 endif
+
+add_global_arguments(compiler.get_supported_arguments(compiler_cflags),
+		     language: 'c')
 
 client_srcs = ['cdba.c',
 	       'circ_buf.c']

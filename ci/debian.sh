@@ -33,6 +33,7 @@ apt install -y --no-install-recommends \
 	libudev-dev \
 	libyaml-dev \
 	make \
+	meson \
 	$PKGS_CC
 
 echo "Install finished: $0"
