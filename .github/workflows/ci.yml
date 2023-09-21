@@ -72,9 +72,9 @@ jobs:
 
           # Debian cross compilation builds
           - container: "debian:testing"
-            arch: armel
-            compiler: arm-linux-gnueabi-gcc
-            cross_compile: arm-linux-gnueabi
+            arch: armhf
+            compiler: arm-linux-gnueabihf-gcc
+            cross_compile: arm-linux-gnueabihf
             variant: cross-compile
 
           - container: "debian:testing"
@@ -96,9 +96,9 @@ jobs:
             variant: cross-compile
 
           - container: "debian:stable"
-            arch: armel
-            compiler: arm-linux-gnueabi-gcc
-            cross_compile: arm-linux-gnueabi
+            arch: armhf
+            compiler: arm-linux-gnueabihf-gcc
+            cross_compile: arm-linux-gnueabihf
             variant: cross-compile
 
           - container: "debian:stable"
