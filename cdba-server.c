@@ -304,7 +304,6 @@ static struct timeval *watch_timer_next(void)
 	struct timeval now;
 	struct timer *next;
 	struct timer *t;
-	int count = 0;
 
 	if (list_empty(&timer_watches))
 		return NULL;
@@ -314,7 +313,6 @@ static struct timeval *watch_timer_next(void)
 	list_for_each_entry(t, &timer_watches, node) {
 		if (timercmp(&t->tv, &next->tv, <))
 			next = t;
-		count++;
 	}
 
 	gettimeofday(&now, NULL);
