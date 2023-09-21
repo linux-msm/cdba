@@ -51,24 +51,28 @@ jobs:
             compiler: gcc -m32
             cross_compile: i686-linux-gnu
             variant: i386
+            pkg_config_path: /usr/lib/i386-linux-gnu/pkgconfig
 
           - container: "debian:stable"
             arch: i386
             compiler: gcc -m32
             cross_compile: i686-linux-gnu
             variant: i386
+            pkg_config_path: /usr/lib/i386-linux-gnu/pkgconfig
 
           - container: "debian:bookworm"
             arch: i386
             compiler: gcc -m32
             cross_compile: i686-linux-gnu
             variant: i386
+            pkg_config_path: /usr/lib/i386-linux-gnu/pkgconfig
 
           - container: "debian:buster"
             arch: i386
             compiler: gcc -m32
             cross_compile: i686-linux-gnu
             variant: i386
+            pkg_config_path: /usr/lib/i386-linux-gnu/pkgconfig
 
           # Debian cross compilation builds
           - container: "debian:testing"
@@ -76,48 +80,56 @@ jobs:
             compiler: arm-linux-gnueabi-gcc
             cross_compile: arm-linux-gnueabi
             variant: cross-compile
+            pkg_config_path: /usr/lib/arm-linux-gnueabi/pkgconfig
 
           - container: "debian:testing"
             arch: arm64
             compiler: aarch64-linux-gnu-gcc
             cross_compile: aarch64-linux-gnu
             variant: cross-compile
+            pkg_config_path: /usr/lib/aarch64-linux-gnu/pkgconfig
 
           - container: "debian:testing"
             arch: ppc64el
             compiler: powerpc64le-linux-gnu-gcc
             cross_compile: powerpc64le-linux-gnu
             variant: cross-compile
+            pkg_config_path: /usr/lib/powerpc64le-linux-gnu/pkgconfig
 
           - container: "debian:testing"
             arch: s390x
             compiler: s390x-linux-gnu-gcc
             cross_compile: s390x-linux-gnu
             variant: cross-compile
+            pkg_config_path: /usr/lib/s390x-linux-gnu/pkgconfig
 
           - container: "debian:stable"
             arch: armel
             compiler: arm-linux-gnueabi-gcc
             cross_compile: arm-linux-gnueabi
             variant: cross-compile
+            pkg_config_path: /usr/lib/arm-linux-gnueabi/pkgconfig
 
           - container: "debian:stable"
             arch: arm64
             compiler: aarch64-linux-gnu-gcc
             cross_compile: aarch64-linux-gnu
             variant: cross-compile
+            pkg_config_path: /usr/lib/aarch64-linux-gnu/pkgconfig
 
           - container: "debian:stable"
             arch: ppc64el
             compiler: powerpc64le-linux-gnu-gcc
             cross_compile: powerpc64le-linux-gnu
             variant: cross-compile
+            pkg_config_path: /usr/lib/powerpc64le-linux-gnu/pkgconfig
 
           - container: "debian:stable"
             arch: s390x
             compiler: s390x-linux-gnu-gcc
             cross_compile: s390x-linux-gnu
             variant: cross-compile
+            pkg_config_path: /usr/lib/s390x-linux-gnu/pkgconfig
 
     container:
       image: ${{ matrix.container }}
@@ -127,6 +139,7 @@ jobs:
         CROSS_COMPILE: ${{ matrix.cross_compile }}
         MODE: ${{ matrix.mode }}
         VARIANT: ${{ matrix.variant }}
+        PKG_CONFIG_PATH: ${{ matrix.pkg_config_path }}
 
     steps:
     - name: Show OS
