@@ -26,7 +26,10 @@ else
   $(info No compiler flags for: $(CC))
 endif
 
-LDFLAGS := -ludev -lyaml -lftdi -lusb
+LIBFTDI := $(shell pkg-config --exists libftdi1 && echo libftdi1 || echo libftdi)
+
+CPPFLAGS := $(shell pkg-config --cflags yaml-0.1 $(LIBFTDI) libudev)
+LDFLAGS := $(shell pkg-config --libs yaml-0.1 $(LIBFTDI) libudev)
 
 CLIENT_SRCS := cdba.c circ_buf.c
 CLIENT_OBJS := $(CLIENT_SRCS:.c=.o)
