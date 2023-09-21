@@ -144,7 +144,10 @@ static void parse_board(struct device_parser *dp)
 			if (!dev->boot)
 				dev->boot = device_fastboot_boot;
 		} else if (!strcmp(key, "fastboot_set_active")) {
-			dev->set_active = !strcmp(value, "true");
+			if (!strcmp(value, "true"))
+				dev->set_active = "a";
+			else
+				dev->set_active = strdup(value);
 		} else if (!strcmp(key, "broken_fastboot_boot")) {
 			if (!strcmp(value, "true"))
 				dev->boot = device_fastboot_flash_reboot;

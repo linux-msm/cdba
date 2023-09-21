@@ -35,7 +35,7 @@ struct device {
 	void (*key)(struct device *device, int key, bool asserted);
 
 	void (*send_break)(struct device *dev);
-	bool set_active;
+	const char *set_active;
 
 	void *cdb;
 
