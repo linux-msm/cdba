@@ -76,11 +76,11 @@ jobs:
 
           # Debian cross compilation builds
           - container: "debian:testing"
-            arch: armel
-            compiler: arm-linux-gnueabi-gcc
-            cross_compile: arm-linux-gnueabi
+            arch: armhf
+            compiler: arm-linux-gnueabihf-gcc
+            cross_compile: arm-linux-gnueabihf
             variant: cross-compile
-            pkg_config_path: /usr/lib/arm-linux-gnueabi/pkgconfig
+            pkg_config_path: /usr/lib/arm-linux-gnueabihf/pkgconfig
 
           - container: "debian:testing"
             arch: arm64
@@ -104,11 +104,11 @@ jobs:
             pkg_config_path: /usr/lib/s390x-linux-gnu/pkgconfig
 
           - container: "debian:stable"
-            arch: armel
-            compiler: arm-linux-gnueabi-gcc
-            cross_compile: arm-linux-gnueabi
+            arch: armhf
+            compiler: arm-linux-gnueabihf-gcc
+            cross_compile: arm-linux-gnueabihf
             variant: cross-compile
-            pkg_config_path: /usr/lib/arm-linux-gnueabi/pkgconfig
+            pkg_config_path: /usr/lib/arm-linux-gnueabihf/pkgconfig
 
           - container: "debian:stable"
             arch: arm64
