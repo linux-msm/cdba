@@ -29,6 +29,7 @@ jobs:
       fail-fast: false
       matrix:
         arch: [x86-64]
+        family: [x86-64]
         compiler: [gcc, clang]
         container:
           - archlinux:latest
@@ -54,6 +55,7 @@ jobs:
           # Debian 32-bit builds
           - container: "debian:testing"
             arch: i386
+            family: x86
             compiler: gcc -m32
             cross_compile: i686-linux-gnu
             pkg_config_path: /usr/lib/i386-linux-gnu/pkgconfig
@@ -61,6 +63,7 @@ jobs:
 
           - container: "debian:stable"
             arch: i386
+            family: x86
             compiler: gcc -m32
             cross_compile: i686-linux-gnu
             pkg_config_path: /usr/lib/i386-linux-gnu/pkgconfig
@@ -68,6 +71,7 @@ jobs:
 
           - container: "debian:bookworm"
             arch: i386
+            family: x86
             compiler: gcc -m32
             cross_compile: i686-linux-gnu
             pkg_config_path: /usr/lib/i386-linux-gnu/pkgconfig
@@ -75,6 +79,7 @@ jobs:
 
           - container: "debian:buster"
             arch: i386
+            family: x86
             compiler: gcc -m32
             cross_compile: i686-linux-gnu
             pkg_config_path: /usr/lib/i386-linux-gnu/pkgconfig
@@ -83,6 +88,7 @@ jobs:
           # Debian cross compilation builds
           - container: "debian:testing"
             arch: armhf
+            family: arm
             compiler: arm-linux-gnueabihf-gcc
             cross_compile: arm-linux-gnueabihf
             pkg_config_path: /usr/lib/arm-linux-gnueabihf/pkgconfig
@@ -90,6 +96,7 @@ jobs:
 
           - container: "debian:testing"
             arch: arm64
+            family: aarch64
             compiler: aarch64-linux-gnu-gcc
             cross_compile: aarch64-linux-gnu
             pkg_config_path: /usr/lib/aarch64-linux-gnu/pkgconfig
@@ -97,6 +104,7 @@ jobs:
 
           - container: "debian:testing"
             arch: ppc64el
+            family: ppc64
             compiler: powerpc64le-linux-gnu-gcc
             cross_compile: powerpc64le-linux-gnu
             pkg_config_path: /usr/lib/powerpc64le-linux-gnu/pkgconfig
@@ -104,6 +112,7 @@ jobs:
 
           - container: "debian:testing"
             arch: s390x
+            family: s390x
             compiler: s390x-linux-gnu-gcc
             cross_compile: s390x-linux-gnu
             pkg_config_path: /usr/lib/s390x-linux-gnu/pkgconfig
@@ -111,6 +120,7 @@ jobs:
 
           - container: "debian:stable"
             arch: armhf
+            family: arm
             compiler: arm-linux-gnueabihf-gcc
             cross_compile: arm-linux-gnueabihf
             pkg_config_path: /usr/lib/arm-linux-gnueabihf/pkgconfig
@@ -118,6 +128,7 @@ jobs:
 
           - container: "debian:stable"
             arch: arm64
+            family: aarch64
             compiler: aarch64-linux-gnu-gcc
             cross_compile: aarch64-linux-gnu
             pkg_config_path: /usr/lib/aarch64-linux-gnu/pkgconfig
@@ -125,6 +136,7 @@ jobs:
 
           - container: "debian:stable"
             arch: ppc64el
+            family: ppc64
             compiler: powerpc64le-linux-gnu-gcc
             cross_compile: powerpc64le-linux-gnu
             pkg_config_path: /usr/lib/powerpc64le-linux-gnu/pkgconfig
@@ -132,6 +144,7 @@ jobs:
 
           - container: "debian:stable"
             arch: s390x
+            family: s390x
             compiler: s390x-linux-gnu-gcc
             cross_compile: s390x-linux-gnu
             pkg_config_path: /usr/lib/s390x-linux-gnu/pkgconfig
@@ -141,9 +154,9 @@ jobs:
       image: ${{ matrix.container }}
       env:
         ARCH: ${{ matrix.arch }}
+        FAMILY: ${{ matrix.family }}
         CC: ${{ matrix.compiler }}
         CROSS_COMPILE: ${{ matrix.cross_compile }}
-        MODE: ${{ matrix.mode }}
         PKG_CONFIG_PATH: ${{ matrix.pkg_config_path }}
         VARIANT: ${{ matrix.variant }}
 
@@ -154,10 +167,11 @@ jobs:
     - name: Show env (matrix settings)
       run: |
         echo "ARCH: $ARCH"
+        echo "FAMILY: $FAMILY"
         echo "CC: $CC"
         echo "CROSS_COMPILE: $CROSS_COMPILE"
-        echo "MODE: $MODE"
         echo "VARIANT: $VARIANT"
+        echo "PKG_CONFIG_PATH: $PKG_CONFIG_PATH"
 
     - name: Git checkout
       uses: actions/checkout@v3
@@ -187,14 +201,42 @@ jobs:
         echo "############################################"
         printenv
 
-    - name: Meson init
-      if: ${{ matrix.arch == 'x86-64' && matrix.container != 'ubuntu:xenial' }}
+    # i386 build on x86_64 only requires passing -m32 to CFLAGS & LDFLAGS
+    - name: Meson init for i386
+      if: ${{ matrix.container != 'ubuntu:xenial' && matrix.variant == 'i386' }}
       run: |
         mkdir build
+        CFLAGS="-m32" LDFLAGS="-m32" meson setup . build
+
+    - name: Meson init with cross compile
+      if: ${{ matrix.container != 'ubuntu:xenial' && matrix.variant == 'cross-compile' }}
+      run: |
+        # Generate cross compile file (see https://mesonbuild.com/Cross-compilation.html#cross-compilation)
+        echo "[binaries]" > cross.txt
+        echo "c = '${CROSS_COMPILE}-gcc'" >> cross.txt
+        echo "strip = '${CROSS_COMPILE}-strip'" >> cross.txt
+        # Forcing pkgconfig binary to 'pkg-config' is required for cross build to work
+        echo "pkgconfig = 'pkg-config'" >> cross.txt
+        echo "[host_machine]" >> cross.txt
+        echo "system = 'linux'" >> cross.txt
+        echo "cpu_family = '${FAMILY}'" >> cross.txt
+        echo "cpu = '${ARCH}'" >> cross.txt
+        echo "endian = 'little'" >> cross.txt
+        echo "[properties]" >> cross.txt
+        echo "pkg_config_libdir = '${PKG_CONFIG_PATH}'" >> cross.txt
+        cat cross.txt
+        mkdir build
+        meson setup --cross-file cross.txt . build
+
+    - name: Meson init
+      if: ${{ matrix.container != 'ubuntu:xenial' && matrix.variant == '' }}
+      run: |
+        mkdir build
+        # Ubuntu Xenial Meson version doesn't support meson setup, so use old way by default
         meson . build
 
     - name: Ninja build
-      if: ${{ matrix.arch == 'x86-64' && matrix.container != 'ubuntu:xenial' }}
+      if: ${{ matrix.container != 'ubuntu:xenial' }}
       run: ninja -C build
 
     - name: Compile
