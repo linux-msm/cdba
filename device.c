@@ -301,7 +301,6 @@ void device_send_break(struct device *device)
 void device_list_devices(const char *username)
 {
 	struct device *device;
-	struct msg hdr;
 	size_t len;
 	char buf[80];
 
@@ -314,22 +313,16 @@ void device_list_devices(const char *username)
 		else
 			len = snprintf(buf, sizeof(buf), "%s", device->board);
 
-		hdr.type = MSG_LIST_DEVICES;
-		hdr.len = len;
-		write(STDOUT_FILENO, &hdr, sizeof(hdr));
-		write(STDOUT_FILENO, buf, len);
+		cdba_send_buf(MSG_LIST_DEVICES, len, buf);
 	}
 
-	hdr.type = MSG_LIST_DEVICES;
-	hdr.len = 0;
-	write(STDOUT_FILENO, &hdr, sizeof(hdr));
+	cdba_send_buf(MSG_LIST_DEVICES, 0, NULL);
 }
 
 void device_info(const char *username, const void *data, size_t dlen)
 {
+	char *description = NULL;
 	struct device *device;
-	struct msg hdr;
-	char *description;
 	size_t len = 0;
 
 	list_for_each_entry(device, &devices, node) {
@@ -346,11 +339,7 @@ void device_info(const char *username, const void *data, size_t dlen)
 		}
 	}
 
-	hdr.type = MSG_BOARD_INFO;
-	hdr.len = len;
-	write(STDOUT_FILENO, &hdr, sizeof(hdr));
-	if (len)
-		write(STDOUT_FILENO, description, len);
+	cdba_send_buf(MSG_BOARD_INFO, len, description);
 }
 
 void device_close(struct device *dev)

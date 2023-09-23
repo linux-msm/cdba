@@ -344,7 +344,6 @@ unsigned int cdb_vref(struct cdb_assist *cdb)
 void cdb_assist_print_status(struct device *dev)
 {
 	struct cdb_assist *cdb = dev->cdb;
-	struct msg hdr;
 	char buf[128];
 	int n;
 
@@ -358,10 +357,7 @@ void cdb_assist_print_status(struct device *dev)
 			 cdb->btn[2] ? " btn3" : "",
 			 cdb->vref);
 
-	hdr.type = MSG_STATUS_UPDATE;
-	hdr.len = n;
-	write(STDOUT_FILENO, &hdr, sizeof(hdr));
-	write(STDOUT_FILENO, buf, n);
+	cdba_send_buf(MSG_STATUS_UPDATE, n, buf);
 }
 
 void cdb_set_voltage(struct cdb_assist *cdb, unsigned mV)

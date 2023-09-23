@@ -207,7 +207,6 @@ out:
 
 static int conmux_data(int fd, void *data)
 {
-	struct msg hdr;
 	char buf[128];
 	ssize_t n;
 
@@ -219,10 +218,7 @@ static int conmux_data(int fd, void *data)
 		fprintf(stderr, "Received EOF from conmux\n");
 		watch_quit();
 	} else {
-		hdr.type = MSG_CONSOLE;
-		hdr.len = n;
-		write(STDOUT_FILENO, &hdr, sizeof(hdr));
-		write(STDOUT_FILENO, buf, n);
+		cdba_send_buf(MSG_CONSOLE, n, buf);
 	}
 
 	return 0;
