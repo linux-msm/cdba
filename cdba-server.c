@@ -47,6 +47,7 @@
 #include "list.h"
 
 static bool quit_invoked;
+static const char *username;
 
 struct device *selected_device;
 
@@ -121,7 +122,7 @@ static void msg_select_board(const void *param)
 {
 	struct msg reply = { MSG_SELECT_BOARD, 0 };
 
-	selected_device = device_open(param, &fastboot_ops);
+	selected_device = device_open(param, username, &fastboot_ops);
 	if (!selected_device) {
 		fprintf(stderr, "failed to open %s\n", (const char *)param);
 		quit_invoked = true;
@@ -231,10 +232,10 @@ static int handle_stdin(int fd, void *buf)
 			device_send_break(selected_device);
 			break;
 		case MSG_LIST_DEVICES:
-			device_list_devices();
+			device_list_devices(username);
 			break;
 		case MSG_BOARD_INFO:
-			device_info(msg->data, msg->len);
+			device_info(username, msg->data, msg->len);
 			break;
 		default:
 			fprintf(stderr, "unk %d len %d\n", msg->type, msg->len);
@@ -363,6 +364,8 @@ int main(int argc, char **argv)
 	int ret;
 
 	signal(SIGPIPE, sigpipe_handler);
+
+	username = getenv("CDBA_USER");
 
 	ret = device_parser(".cdba");
 	if (ret) {

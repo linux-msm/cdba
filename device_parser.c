@@ -90,6 +90,28 @@ static void parse_board(struct device_parser *dp)
 	dev = calloc(1, sizeof(*dev));
 
 	while (accept(dp, YAML_SCALAR_EVENT, key)) {
+		if (!strcmp(key, "users")) {
+			dev->users = calloc(1, sizeof(*dev->users));
+			list_init(dev->users);
+
+			if (accept(dp, YAML_SCALAR_EVENT, value))
+				continue;
+
+			expect(dp, YAML_SEQUENCE_START_EVENT, NULL);
+
+			while (accept(dp, YAML_SCALAR_EVENT, key)) {
+				struct device_user *user = calloc(1, sizeof(*user));
+
+				user->username = strdup(key);
+
+				list_add(dev->users, &user->node);
+			}
+
+			expect(dp, YAML_SEQUENCE_END_EVENT, NULL);
+
+			continue;
+		}
+
 		expect(dp, YAML_SCALAR_EVENT, value);
 
 		if (!strcmp(key, "board")) {

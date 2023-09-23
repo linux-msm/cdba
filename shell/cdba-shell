@@ -1,10 +1,10 @@
 #!/bin/sh
 
-user=$1
+export CDBA_USER="$1"
 cmd=${SSH_ORIGINAL_COMMAND%% *}
 
 if [ "$cmd" = "git-upload-pack" -o "$cmd" = "git-receive-pack" ]; then
-	if grep -Fxq $user $HOME/admins ; then
+	if grep -Fxq $CDBA_USER $HOME/admins ; then
 		exec sh -c "$SSH_ORIGINAL_COMMAND"
 	fi
 

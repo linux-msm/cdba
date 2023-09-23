@@ -83,7 +83,27 @@ static void device_lock(struct device *device)
 		err(1, "failed to lock lockfile %s", lock);
 }
 
+static bool device_check_access(struct device *device,
+				const char *username)
+{
+	struct device_user *user;
+
+	if (!device->users)
+		return true;
+
+	if (!username)
+		return false;
+
+	list_for_each_entry(user, device->users, node) {
+		if (!strcmp(user->username, username))
+			return true;
+	}
+
+	return false;
+}
+
 struct device *device_open(const char *board,
+			   const char *username,
 			   struct fastboot_ops *fastboot_ops)
 {
 	struct device *device;
@@ -97,6 +117,9 @@ struct device *device_open(const char *board,
 
 found:
 	assert(device->open || device->console_dev);
+
+	if (!device_check_access(device, username))
+		return NULL;
 
 	device_lock(device);
 
@@ -269,7 +292,7 @@ void device_send_break(struct device *device)
 		device->send_break(device);
 }
 
-void device_list_devices(void)
+void device_list_devices(const char *username)
 {
 	struct device *device;
 	struct msg hdr;
@@ -277,6 +300,9 @@ void device_list_devices(void)
 	char buf[80];
 
 	list_for_each_entry(device, &devices, node) {
+		if (!device_check_access(device, username))
+			continue;
+
 		if (device->name)
 			len = snprintf(buf, sizeof(buf), "%-20s %s", device->board, device->name);
 		else
@@ -293,7 +319,7 @@ void device_list_devices(void)
 	write(STDOUT_FILENO, &hdr, sizeof(hdr));
 }
 
-void device_info(const void *data, size_t dlen)
+void device_info(const char *username, const void *data, size_t dlen)
 {
 	struct device *device;
 	struct msg hdr;
@@ -301,7 +327,13 @@ void device_info(const void *data, size_t dlen)
 	size_t len = 0;
 
 	list_for_each_entry(device, &devices, node) {
-		if (!strncmp(device->board, data, dlen) && device->description) {
+		if (strncmp(device->board, data, dlen))
+			continue;
+
+		if (!device_check_access(device, username))
+			continue;
+
+		if (device->description) {
 			description = device->description;
 			len = strlen(device->description);
 			break;
