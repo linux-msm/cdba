@@ -406,6 +406,17 @@ int main(int argc, char **argv)
 
 done:
 
+	/* if we got here, stdin/out/err might be not accessible anymore */
+	ret = open("/dev/null", O_RDWR);
+	if (ret >= 0) {
+		close(STDIN_FILENO);
+		dup2(ret, STDIN_FILENO);
+		close(STDOUT_FILENO);
+		dup2(ret, STDOUT_FILENO);
+		close(STDERR_FILENO);
+		dup2(ret, STDERR_FILENO);
+	}
+
 	if (selected_device)
 		device_close(selected_device);
 
