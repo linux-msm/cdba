@@ -39,6 +39,7 @@
 #include "conmux.h"
 #include "console.h"
 #include "qcomlt_dbg.h"
+#include "ppps.h"
 
 #define TOKEN_LENGTH	16384
 
@@ -179,6 +180,8 @@ static void parse_board(struct device_parser *dp)
 			dev->fastboot_key_timeout = strtoul(value, NULL, 10);
 		} else if (!strcmp(key, "usb_always_on")) {
 			dev->usb_always_on = !strcmp(value, "true");
+		} else if (!strcmp(key, "ppps_path")) {
+			dev->ppps_path = strdup(value);
 		} else {
 			fprintf(stderr, "device parser: unknown key \"%s\"\n", key);
 			exit(1);

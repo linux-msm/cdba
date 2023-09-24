@@ -15,6 +15,7 @@ struct device {
 	char *name;
 	char *serial;
 	char *description;
+	char *ppps_path;
 	struct list_head *users;
 	unsigned voltage;
 	bool tickle_mmc;
