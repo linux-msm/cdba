@@ -82,16 +82,10 @@ int tty_open(const char *tty, struct termios *old)
 static void fastboot_opened(struct fastboot *fb, void *data)
 {
 	const uint8_t one = 1;
-	struct msg *msg;
 
 	warnx("fastboot connection opened");
 
-	msg = alloca(sizeof(*msg) + 1);
-	msg->type = MSG_FASTBOOT_PRESENT;
-	msg->len = 1;
-	memcpy(msg->data, &one, 1);
-
-	write(STDOUT_FILENO, msg, sizeof(*msg) + 1);
+	cdba_send_buf(MSG_FASTBOOT_PRESENT, 1, &one);
 }
 
 static void fastboot_info(struct fastboot *fb, const void *buf, size_t len)
@@ -102,14 +96,8 @@ static void fastboot_info(struct fastboot *fb, const void *buf, size_t len)
 static void fastboot_disconnect(void *data)
 {
 	const uint8_t zero = 0;
-	struct msg *msg;
 
-	msg = alloca(sizeof(*msg) + 1);
-	msg->type = MSG_FASTBOOT_PRESENT;
-	msg->len = 1;
-	memcpy(msg->data, &zero, 1);
-
-	write(STDOUT_FILENO, msg, sizeof(*msg) + 1);
+	cdba_send_buf(MSG_FASTBOOT_PRESENT, 1, &zero);
 }
 
 static struct fastboot_ops fastboot_ops = {
@@ -120,15 +108,13 @@ static struct fastboot_ops fastboot_ops = {
 
 static void msg_select_board(const void *param)
 {
-	struct msg reply = { MSG_SELECT_BOARD, 0 };
-
 	selected_device = device_open(param, username, &fastboot_ops);
 	if (!selected_device) {
 		fprintf(stderr, "failed to open %s\n", (const char *)param);
 		quit_invoked = true;
 	}
 
-	write(STDOUT_FILENO, &reply, sizeof(reply));
+	cdba_send(MSG_SELECT_BOARD);
 }
 
 static void *fastboot_payload;
@@ -136,7 +122,6 @@ static size_t fastboot_size;
 
 static void msg_fastboot_download(const void *data, size_t len)
 {
-	struct msg reply = { MSG_FASTBOOT_DOWNLOAD, };
 	size_t new_size = fastboot_size + len;
 	char *newp;
 
@@ -152,18 +137,23 @@ static void msg_fastboot_download(const void *data, size_t len)
 	if (!len) {
 		device_boot(selected_device, fastboot_payload, fastboot_size);
 
-		write(STDOUT_FILENO, &reply, sizeof(reply));
+		cdba_send(MSG_FASTBOOT_DOWNLOAD);
 		free(fastboot_payload);
 		fastboot_payload = NULL;
 		fastboot_size = 0;
 	}
 }
 
-static void invoke_reply(int reply)
+void cdba_send_buf(int type, size_t len, const void *buf)
 {
-	struct msg msg = { reply, };
+	struct msg msg = {
+		.type = type,
+		.len = len
+	};
 
 	write(STDOUT_FILENO, &msg, sizeof(msg));
+	if (len)
+		write(STDOUT_FILENO, buf, len);
 }
 
 static int handle_stdin(int fd, void *buf)
@@ -206,12 +196,12 @@ static int handle_stdin(int fd, void *buf)
 		case MSG_POWER_ON:
 			device_power(selected_device, true);
 
-			invoke_reply(MSG_POWER_ON);
+			cdba_send(MSG_POWER_ON);
 			break;
 		case MSG_POWER_OFF:
 			device_power(selected_device, false);
 
-			invoke_reply(MSG_POWER_OFF);
+			cdba_send(MSG_POWER_OFF);
 			break;
 		case MSG_FASTBOOT_DOWNLOAD:
 			msg_fastboot_download(msg->data, msg->len);

@@ -144,10 +144,30 @@ static int fork_ssh(const char *host, const char *cmd, int *pipes)
 	return 0;
 }
 
+#define cdba_send(fd, type) cdba_send_buf(fd, type, 0, NULL)
+static int cdba_send_buf(int fd, int type, size_t len, const void *buf)
+{
+	int ret;
+
+	struct msg msg = {
+		.type = type,
+		.len = len
+	};
+
+	ret = write(fd, &msg, sizeof(msg));
+	if (ret < 0)
+		return ret;
+
+	if (len)
+		ret = write(fd, buf, len);
+
+	return ret < 0 ? ret : 0;
+}
+
 static int tty_callback(int *ssh_fds)
 {
+	static const char ctrl_a = 0x1;
 	static bool special;
-	struct msg hdr;
 	char buf[32];
 	ssize_t k;
 	ssize_t n;
@@ -157,7 +177,7 @@ static int tty_callback(int *ssh_fds)
 		return n;
 
 	for (k = 0; k < n; k++) {
-		if (buf[k] == 0x1) {
+		if (buf[k] == ctrl_a) {
 			special = true;
 		} else if (special) {
 			switch (buf[k]) {
@@ -165,51 +185,31 @@ static int tty_callback(int *ssh_fds)
 				quit = true;
 				break;
 			case 'P':
-				hdr.type = MSG_POWER_ON;
-				hdr.len = 0;
-				write(ssh_fds[0], &hdr, sizeof(hdr));
+				cdba_send(ssh_fds[0], MSG_POWER_ON);
 				break;
 			case 'p':
-				hdr.type = MSG_POWER_OFF;
-				hdr.len = 0;
-				write(ssh_fds[0], &hdr, sizeof(hdr));
+				cdba_send(ssh_fds[0], MSG_POWER_OFF);
 				break;
 			case 's':
-				hdr.type = MSG_STATUS_UPDATE;
-				hdr.len = 0;
-				write(ssh_fds[0], &hdr, sizeof(hdr));
+				cdba_send(ssh_fds[0], MSG_STATUS_UPDATE);
 				break;
 			case 'V':
-				hdr.type = MSG_VBUS_ON;
-				hdr.len = 0;
-				write(ssh_fds[0], &hdr, sizeof(hdr));
+				cdba_send(ssh_fds[0], MSG_VBUS_ON);
 				break;
 			case 'v':
-				hdr.type = MSG_VBUS_OFF;
-				hdr.len = 0;
-				write(ssh_fds[0], &hdr, sizeof(hdr));
+				cdba_send(ssh_fds[0], MSG_VBUS_OFF);
 				break;
 			case 'a':
-				hdr.type = MSG_CONSOLE;
-				hdr.len = 1;
-
-				write(ssh_fds[0], &hdr, sizeof(hdr));
-				write(ssh_fds[0], "\001", 1);
+				cdba_send_buf(ssh_fds[0], MSG_CONSOLE, 1, &ctrl_a);
 				break;
 			case 'B':
-				hdr.type = MSG_SEND_BREAK;
-				hdr.len = 0;
-				write(ssh_fds[0], &hdr, sizeof(hdr));
+				cdba_send(ssh_fds[0], MSG_SEND_BREAK);
 				break;
 			}
 
 			special = false;
 		} else {
-			hdr.type = MSG_CONSOLE;
-			hdr.len = 1;
-
-			write(ssh_fds[0], &hdr, sizeof(hdr));
-			write(ssh_fds[0], buf + k, 1);
+			cdba_send_buf(ssh_fds[0], MSG_CONSOLE, 1, buf + k);
 		}
 	}
 
@@ -226,14 +226,10 @@ static struct list_head work_items = LIST_INIT(work_items);
 
 static void list_boards_fn(struct work *work, int ssh_stdin)
 {
-	struct msg msg;
-	ssize_t n;
+	int ret;
 
-	msg.type = MSG_LIST_DEVICES;
-	msg.len = 0;
-
-	n = write(ssh_stdin, &msg, sizeof(msg));
-	if (n < 0)
+	ret = cdba_send(ssh_stdin, MSG_LIST_DEVICES);
+	if (ret < 0)
 		err(1, "failed to send board list request");
 
 	free(work);
@@ -257,17 +253,12 @@ struct board_info_request {
 static void board_info_fn(struct work *work, int ssh_stdin)
 {
 	struct board_info_request *board = container_of(work, struct board_info_request, work);
-	size_t blen = strlen(board->board) + 1;
-	struct msg *msg;
-	ssize_t n;
+	int ret;
 
-	msg = alloca(sizeof(*msg) + blen);
-	msg->type = MSG_BOARD_INFO;
-	msg->len = blen;
-	memcpy(msg->data, board->board, blen);
-
-	n = write(ssh_stdin, msg, sizeof(*msg) + blen);
-	if (n < 0)
+	ret = cdba_send_buf(ssh_stdin, MSG_BOARD_INFO,
+			    strlen(board->board) + 1,
+			    board->board);
+	if (ret < 0)
 		err(1, "failed to send board info request");
 
 	free(work);
@@ -293,17 +284,12 @@ struct select_board {
 static void select_board_fn(struct work *work, int ssh_stdin)
 {
 	struct select_board *board = container_of(work, struct select_board, work);
-	size_t blen = strlen(board->board) + 1;
-	struct msg *msg;
-	ssize_t n;
+	int ret;
 
-	msg = alloca(sizeof(*msg) + blen);
-	msg->type = MSG_SELECT_BOARD;
-	msg->len = blen;
-	memcpy(msg->data, board->board, blen);
-
-	n = write(ssh_stdin, msg, sizeof(*msg) + blen);
-	if (n < 0)
+	ret = cdba_send_buf(ssh_stdin, MSG_SELECT_BOARD,
+			    strlen(board->board) + 1,
+			    board->board);
+	if (ret < 0)
 		err(1, "failed to send power on request");
 
 	free(work);
@@ -322,21 +308,19 @@ static void request_select_board(const char *board)
 
 static void request_power_on_fn(struct work *work, int ssh_stdin)
 {
-	struct msg msg = { MSG_POWER_ON, };
-	ssize_t n;
+	int ret;
 
-	n = write(ssh_stdin, &msg, sizeof(msg));
-	if (n < 0)
+	ret = cdba_send(ssh_stdin, MSG_POWER_ON);
+	if (ret < 0)
 		err(1, "failed to send power on request");
 }
 
 static void request_power_off_fn(struct work *work, int ssh_stdin)
 {
-	struct msg msg = { MSG_POWER_OFF, };
-	ssize_t n;
+	int ret;
 
-	n = write(ssh_stdin, &msg, sizeof(msg));
-	if (n < 0)
+	ret = cdba_send(ssh_stdin, MSG_POWER_OFF);
+	if (ret < 0)
 		err(1, "failed to send power off request");
 }
 
@@ -365,29 +349,25 @@ struct fastboot_download_work {
 static void fastboot_work_fn(struct work *_work, int ssh_stdin)
 {
 	struct fastboot_download_work *work = container_of(_work, struct fastboot_download_work, work);
-	struct msg *msg;
-	size_t left;
-	ssize_t n;
+	ssize_t left;
+	int ret;
 
 	left = MIN(2048, work->size - work->offset);
 
-	msg = alloca(sizeof(*msg) + left);
-	msg->type = MSG_FASTBOOT_DOWNLOAD;
-	msg->len = left;
-	memcpy(msg->data, (char *)work->data + work->offset, left);
-
-	n = write(ssh_stdin, msg, sizeof(*msg) + msg->len);
-	if (n < 0 && errno == EAGAIN) {
+	ret = cdba_send_buf(ssh_stdin, MSG_FASTBOOT_DOWNLOAD,
+			    left,
+			    (char *)work->data + work->offset);
+	if (ret < 0 && errno == EAGAIN) {
 		list_add(&work_items, &_work->node);
 		return;
-	} else if (n < 0) {
+	} else if (ret < 0) {
 		err(1, "failed to write fastboot message");
 	}
 
-	work->offset += msg->len;
+	work->offset += left;
 
 	/* We've sent the entire image, and a zero length packet */
-	if (!msg->len)
+	if (!left)
 		free(work);
 	else
 		list_add(&work_items, &_work->node);
