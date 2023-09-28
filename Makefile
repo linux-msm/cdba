@@ -18,9 +18,9 @@ CLANG_CFLAGS := -Wnull-dereference -Wdouble-promotion -Wshadow -Wpointer-arith -
 # TODO:
 # GCC_CFLAGS += -Wcast-qual
 # CLANG_CFLAGS += -Wcast-qual -Wcast-align
-ifeq ($(CC),cc)
+ifneq (,$(findstring gcc,$(CC)))
   CFLAGS += $(GCC_CFLAGS)
-else ifeq ($(CC),clang)
+else ifneq (,$(findstring clang,$(CC)))
   CFLAGS += $(CLANG_CFLAGS)
 else
   $(info No compiler flags for: $(CC))
