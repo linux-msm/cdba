@@ -34,7 +34,7 @@ LDFLAGS := $(shell pkg-config --libs yaml-0.1 $(LIBFTDI) libudev)
 CLIENT_SRCS := cdba.c circ_buf.c
 CLIENT_OBJS := $(CLIENT_SRCS:.c=.o)
 
-SERVER_SRCS := cdba-server.c cdb_assist.c circ_buf.c conmux.c device.c device_parser.c fastboot.c alpaca.c ftdi-gpio.c console.c qcomlt_dbg.c
+SERVER_SRCS := cdba-server.c cdb_assist.c circ_buf.c conmux.c device.c device_parser.c fastboot.c alpaca.c ftdi-gpio.c console.c qcomlt_dbg.c ppps.c
 SERVER_OBJS := $(SERVER_SRCS:.c=.o)
 
 $(CLIENT): $(CLIENT_OBJS)
