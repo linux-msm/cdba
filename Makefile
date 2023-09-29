@@ -12,8 +12,9 @@ CFLAGS := $(CFLAGS) -Wextra -Wno-unused-parameter -Wno-unused-result -Wno-missin
 # Few clang version still have warnings so fail only on GCC
 GCC_CFLAGS := -Werror
 GCC_CFLAGS += -Wformat-signedness -Wnull-dereference -Wduplicated-cond -Wduplicated-branches -Wvla-larger-than=1
-GCC_CFLAGS += -Walloc-zero -Wstringop-truncation -Wdouble-promotion -Wshadow -Wunsafe-loop-optimizations
+GCC_CFLAGS += -Walloc-zero -Wdouble-promotion -Wshadow -Wunsafe-loop-optimizations
 GCC_CFLAGS += -Wpointer-arith -Wcast-align -Wwrite-strings -Wlogical-op -Wstrict-overflow=4 -Wundef -Wjump-misses-init
+#GCC_CFLAGS += -Wstringop-truncation # not on Ubuntu bionic, gcc 7.5 doesn't support it
 CLANG_CFLAGS := -Wnull-dereference -Wdouble-promotion -Wshadow -Wpointer-arith -Wwrite-strings -Wstrict-overflow=4 -Wundef
 # TODO:
 # GCC_CFLAGS += -Wcast-qual
