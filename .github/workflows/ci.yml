@@ -47,10 +47,17 @@ jobs:
           - ubuntu:jammy
           - ubuntu:focal
           - ubuntu:bionic
-          - ubuntu:xenial
         cross_compile: [""]
         variant: [""]
         include:
+          - container: "ubuntu:xenial"
+            arch: x86-64
+            compiler: cc
+
+          - container: "ubuntu:xenial"
+            arch: x86-64
+            compiler: clang
+
           # Debian 32-bit builds
           - container: "debian:testing"
             arch: i386
