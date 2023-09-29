@@ -51,7 +51,7 @@ struct conmux {
 
 struct conmux_lookup {
 	char *host;
-	int port;
+	char *port;
 };
 
 struct conmux_response {
@@ -193,7 +193,7 @@ static int registry_lookup(const char *service, struct conmux_lookup *result)
 	*p++ = '\0';
 
 	result->host = strdup(resp.result);
-	result->port = strtol(p, NULL, 10);
+	result->port = strdup(p);
 
 	ret = strcmp(resp.status, "OK") ? -1 : 0;
 
@@ -226,17 +226,16 @@ static int conmux_data(int fd, void *data)
 
 void *conmux_open(struct device *dev)
 {
+	struct addrinfo hints = {0}, *addrs, *addr;
 	struct conmux_response resp = {};
 	struct conmux_lookup lookup;
-	struct sockaddr_in saddr;
 	struct conmux *conmux;
-	struct hostent *hent;
 	const char *service = dev->control_dev;
 	const char *user;
 	ssize_t n;
 	char req[256];
 	int ret;
-	int fd;
+	int fd = -1;
 
 	user = getenv("USER");
 	if (!user)
@@ -246,27 +245,31 @@ void *conmux_open(struct device *dev)
 	if (ret)
 		exit(1);
 
-	fprintf(stderr, "conmux device at %s:%d\n", lookup.host, lookup.port);
+	fprintf(stderr, "conmux device at %s:%s\n", lookup.host, lookup.port);
 
-	fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (fd < 0)
-		err(1, "failed to create registry socket");
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = IPPROTO_TCP;
 
-	memset(&saddr, 0, sizeof(saddr));
-	saddr.sin_family = AF_INET;
-	saddr.sin_port = htons(lookup.port);
+	ret = getaddrinfo(lookup.host, lookup.port, &hints, &addrs);
+	if (ret != 0)
+		errx(1, "failed resolve \"%s\": %s", lookup.host, gai_strerror(ret));
 
-	hent = gethostbyname(lookup.host);
-	if (!hent) {
-		errno = h_errno;
-		err(1, "failed resolve \"%s\"", lookup.host);
+	for (addr = addrs; addr; addr = addr->ai_next) {
+		fd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
+		if (fd < 0)
+			err(1, "failed to create registry socket");
+
+		ret = connect(fd, addr->ai_addr, addr->ai_addrlen);
+		if (ret < 0) {
+			warn("failed to connect to conmux instance");
+			close(fd);
+			fd = -1;
+		}
 	}
 
-	saddr.sin_addr = *(struct in_addr *)hent->h_addr_list[0];
-
-	ret = connect(fd, (struct sockaddr *)&saddr, sizeof(saddr));
-	if (ret < 0)
-		err(1, "failed to connect to conmux instance");
+	if (fd == -1)
+		errx(1, "failed to connect to conmux instance");
 
 	ret = snprintf(req, sizeof(req), "CONNECT id=cdba:%s to=console\n", user);
 	if (ret >= (int)sizeof(req))
