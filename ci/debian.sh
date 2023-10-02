@@ -32,7 +32,6 @@ apt install -y --no-install-recommends \
 	libftdi-dev \
 	libudev-dev \
 	libyaml-dev \
-	make \
 	meson \
 	$PKGS_CC
 
