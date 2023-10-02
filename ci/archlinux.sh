@@ -20,8 +20,8 @@ pacman -Syu --noconfirm \
 	libftdi-compat \
 	libyaml \
 	systemd-libs \
-	make \
 	pkgconf \
+	meson \
 	$PKGS_CC
 
 echo "Install finished: $0"

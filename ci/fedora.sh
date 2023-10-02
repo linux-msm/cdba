@@ -20,7 +20,7 @@ dnf -y install \
 	libftdi-devel \
 	libudev-devel \
 	libyaml-devel \
-	make \
+	meson \
 	$PKGS_CC
 
 echo "Install finished: $0"
