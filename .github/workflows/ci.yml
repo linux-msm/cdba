@@ -207,7 +207,7 @@ jobs:
       if: ${{ matrix.variant == 'i386' }}
       run: |
         mkdir build
-        CFLAGS="-m32" LDFLAGS="-m32" meson setup . build
+        CFLAGS="-m32" LDFLAGS="-m32" meson setup --werror . build
 
     - name: Meson init with cross compile
       if: ${{ matrix.variant == 'cross-compile' }}
@@ -227,13 +227,13 @@ jobs:
         echo "pkg_config_libdir = '${PKG_CONFIG_PATH}'" >> cross.txt
         cat cross.txt
         mkdir build
-        meson setup --cross-file cross.txt . build
+        meson setup --cross-file cross.txt --werror . build
 
     - name: Meson init
       if: ${{ matrix.variant == '' }}
       run: |
         mkdir build
-        meson setup . build
+        meson setup --werror . build
 
     - name: Compile
       run: ninja -C build

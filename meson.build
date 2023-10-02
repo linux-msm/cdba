@@ -26,8 +26,7 @@ compiler_cflags = ['-Wno-unused-parameter',
 
 # TODO add clang specific options
 if compiler.get_id() == 'gcc'
-	compiler_cflags += ['-Werror',	# Only set it on GCC
-			    '-Wformat-signedness',
+	compiler_cflags += ['-Wformat-signedness',
 			    '-Wduplicated-cond',
 			    '-Wduplicated-branches',
 			    '-Wvla-larger-than=1',
