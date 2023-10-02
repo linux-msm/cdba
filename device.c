@@ -254,12 +254,10 @@ void device_print_status(struct device *device)
 
 void device_usb(struct device *device, bool on)
 {
-	if (device->usb) {
-		if (device->ppps_path)
-			ppps_power(device, on);
-		else
-			device->usb(device, on);
-	}
+	if (device->ppps_path)
+		ppps_power(device, on);
+	else if (device->usb)
+		device->usb(device, on);
 }
 
 int device_write(struct device *device, const void *buf, size_t len)
