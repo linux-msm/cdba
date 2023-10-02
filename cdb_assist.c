@@ -43,6 +43,7 @@
 
 #include "cdba-server.h"
 #include "cdb_assist.h"
+#include "device.h"
 
 struct cdb_assist {
 	char serial[9];
@@ -382,3 +383,12 @@ void cdb_assist_key(struct device *dev, int key, bool asserted)
 		break;
 	}
 }
+
+const struct control_ops cdb_assist_ops = {
+	.open = cdb_assist_open,
+	.close = cdb_assist_close,
+	.power = cdb_assist_power,
+	.print_status = cdb_assist_print_status,
+	.usb = cdb_assist_usb,
+	.key = cdb_assist_key,
+};

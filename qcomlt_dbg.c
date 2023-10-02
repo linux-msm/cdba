@@ -44,6 +44,7 @@
 
 #include "cdba-server.h"
 #include "qcomlt_dbg.h"
+#include "device.h"
 
 struct qcomlt_dbg {
 	int fd;
@@ -99,3 +100,10 @@ void qcomlt_dbg_key(struct device *dev, int key, bool asserted)
 		break;
 	}
 }
+
+const struct control_ops qcomlt_dbg_ops = {
+	.open = qcomlt_dbg_open,
+	.power = qcomlt_dbg_power,
+	.usb = qcomlt_dbg_usb,
+	.key = qcomlt_dbg_key,
+};

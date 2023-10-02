@@ -43,6 +43,7 @@
 
 #include "cdba-server.h"
 #include "alpaca.h"
+#include "device.h"
 
 struct alpaca {
 	int alpaca_fd;
@@ -147,3 +148,10 @@ void alpaca_key(struct device *dev, int key, bool asserted)
 		break;
 	}
 }
+
+const struct control_ops alpaca_ops = {
+	.open = alpaca_open,
+	.power = alpaca_power,
+	.usb = alpaca_usb,
+	.key = alpaca_key,
+};

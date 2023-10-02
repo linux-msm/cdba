@@ -251,3 +251,10 @@ void ftdi_gpio_key(struct device *dev, int key, bool asserted)
 		break;
 	}
 }
+
+const struct control_ops ftdi_gpio_ops = {
+	.open = ftdi_gpio_open,
+	.power = ftdi_gpio_power,
+	.usb = ftdi_gpio_usb,
+	.key = ftdi_gpio_key,
+};
