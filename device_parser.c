@@ -189,6 +189,8 @@ static void parse_board(struct device_parser *dp)
 			dev->usb_always_on = !strcmp(value, "true");
 		} else if (!strcmp(key, "ppps_path")) {
 			dev->ppps_path = strdup(value);
+		} else if (!strcmp(key, "ppps3_path")) {
+			dev->ppps3_path = strdup(value);
 		} else {
 			fprintf(stderr, "device parser: unknown key \"%s\"\n", key);
 			exit(1);

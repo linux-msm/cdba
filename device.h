@@ -36,6 +36,7 @@ struct device {
 	char *serial;
 	char *description;
 	char *ppps_path;
+	char *ppps3_path;
 	struct list_head *users;
 	unsigned voltage;
 	bool tickle_mmc;
