@@ -32,6 +32,8 @@ jobs:
         family: [x86-64]
         compiler: [gcc, clang]
         container:
+          - alpine:edge
+          - alpine:latest
           - archlinux:latest
           - debian:testing
           - debian:stable
