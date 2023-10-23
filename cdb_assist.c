@@ -42,7 +42,7 @@
 #include <unistd.h>
 
 #include "cdba-server.h"
-#include "cdb_assist.h"
+#include "device.h"
 
 struct cdb_assist {
 	char serial[9];
@@ -88,6 +88,8 @@ enum {
 	STATE_num_mX_,
 	STATE_num_num_m,
 };
+
+static void cdb_set_voltage(struct cdb_assist *cdb, unsigned mV);
 
 static void cdb_parser_bool(struct cdb_assist *cdb, const char *key, bool set)
 {
@@ -271,7 +273,7 @@ static int cdb_ctrl_write(struct cdb_assist *cdb, const char *buf, size_t len)
 	return write(cdb->control_tty, buf, len);
 }
 
-void *cdb_assist_open(struct device *dev)
+static void *cdb_assist_open(struct device *dev)
 {
 	struct cdb_assist *cdb;
 	int ret;
@@ -293,7 +295,7 @@ void *cdb_assist_open(struct device *dev)
 	return cdb;
 }
 
-void cdb_assist_close(struct device *dev)
+static void cdb_assist_close(struct device *dev)
 {
 	struct cdb_assist *cdb = dev->cdb;
 
@@ -309,14 +311,14 @@ static void cdb_power(struct cdb_assist *cdb, bool on)
 	cdb_ctrl_write(cdb, &cmd[on], 1);
 }
 
-void cdb_vbus(struct cdb_assist *cdb, bool on)
+static void cdb_vbus(struct cdb_assist *cdb, bool on)
 {
 	const char cmd[] = "vV";
 
 	cdb_ctrl_write(cdb, &cmd[on], 1);
 }
 
-int cdb_assist_power(struct device *dev, bool on)
+static int cdb_assist_power(struct device *dev, bool on)
 {
 	struct cdb_assist *cdb = dev->cdb;
 
@@ -325,23 +327,18 @@ int cdb_assist_power(struct device *dev, bool on)
 	return 0;
 }
 
-void cdb_assist_usb(struct device *dev, bool on)
+static void cdb_assist_usb(struct device *dev, bool on)
 {
 	cdb_vbus(dev->cdb, on);
 }
 
-void cdb_gpio(struct cdb_assist *cdb, int gpio, bool on)
+static void cdb_gpio(struct cdb_assist *cdb, int gpio, bool on)
 {
 	const char *cmd[] = { "aA", "bB", "cC" };
 	cdb_ctrl_write(cdb, &cmd[gpio][on], 1);
 }
 
-unsigned int cdb_vref(struct cdb_assist *cdb)
-{
-	return cdb->vref;
-}
-
-void cdb_assist_print_status(struct device *dev)
+static void cdb_assist_print_status(struct device *dev)
 {
 	struct cdb_assist *cdb = dev->cdb;
 	char buf[128];
@@ -360,7 +357,7 @@ void cdb_assist_print_status(struct device *dev)
 	cdba_send_buf(MSG_STATUS_UPDATE, n, buf);
 }
 
-void cdb_set_voltage(struct cdb_assist *cdb, unsigned mV)
+static void cdb_set_voltage(struct cdb_assist *cdb, unsigned mV)
 {
 	char buf[20];
 	int n;
@@ -369,7 +366,7 @@ void cdb_set_voltage(struct cdb_assist *cdb, unsigned mV)
 	cdb_ctrl_write(cdb, buf, n);
 }
 
-void cdb_assist_key(struct device *dev, int key, bool asserted)
+static void cdb_assist_key(struct device *dev, int key, bool asserted)
 {
 	struct cdb_assist *cdb = dev->cdb;
 
@@ -382,3 +379,12 @@ void cdb_assist_key(struct device *dev, int key, bool asserted)
 		break;
 	}
 }
+
+const struct control_ops cdb_assist_ops = {
+	.open = cdb_assist_open,
+	.close = cdb_assist_close,
+	.power = cdb_assist_power,
+	.print_status = cdb_assist_print_status,
+	.usb = cdb_assist_usb,
+	.key = cdb_assist_key,
+};

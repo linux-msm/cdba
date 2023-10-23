@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linaro Ltd.
+ * Copyright (c) 2021-2023, Linaro Ltd.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,79 +30,96 @@
  */
 
 #include <sys/types.h>
-#include <ctype.h>
-#include <dirent.h>
-#include <err.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <termios.h>
+#include <sys/wait.h>
 #include <unistd.h>
+
+#include <errno.h>
+#include <stdlib.h>
 
 #include "cdba-server.h"
 #include "device.h"
 
-struct qcomlt_dbg {
-	int fd;
-	struct termios orig_tios;
+struct external {
+	const char *path;
+	const char *board;
 };
 
-static void *qcomlt_dbg_open(struct device *dev)
+static int external_helper(struct external *ext, const char *command, bool on)
 {
-	struct qcomlt_dbg *dbg;
+	pid_t pid, pid_ret;
+	int status;
+
+	pid =  fork();
+	switch (pid) {
+	case 0:
+		/* Do not clobber stdout with program messages or cdba will become confused */
+		dup2(2, 1);
+		return execlp(ext->path, ext->path, ext->board, command, on ? "on": "off", NULL);
+	case -1:
+		return -1;
+	default:
+		break;
+	}
+
+	pid_ret = waitpid(pid, &status, 0);
+	if (pid_ret < 0)
+		return pid_ret;
+
+	if (WIFEXITED(status))
+		return WEXITSTATUS(status);
+	else if (WIFSIGNALED(status))
+		errno = -EINTR;
+	else
+		errno = -EIO;
+
+	return -1;
+}
+
+static void *external_open(struct device *dev)
+{
+	struct external *ext;
 
 	dev->has_power_key = true;
 
-	dbg = calloc(1, sizeof(*dbg));
+	ext = calloc(1, sizeof(*ext));
 
-	dbg->fd = tty_open(dev->control_dev, &dbg->orig_tios);
-	if (dbg->fd < 0)
-		err(1, "failed to open %s", dev->control_dev);
+	ext->path = dev->control_dev;
+	ext->board = dev->board;
 
-	// fprintf(stderr, "qcomlt_dbg_open()\n");
-	write(dbg->fd, "brpu", 4);
-
-	return dbg;
+	return ext;
 }
 
-static int qcomlt_dbg_power(struct device *dev, bool on)
+static int external_power(struct device *dev, bool on)
 {
-	struct qcomlt_dbg *dbg = dev->cdb;	
+	struct external *ext = dev->cdb;
 
-	// fprintf(stderr, "qcomlt_dbg_power(%d)\n", on);
-	return write(dbg->fd, &("pP"[on]), 1);
+	return external_helper(ext, "power", on);
 }
 
-static void qcomlt_dbg_usb(struct device *dev, bool on)
+static void external_usb(struct device *dev, bool on)
 {
-	struct qcomlt_dbg *dbg = dev->cdb;	
+	struct external *ext = dev->cdb;
 
-	// fprintf(stderr, "qcomlt_dbg_usb(%d)\n", on);
-	write(dbg->fd, &("uU"[on]), 1);
+	external_helper(ext, "usb", on);
 }
 
-static void qcomlt_dbg_key(struct device *dev, int key, bool asserted)
+static void external_key(struct device *dev, int key, bool asserted)
 {
-	struct qcomlt_dbg *dbg = dev->cdb;	
-
-	// fprintf(stderr, "qcomlt_dbg_key(%d, %d)\n", key, asserted);
+	struct external *ext = dev->cdb;
 
 	switch (key) {
 	case DEVICE_KEY_FASTBOOT:
-		write(dbg->fd, &("rR"[asserted]), 1);
+		external_helper(ext, "key-fastboot", asserted);
 		break;
 	case DEVICE_KEY_POWER:
-		write(dbg->fd, &("bB"[asserted]), 1);
+		external_helper(ext, "key-power", asserted);
 		break;
 	}
 }
 
-const struct control_ops qcomlt_dbg_ops = {
-	.open = qcomlt_dbg_open,
-	.power = qcomlt_dbg_power,
-	.usb = qcomlt_dbg_usb,
-	.key = qcomlt_dbg_key,
+const struct control_ops external_ops = {
+	.open = external_open,
+	.power = external_power,
+	.usb = external_usb,
+	.key = external_key,
 };
