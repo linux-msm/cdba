@@ -129,6 +129,13 @@ static void parse_board(struct device_parser *dp)
 			continue;
 		}
 
+		if (!strcmp(key, "local_gpio")) {
+			dev->control_options = local_gpio_ops.parse_options(dp);
+			if (dev->control_options)
+				set_control_ops(dev, &local_gpio_ops);
+			continue;
+		}
+
 		device_parser_expect(dp, YAML_SCALAR_EVENT, value, TOKEN_LENGTH);
 
 		if (!strcmp(key, "board")) {

@@ -20,6 +20,7 @@ pacman -Syu --noconfirm \
 	libftdi-compat \
 	libyaml \
 	systemd-libs \
+	libgpiod \
 	pkgconf \
 	meson \
 	$PKGS_CC
