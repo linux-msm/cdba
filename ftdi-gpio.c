@@ -54,18 +54,17 @@ enum {
 	GPIO_COUNT
 };
 
-enum {
-	GPIO_ACTIVE_HIGH = 0,
-	GPIO_ACTIVE_LOW,
-};
-
 struct ftdi_gpio {
+	struct {
+		char *description;
+		unsigned int interface;
+	} ftdi;
+	struct {
+		bool present;
+		unsigned int offset;
+		bool active_low;
+	} gpios[GPIO_COUNT];
 	struct ftdi_context *gpio;
-	char *ftdi_device;
-	unsigned int ftdi_interface;
-	unsigned int gpio_present[GPIO_COUNT];
-	unsigned int gpio_offset[GPIO_COUNT];
-	unsigned int gpio_polarity[GPIO_COUNT];
 	unsigned char gpio_lines;
 };
 
@@ -85,19 +84,19 @@ static int ftdi_gpio_toggle_io(struct ftdi_gpio *ftdi_gpio, unsigned int gpio, b
  * Example: s:0xVEND:0xPROD:SERIAL;D;POWER,0,ACTIVE_LOW;FASTBOOT_KEY,1,ACTIVE_HIGH;POWER_KEY,2,ACTIVE_HIGH;USB_DISCONNECT,3,ACTIVE_LOW
  */
 
-static void ftdi_gpio_parse_config(struct ftdi_gpio *ftdi_gpio, char *control_dev)
+static void ftdi_gpio_parse_config(struct ftdi_gpio *ftdi_gpio, char *value)
 {
 	char *c, *interface;
 	size_t device_len;
 
 	// First libftdi description
-	c = strchr(control_dev, ';');
+	c = strchr(value, ';');
 	if (!c)
-		device_len = strlen(control_dev);
+		device_len = strlen(value);
 	else
-		device_len = c - control_dev;
+		device_len = c - value;
 
-	ftdi_gpio->ftdi_device = strndup(control_dev, device_len);
+	ftdi_gpio->ftdi.description = strndup(value, device_len);
 
 	if (!c)
 		return;
@@ -110,7 +109,7 @@ static void ftdi_gpio_parse_config(struct ftdi_gpio *ftdi_gpio, char *control_de
 	    *interface != 'D') {
 		errx(1, "Invalid interface '%c'", *interface);
 	}
-	ftdi_gpio->ftdi_interface = *interface - 'A';
+	ftdi_gpio->ftdi.interface = *interface - 'A';
 
 	c = strchr(interface, ';');
 
@@ -119,7 +118,7 @@ static void ftdi_gpio_parse_config(struct ftdi_gpio *ftdi_gpio, char *control_de
 		char *name, *off, *pol;
 		unsigned gpio_type;
 		unsigned gpio_offset;
-		unsigned gpio_polarity;
+		bool active_low;
 
 		name = c + 1;
 		off = strchr(name, ',');
@@ -151,15 +150,15 @@ static void ftdi_gpio_parse_config(struct ftdi_gpio *ftdi_gpio, char *control_de
 			errx(1, "GPIOs offset invalid: '%u'", gpio_offset);
 
 		if (strncmp("ACTIVE_HIGH", pol, c - pol - 1) == 0)
-			gpio_polarity = GPIO_ACTIVE_HIGH;
+			active_low = false;
 		else if (strncmp("ACTIVE_LOW", pol, c - pol - 1) == 0)
-			gpio_polarity = GPIO_ACTIVE_LOW;
+			active_low = true;
 		else
 			errx(1, "GPIOs polarity invalid: '%s'", pol);
 
-		ftdi_gpio->gpio_present[gpio_type] = 1;
-		ftdi_gpio->gpio_offset[gpio_type] = gpio_offset;
-		ftdi_gpio->gpio_polarity[gpio_type] = gpio_polarity;
+		ftdi_gpio->gpios[gpio_type].present = true;
+		ftdi_gpio->gpios[gpio_type].offset = gpio_offset;
+		ftdi_gpio->gpios[gpio_type].active_low = active_low;
 	}
 }
 
@@ -175,15 +174,16 @@ static void *ftdi_gpio_open(struct device *dev)
 	if ((ftdi_gpio->gpio = ftdi_new()) == 0)
 		errx(1, "failed to allocate ftdi gpio struct");
 
-	ftdi_set_interface(ftdi_gpio->gpio, INTERFACE_A + ftdi_gpio->ftdi_interface);
+	ftdi_set_interface(ftdi_gpio->gpio, INTERFACE_A + ftdi_gpio->ftdi.interface);
 
-	ret = ftdi_usb_open_string(ftdi_gpio->gpio, ftdi_gpio->ftdi_device);
+	ret = ftdi_usb_open_string(ftdi_gpio->gpio, ftdi_gpio->ftdi.description);
 	if (ret < 0)
-		errx(1, "failed to open ftdi gpio device '%s' (%d)", ftdi_gpio->ftdi_device, ret);
+		errx(1, "failed to open ftdi gpio device '%s' (%d)",
+		     ftdi_gpio->ftdi.description, ret);
 
 	ftdi_set_bitmode(ftdi_gpio->gpio, 0xFF, BITMODE_BITBANG);
 
-	if (ftdi_gpio->gpio_present[GPIO_POWER_KEY])
+	if (ftdi_gpio->gpios[GPIO_POWER_KEY].present)
 		dev->has_power_key = true;
 
 	ftdi_gpio_device_power(ftdi_gpio, 0);
@@ -205,12 +205,12 @@ static int ftdi_gpio_toggle_io(struct ftdi_gpio *ftdi_gpio, unsigned int gpio, b
 {
 	unsigned int bit;
 
-	if (!ftdi_gpio->gpio_present[gpio])
+	if (!ftdi_gpio->gpios[gpio].present)
 		return -EINVAL;
 
-	bit = ftdi_gpio->gpio_offset[gpio];
+	bit = ftdi_gpio->gpios[gpio].offset;
 
-	if (ftdi_gpio->gpio_polarity[gpio])
+	if (ftdi_gpio->gpios[gpio].active_low)
 		on = !on;
 
 	if (on)
