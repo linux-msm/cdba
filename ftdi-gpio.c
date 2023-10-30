@@ -50,6 +50,7 @@ enum {
 	GPIO_FASTBOOT_KEY,		// Usually volume key
 	GPIO_POWER_KEY,			// Key to power the device
 	GPIO_USB_DISCONNECT,		// Simulate main USB connection
+	GPIO_OUTPUT_ENABLE,		// Enable FTDI signals to flow to the board
 	GPIO_COUNT
 };
 
@@ -70,6 +71,7 @@ struct ftdi_gpio {
 
 static int ftdi_gpio_device_power(struct ftdi_gpio *ftdi_gpio, bool on);
 static void ftdi_gpio_device_usb(struct ftdi_gpio *ftdi_gpio, bool on);
+static int ftdi_gpio_toggle_io(struct ftdi_gpio *ftdi_gpio, unsigned int gpio, bool on);
 
 /*
  * fdio_gpio parameter: <libftdi description>;[<interface>[;<gpios>...]]
@@ -139,6 +141,8 @@ static void ftdi_gpio_parse_config(struct ftdi_gpio *ftdi_gpio, char *control_de
 			gpio_type = GPIO_POWER_KEY;
 		else if (strncmp("USB_DISCONNECT", name, off - name - 1) == 0)
 			gpio_type = GPIO_USB_DISCONNECT;
+		else if (strncmp("OUTPUT_ENABLE", name, off - name - 1) == 0)
+			gpio_type = GPIO_OUTPUT_ENABLE;
 		else
 			errx(1, "GPIOs type invalid: '%s'", name);
 
@@ -188,6 +192,9 @@ static void *ftdi_gpio_open(struct device *dev)
 		ftdi_gpio_device_usb(ftdi_gpio, 1);
 	else
 		ftdi_gpio_device_usb(ftdi_gpio, 0);
+
+	if (ftdi_gpio->gpio_present[GPIO_OUTPUT_ENABLE])
+		ftdi_gpio_toggle_io(ftdi_gpio, GPIO_OUTPUT_ENABLE, 1);
 
 	usleep(500000);
 
