@@ -20,6 +20,7 @@ dnf -y install \
 	libftdi-devel \
 	libudev-devel \
 	libyaml-devel \
+	libgpiod-devel \
 	meson \
 	$PKGS_CC
 

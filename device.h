@@ -8,8 +8,10 @@ struct cdb_assist;
 struct fastboot;
 struct fastboot_ops;
 struct device;
+struct device_parser;
 
 struct control_ops {
+	void *(*parse_options)(struct device_parser *dp);
 	void *(*open)(struct device *dev);
 	void (*close)(struct device *dev);
 	int (*power)(struct device *dev, bool on);
@@ -28,6 +30,7 @@ struct console_ops {
 struct device {
 	char *board;
 	char *control_dev;
+	void *control_options;
 	char *console_dev;
 	char *name;
 	char *serial;
@@ -90,6 +93,7 @@ extern const struct control_ops alpaca_ops;
 extern const struct control_ops cdb_assist_ops;
 extern const struct control_ops conmux_ops;
 extern const struct control_ops ftdi_gpio_ops;
+extern const struct control_ops local_gpio_ops;
 extern const struct control_ops external_ops;
 extern const struct control_ops qcomlt_dbg_ops;
 

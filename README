@@ -61,3 +61,26 @@ devices:
     fastboot: 91671140
     fastboot_set_active: true
     fastboot_key_timeout: 2
+
+  - board: testboard
+    console: /dev/serial/by-id/usb-1234-if00-port0
+    name: GPIO controller board
+    local_gpio:
+      - power:
+          chip: gpiochip0
+          line: 7
+          active_low: true
+      - fastboot_key:
+          chip: gpiochip0
+          line: 8
+          active_low: true
+      - power_key:
+          chip: gpiochip0
+          line: 14
+          active_low: true
+      - usb_disconnect:
+          chip: gpiochip1
+          line: 4
+    fastboot: cacafada
+    fastboot_set_active: true
+    fastboot_key_timeout: 2

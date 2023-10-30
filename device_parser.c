@@ -33,6 +33,7 @@
 #include <yaml.h>
 
 #include "device.h"
+#include "device_parser.h"
 
 #define TOKEN_LENGTH	16384
 
@@ -49,12 +50,13 @@ static void nextsym(struct device_parser *dp)
 	}
 }
 
-static int accept(struct device_parser *dp, int type, char *scalar)
+int device_parser_accept(struct device_parser *dp, int type,
+			 char *scalar,  size_t scalar_len)
 {
 	if (dp->event.type == type) {
-		if (scalar) {
-			strncpy(scalar, (char *)dp->event.data.scalar.value, TOKEN_LENGTH - 1);
-			scalar[TOKEN_LENGTH - 1] = '\0';
+		if (scalar && scalar_len > 0) {
+			strncpy(scalar, (char *)dp->event.data.scalar.value, scalar_len - 1);
+			scalar[scalar_len - 1] = '\0';
 		}
 
 		yaml_event_delete(&dp->event);
@@ -65,9 +67,10 @@ static int accept(struct device_parser *dp, int type, char *scalar)
 	}
 }
 
-static bool expect(struct device_parser *dp, int type, char *scalar)
+bool device_parser_expect(struct device_parser *dp, int type,
+			  char *scalar,  size_t scalar_len)
 {
-	if (accept(dp, type, scalar)) {
+	if (device_parser_accept(dp, type, scalar, scalar_len)) {
 		return true;
 	}
 
@@ -103,17 +106,17 @@ static void parse_board(struct device_parser *dp)
 
 	dev = calloc(1, sizeof(*dev));
 
-	while (accept(dp, YAML_SCALAR_EVENT, key)) {
+	while (device_parser_accept(dp, YAML_SCALAR_EVENT, key, TOKEN_LENGTH)) {
 		if (!strcmp(key, "users")) {
 			dev->users = calloc(1, sizeof(*dev->users));
 			list_init(dev->users);
 
-			if (accept(dp, YAML_SCALAR_EVENT, value))
+			if (device_parser_accept(dp, YAML_SCALAR_EVENT, value, 0))
 				continue;
 
-			expect(dp, YAML_SEQUENCE_START_EVENT, NULL);
+			device_parser_expect(dp, YAML_SEQUENCE_START_EVENT, NULL, 0);
 
-			while (accept(dp, YAML_SCALAR_EVENT, key)) {
+			while (device_parser_accept(dp, YAML_SCALAR_EVENT, key, TOKEN_LENGTH)) {
 				struct device_user *user = calloc(1, sizeof(*user));
 
 				user->username = strdup(key);
@@ -121,12 +124,19 @@ static void parse_board(struct device_parser *dp)
 				list_add(dev->users, &user->node);
 			}
 
-			expect(dp, YAML_SEQUENCE_END_EVENT, NULL);
+			device_parser_expect(dp, YAML_SEQUENCE_END_EVENT, NULL, 0);
 
 			continue;
 		}
 
-		expect(dp, YAML_SCALAR_EVENT, value);
+		if (!strcmp(key, "local_gpio")) {
+			dev->control_options = local_gpio_ops.parse_options(dp);
+			if (dev->control_options)
+				set_control_ops(dev, &local_gpio_ops);
+			continue;
+		}
+
+		device_parser_expect(dp, YAML_SCALAR_EVENT, value, TOKEN_LENGTH);
 
 		if (!strcmp(key, "board")) {
 			dev->board = strdup(value);
@@ -212,25 +222,25 @@ int device_parser(const char *path)
 
 	nextsym(&dp);
 
-	expect(&dp, YAML_STREAM_START_EVENT, NULL);
+	device_parser_expect(&dp, YAML_STREAM_START_EVENT, NULL, 0);
 
-	expect(&dp, YAML_DOCUMENT_START_EVENT, NULL);
-	expect(&dp, YAML_MAPPING_START_EVENT, NULL);
+	device_parser_expect(&dp, YAML_DOCUMENT_START_EVENT, NULL, 0);
+	device_parser_expect(&dp, YAML_MAPPING_START_EVENT, NULL, 0);
 
-	if (accept(&dp, YAML_SCALAR_EVENT, key)) {
-		expect(&dp, YAML_SEQUENCE_START_EVENT, NULL);
+	if (device_parser_accept(&dp, YAML_SCALAR_EVENT, key, TOKEN_LENGTH)) {
+		device_parser_expect(&dp, YAML_SEQUENCE_START_EVENT, NULL, 0);
 
-		while (accept(&dp, YAML_MAPPING_START_EVENT, NULL)) {
+		while (device_parser_accept(&dp, YAML_MAPPING_START_EVENT, NULL, 0)) {
 			parse_board(&dp);
-			expect(&dp, YAML_MAPPING_END_EVENT, NULL);
+			device_parser_expect(&dp, YAML_MAPPING_END_EVENT, NULL, 0);
 		}
 
-		expect(&dp, YAML_SEQUENCE_END_EVENT, NULL);
+		device_parser_expect(&dp, YAML_SEQUENCE_END_EVENT, NULL, 0);
 	}
 
-	expect(&dp, YAML_MAPPING_END_EVENT, NULL);
-	expect(&dp, YAML_DOCUMENT_END_EVENT, NULL);
-	expect(&dp, YAML_STREAM_END_EVENT, NULL);
+	device_parser_expect(&dp, YAML_MAPPING_END_EVENT, NULL, 0);
+	device_parser_expect(&dp, YAML_DOCUMENT_END_EVENT, NULL, 0);
+	device_parser_expect(&dp, YAML_STREAM_END_EVENT, NULL, 0);
 
 	yaml_event_delete(&dp.event);
 	yaml_parser_delete(&dp.parser);

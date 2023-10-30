@@ -22,6 +22,7 @@ apt install -y --no-install-recommends \
 	libftdi-dev:${ARCH} \
 	libudev-dev:${ARCH} \
 	libyaml-dev:${ARCH} \
+	libgpiod-dev:${ARCH} \
 	gcc-`dpkg-architecture -a ${ARCH} -q DEB_TARGET_GNU_TYPE`
 
 echo "Install finished: $0"

@@ -23,6 +23,7 @@ apt install -y --no-install-recommends \
 	libftdi-dev:i386 \
 	libudev-dev:i386 \
 	libyaml-dev:i386 \
+	libgpiod-dev:i386 \
 	$PKGS_CC
 
 echo "Install finished: $0"

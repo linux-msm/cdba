@@ -52,8 +52,10 @@ if not ftdi_dep.found()
 	ftdi_dep = dependency('libftdi')
 endif
 
+gpiod_dep = dependency('libgpiod')
 server_deps = [dependency('libudev'),
 	       dependency('yaml-0.1'),
+	       gpiod_dep,
 	       ftdi_dep]
 server_srcs = ['cdba-server.c',
 	       'cdb_assist.c',
@@ -65,9 +67,17 @@ server_srcs = ['cdba-server.c',
 	       'fastboot.c',
 	       'alpaca.c',
 	       'ftdi-gpio.c',
+	       'local-gpio.c',
 	       'console.c',
 	       'qcomlt_dbg.c',
 	       'ppps.c']
+
+if gpiod_dep.version().version_compare('>=2.0')
+	server_srcs += ['local-gpio-v2.c']
+else
+	server_srcs += ['local-gpio-v1.c']
+endif
+
 executable('cdba-server',
 	   server_srcs,
 	   dependencies : server_deps,
