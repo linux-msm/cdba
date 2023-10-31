@@ -1,0 +1,189 @@
+"$schema": https://json-schema.org/draft/2020-12/schema#
+title: CDBA Configuration Schema
+type: object
+properties:
+  devices:
+    type: array
+    items:
+      type: object
+      properties:
+        board:
+          description: board identifier to be used by cdba client
+          type: string
+
+        name:
+          description: board pretty name to be printed by cdba client when querying boards
+          type: string
+
+        description:
+          description: board verbose description for reference
+          type: string
+
+        console:
+          description: console TTY device path
+          $ref: "#/$defs/device_path"
+
+        fastboot:
+          description: fastboot id
+          type: string
+          pattern: "^[0-9a-f]{8}$"
+
+        fastboot_set_active:
+          description: run fastboot set active before each boot, slot can be selected
+          oneOf:
+            - type: boolean
+            - enum:
+                - a
+                - b
+
+        broken_fastboot_boot:
+          description: Is fastboot boot broken, in this case boot is flashed and board is rebooted
+          type: boolean
+
+        usb_always_on:
+          description: mark USB as always on
+          type: boolean
+
+        fastboot_key_timeout:
+          description: timeout of the fastbook key press
+          type: integer
+          minimum: 1
+
+        cdba:
+          description: CDB Assist device path
+          $ref: "#/$defs/device_path"
+
+        voltage:
+          description: CDB Assist voltage in microvolt
+          type: integer
+
+        conmux:
+          description: conmux service string
+          type: string
+
+        external:
+          description: path to the program that handles board power, usb and key controls
+          type: string
+
+        ppps_path:
+          description: USB device name, like 2-2:1.0/2-2-port2
+          type: string
+
+        ppps3_path:
+          description: USB device name, like 2-2:1.0/2-2-port2
+          type: string
+
+        qcomlt_debug_board:
+          description: Qlt Debug Board control tty device path
+          $ref: "#/$defs/device_path"
+
+        alpaca:
+          description: Alpaca board control device path
+          $ref: "#/$defs/device_path"
+
+        users:
+          description: User access allowance for the board
+          type: array
+          uniqueItems: true
+          minItems: 1
+          items:
+            type: string
+
+        ftdi_gpio:
+          description: GPIO control over FTDI chip
+          oneOf:
+            - type: string
+              # <libftdi description>;[<interface>[;<gpios>...]]
+              # - libftdi description: ftdi_usb_open_string() formats
+              # - interface: A, B, C or D (default A)
+              # - gpios: type,id,polarity
+              #  - type: POWER, FASTBOOT_KEY, POWER_KEY or USB_DISCONNECT
+              #  - id: 0, 1, 2, 3, 4, 5, 6 or 7
+              #  - polarity: ACTIVE_HIGH or ACTIVE_LOW
+              pattern: "^(d:/.*)|(i:0x[0-9a-fA-F]{4}:0x[0-9a-fA-F]{4}(:[0-9]+)?)|(s:0x[0-9a-fA-F]{4}:0x[0-9a-fA-F]{4}:FT[0-9a-zA-Z]{6})(;[A-D](;(POWER|FASTBOOT_KEY|POWER_KEY|USB_DISCONNECT),[0-7],(ACTIVE_HIGH|ACTIVE_LOW)){0,4})?$"
+              deprecated: true
+
+            - type: object
+              properties:
+                vendor:
+                  type: string
+                  pattern: "^0x[0-9a-fA-F]{4}$"
+                product:
+                  type: string
+                  pattern: "^0x[0-9a-fA-F]{4}$"
+                serial:
+                  type: string
+                  pattern: "^FT[0-9a-zA-Z]{6}"
+                index:
+                  type: integer
+                  minimin: 0
+                devicenode:
+                  $ref: "#/$defs/device_path"
+                patternProperties:
+                  "^power|fastboot_key|power_key|usb_disconnect|output_enable$":
+                    $ref: "#/$defs/ftdi_gpio"
+
+              dependentRequired:
+                index:
+                  - product
+                  - vendor
+                serial:
+                  - product
+                  - vendor
+
+        local_gpio:
+          description: Local GPIO
+          type: object
+          unevaluatedItems: false
+          patternProperties:
+            "^power|fastboot_key|power_key|usb_disconnect$":
+              $ref: "#/$defs/local_gpio"
+      required:
+        - board
+        - name
+
+      additionalProperties: false
+
+required:
+  - devices
+
+additionalProperties: false
+
+$defs:
+  device_path:
+    type: string
+    pattern: "^/dev/.*$"
+
+  ftdi_gpio:
+    type: object
+    properties:
+      interface:
+        enum:
+          - A
+          - B
+          - C
+          - D
+      line:
+        type: integer
+        minimum: 0
+        maximum: 7
+      active_low:
+        type: boolean
+    required:
+      - interface
+      - line
+
+  local_gpio:
+    type: object
+    properties:
+      chip:
+        type: string
+        pattern: "^gpiochip[0-9]+$"
+      line:
+        type: integer
+        minimum: 0
+      active_low:
+        type: boolean
+    required:
+      - chip
+      - line
