@@ -1,0 +1,12 @@
+---
+devices:
+  - board: myboard
+    name: "My Board"
+    description: |
+      My Awesome board
+    console: /dev/ttyABC0
+    fastboot: cacafada
+    fastboot_set_active: b
+    fastboot_key_timeout: 2
+    usb_always_on: false
+    conmux: /dev/serial/by-id/usb-CDBA-if00

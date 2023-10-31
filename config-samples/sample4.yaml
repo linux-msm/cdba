@@ -1,0 +1,13 @@
+---
+devices:
+  - board: myboard
+    name: "My Board"
+    description: |
+      My Awesome board
+    console: /dev/ttyABC0
+    fastboot: cacafada
+    fastboot_set_active: true
+    fastboot_key_timeout: 2
+    usb_always_on: false
+    ppps_path: 2-2:1.0/2-2-port2
+    ppps3_path: 2-2:2.0/2-2-port2

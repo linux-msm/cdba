@@ -1,0 +1,26 @@
+---
+devices:
+  - board: myboard
+    name: "My Board"
+    description: |
+      My Awesome board
+    console: /dev/ttyABC0
+    fastboot: cacafada
+    fastboot_set_active: true
+    fastboot_key_timeout: 2
+    local_gpio:
+      power:
+        chip: gpiochip0
+        line: 7
+        active_low: true
+      fastboot_key:
+        chip: gpiochip0
+        line: 8
+        active_low: true
+      power_key:
+        chip: gpiochip0
+        line: 14
+        active_low: true
+      usb_disconnect:
+        chip: gpiochip0
+        line: 4

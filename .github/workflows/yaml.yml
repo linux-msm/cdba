@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: GPL-2.0
+#
+# Copyright (c) 2021 Canonical Ltd.
+# Copyright (c) 2023 Linaro Ltd
+# Author: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+#                             <krzk@kernel.org>
+#
+# Loosely based on: https://github.com/linux-test-project/ltp
+#                   https://github.com/linux-nfc/neard
+#
+name: "Yaml"
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+jobs:
+  job:
+    name: Yaml
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+
+    container:
+      image: ubuntu:jammy
+
+    steps:
+    - name: Git checkout
+      uses: actions/checkout@v3
+
+    - name: Install additional packages
+      run: |
+        export DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true
+        apt update
+        apt install -y --no-install-recommends yamllint python3-jsonschema python3-ruamel.yaml
+
+    - name: Lint samples
+      run: for file in config-samples/*; do yamllint $file; done
+
+    - name: Check samples
+      run: for file in config-samples/*; do python3 ./validate.py -s schema.yaml $file; done
