@@ -47,7 +47,8 @@ jobs:
           - ubuntu:lunar # EOL 01.2024
           - ubuntu:jammy
           - ubuntu:focal
-          - ubuntu:bionic
+          # On Ubuntu Bionic the Meson doesn't support feature options
+          #- ubuntu:bionic
           # Meson version on Ubuntu Xenial is really too old
           #- ubuntu:xenial
         cross_compile: [""]
