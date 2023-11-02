@@ -3,7 +3,7 @@
 project('cdba',
 	'c',
 	license : [ 'BSD-3-Clause'],
-	meson_version : '>= 0.43.0', # for compiler.get_supported_arguments()
+	meson_version : '>= 0.47.0', # for feature user options
 	default_options: [
             'warning_level=2',	# sets -Wextra
             'buildtype=release',
@@ -47,14 +47,16 @@ executable('cdba',
 	   client_srcs,
 	   install : true)
 
+server_opt = get_option('server')
+
 ftdi_dep = dependency('libftdi1', required: false)
 if not ftdi_dep.found()
-	ftdi_dep = dependency('libftdi')
+	ftdi_dep = dependency('libftdi', required: server_opt)
 endif
 
-gpiod_dep = dependency('libgpiod')
-server_deps = [dependency('libudev'),
-	       dependency('yaml-0.1'),
+gpiod_dep = dependency('libgpiod', required: server_opt)
+server_deps = [dependency('libudev', required: server_opt),
+	       dependency('yaml-0.1', required: server_opt),
 	       gpiod_dep,
 	       ftdi_dep]
 server_srcs = ['cdba-server.c',
@@ -78,7 +80,18 @@ else
 	server_srcs += ['local-gpio-v1.c']
 endif
 
-executable('cdba-server',
-	   server_srcs,
-	   dependencies : server_deps,
-	   install : true)
+build_server = true
+foreach d: server_deps
+  if not d.found()
+    build_server = false
+  endif
+endforeach
+
+if build_server
+	executable('cdba-server',
+		  server_srcs,
+		  dependencies : server_deps,
+		  install : true)
+elif not server_opt.disabled()
+	message('Skipping CDBA server build')
+endif
