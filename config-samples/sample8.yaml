@@ -1,0 +1,75 @@
+---
+devices:
+  - board: myboard
+    name: "My Board"
+    description: |
+      My Awesome board
+    console: /dev/ttyABC0
+    fastboot: cacafada
+    ftdi_gpio:
+      vendor: "0x0403"
+      product: "0x6011"
+      serial: FT7YWRL8
+      power_key:
+        interface: A
+        line: 2
+      fastboot_key:
+        interface: A
+        line: 0
+        active_low: true
+      power:
+        interface: A
+        line: 1
+        active_low: true
+  - board: myboard-2
+    name: "My Board 2"
+    description: |
+      My Awesome board Number 2
+    console: /dev/ttyABC1
+    fastboot: cacafada
+    ftdi_gpio:
+      vendor: "0x0403"
+      product: "0x6011"
+      index: 0
+      power:
+        interface: B
+        line: 1
+        active_low: true
+      fastboot_key:
+        interface: B
+        line: 0
+        active_low: true
+      power_key:
+        interface: B
+        line: 2
+      usb_disconnect:
+        interface: C
+        line: 7
+        active_low: true
+  - board: myboard-3
+    name: "My Board 3"
+    description: |
+      My Awesome board Number 3
+    console: /dev/ttyABC1
+    fastboot: cacafada
+    ftdi_gpio:
+      vendor: "0x0403"
+      product: "0x6011"
+      power_key:
+        interface: B
+        line: 2
+      power:
+        interface: D
+        line: 1
+        active_low: true
+  - board: myboard-4
+    name: "My Board 4"
+    description: |
+      My Awesome board Number 4
+    console: /dev/ttyABC1
+    fastboot: cacafada
+    ftdi_gpio:
+      devicenode: /dev/bus/usb/006/001
+      power:
+        interface: D
+        line: 6

@@ -1,0 +1,65 @@
+---
+devices:
+  - board: myboard
+    name: "My Board"
+    description: |
+      My Awesome board
+    console: /dev/ttyABC0
+    fastboot: cacafada
+    ftdi_gpio: "s:0x0403:0x6011:FT7YWRL8;D;POWER,1,ACTIVE_LOW;FASTBOOT_KEY,0,ACTIVE_HIGH;POWER_KEY,3,ACTIVE_HIGH;USB_DISCONNECT,7,ACTIVE_LOW"
+  - board: myboard-2
+    name: "My Board 2"
+    description: |
+      My Awesome board Number 2
+    console: /dev/ttyABC1
+    fastboot: cacafada
+    ftdi_gpio: "s:0x0403:0x6011:FT7YWRL8;D;POWER_KEY,3,ACTIVE_HIGH;POWER,1,ACTIVE_LOW;FASTBOOT_KEY,0,ACTIVE_HIGH"
+  - board: myboard-3
+    name: "My Board 2"
+    description: |
+      My Awesome board Number 3
+    console: /dev/ttyABC2
+    fastboot: cacafada
+    ftdi_gpio: "s:0x0403:0x6011:FT7YWRL8;D;FASTBOOT_KEY,0,ACTIVE_HIGH;POWER,1,ACTIVE_LOW"
+  - board: myboard-4
+    name: "My Board 2"
+    description: |
+      My Awesome board Number 4
+    console: /dev/ttyABC3
+    fastboot: cacafada
+    ftdi_gpio: "s:0x0403:0x6011:FT7YWRL8;D;POWER,1,ACTIVE_LOW"
+  - board: myboard-5
+    name: "My Board 2"
+    description: |
+      My Awesome board Number 5
+    console: /dev/ttyABC4
+    fastboot: cacafada
+    ftdi_gpio: "s:0x0403:0x6011:FT7YWRL8;D"
+  - board: myboard-6
+    name: "My Board 2"
+    description: |
+      My Awesome board Number 6
+    console: /dev/ttyABC5
+    fastboot: cacafada
+    ftdi_gpio: "s:0x0403:0x6011:FT7YWRL8"
+  - board: myboard-7
+    name: "My Board 2"
+    description: |
+      My Awesome board Number 7
+    console: /dev/ttyABC6
+    fastboot: cacafada
+    ftdi_gpio: "i:0x0403:0x6011;D;POWER,1,ACTIVE_LOW;FASTBOOT_KEY,0,ACTIVE_HIGH;POWER_KEY,3,ACTIVE_HIGH;USB_DISCONNECT,7,ACTIVE_LOW"
+  - board: myboard-8
+    name: "My Board 2"
+    description: |
+      My Awesome board Number 7
+    console: /dev/ttyABC6
+    fastboot: cacafada
+    ftdi_gpio: "i:0x0403:0x6011:0;D;POWER,1,ACTIVE_LOW;FASTBOOT_KEY,0,ACTIVE_HIGH;POWER_KEY,3,ACTIVE_HIGH;USB_DISCONNECT,7,ACTIVE_LOW"
+  - board: myboard-9
+    name: "My Board 2"
+    description: |
+      My Awesome board Number 7
+    console: /dev/ttyABC6
+    fastboot: cacafada
+    ftdi_gpio: "d:/dev/bus/usb/006/001;D;POWER,1,ACTIVE_LOW;FASTBOOT_KEY,0,ACTIVE_HIGH;POWER_KEY,3,ACTIVE_HIGH;USB_DISCONNECT,7,ACTIVE_LOW"

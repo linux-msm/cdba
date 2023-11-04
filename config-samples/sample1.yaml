@@ -1,0 +1,13 @@
+---
+devices:
+  - board: myboard
+    name: "My Board"
+    description: |
+      My Awesome board
+    console: /dev/ttyABC0
+    fastboot: cacafada
+    fastboot_set_active: a
+    fastboot_key_timeout: 2
+    usb_always_on: false
+    cdba: /dev/serial/by-id/usb-CDBA-if00
+    voltage: 1800
