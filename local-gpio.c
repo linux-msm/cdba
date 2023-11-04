@@ -54,15 +54,13 @@ void *local_gpio_parse_options(struct device_parser *dp)
 	char value[TOKEN_LENGTH];
 	char key[TOKEN_LENGTH];
 
-	device_parser_expect(dp, YAML_SEQUENCE_START_EVENT, NULL, 0);
+	device_parser_expect(dp, YAML_MAPPING_START_EVENT, NULL, 0);
 
 	options = calloc(1, sizeof(*options));
 
 	/* Loop over sub-properties */
-	while (device_parser_accept(dp, YAML_MAPPING_START_EVENT, NULL, 0)) {
+	while (device_parser_accept(dp, YAML_SCALAR_EVENT, key, TOKEN_LENGTH)) {
 		int gpio_id;
-
-		device_parser_accept(dp, YAML_SCALAR_EVENT, key, TOKEN_LENGTH);
 
 		if (!strcmp(key, "power")) {
 			gpio_id = GPIO_POWER;
@@ -98,11 +96,9 @@ void *local_gpio_parse_options(struct device_parser *dp)
 		device_parser_expect(dp, YAML_MAPPING_END_EVENT, NULL, 0);
 
 		options->gpios[gpio_id].present = true;
-
-		device_parser_expect(dp, YAML_MAPPING_END_EVENT, NULL, 0);
 	}
 
-	device_parser_expect(dp, YAML_SEQUENCE_END_EVENT, NULL, 0);
+	device_parser_expect(dp, YAML_MAPPING_END_EVENT, NULL, 0);
 
 	return options;
 }
