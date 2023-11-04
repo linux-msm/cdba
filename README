@@ -84,3 +84,29 @@ devices:
     fastboot: cacafada
     fastboot_set_active: true
     fastboot_key_timeout: 2
+
+  - board: testboard2
+    console: /dev/serial/by-id/usb-1234-if00-port0
+    name: FTDI controller board
+    ftdi_gpio:
+      vendor: "0x0403"
+      product: "0x6011"
+      index: 0
+      power:
+        interface: D
+        line: 7
+        active_low: true
+      fastboot_key:
+        interface: D
+        line: 8
+        active_low: true
+      power_key:
+        interface: D
+        line: 3
+        active_low: true
+      usb_disconnect:
+        interface: D
+        line: 2
+    fastboot: cacafada
+    fastboot_set_active: true
+    fastboot_key_timeout: 2

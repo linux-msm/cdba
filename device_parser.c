@@ -134,6 +134,11 @@ static void parse_board(struct device_parser *dp)
 			if (dev->control_options)
 				set_control_ops(dev, &local_gpio_ops);
 			continue;
+		} else if (!strcmp(key, "ftdi_gpio")) {
+			dev->control_options = ftdi_gpio_ops.parse_options(dp);
+			if (dev->control_options)
+				set_control_ops(dev, &ftdi_gpio_ops);
+			continue;
 		}
 
 		device_parser_expect(dp, YAML_SCALAR_EVENT, value, TOKEN_LENGTH);
@@ -154,9 +159,6 @@ static void parse_board(struct device_parser *dp)
 		} else if (!strcmp(key, "alpaca")) {
 			dev->control_dev = strdup(value);
 			set_control_ops(dev, &alpaca_ops);
-		} else if (!strcmp(key, "ftdi_gpio")) {
-			dev->control_dev = strdup(value);
-			set_control_ops(dev, &ftdi_gpio_ops);
 		} else if (!strcmp(key, "external")) {
 			dev->control_dev = strdup(value);
 			set_control_ops(dev, &external_ops);
