@@ -73,6 +73,10 @@ properties:
           description: USB device name, like 2-2:1.0/2-2-port2
           type: string
 
+        status-cmd:
+          description: Command to execute for generating status updates
+          type: string
+
         qcomlt_debug_board:
           description: Qlt Debug Board control tty device path
           $ref: "#/$defs/device_path"

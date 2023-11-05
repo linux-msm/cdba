@@ -77,3 +77,8 @@ void status_send_values(const char *id, struct status_value *values)
 
 	cdba_send_buf(MSG_STATUS_UPDATE, len, buf);
 }
+
+void status_send_raw(const char *data, size_t len)
+{
+	cdba_send_buf(MSG_STATUS_UPDATE, len, data);
+}

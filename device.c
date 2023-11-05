@@ -45,6 +45,7 @@
 #include "fastboot.h"
 #include "list.h"
 #include "ppps.h"
+#include "status-cmd.h"
 
 #define ARRAY_SIZE(x) ((sizeof(x)/sizeof((x)[0])))
 
@@ -267,6 +268,9 @@ void device_status_enable(struct device *device)
 
 	if (device_has_control(device, status_enable))
 		device_control(device, status_enable);
+
+	if (device->status_cmd)
+		status_cmd_open(device);
 
 	device->status_enabled = true;
 }

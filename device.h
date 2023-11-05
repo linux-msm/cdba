@@ -58,6 +58,8 @@ struct device {
 	void *cdb;
 	void *console;
 
+	char *status_cmd;
+
 	struct list_head node;
 };
 
