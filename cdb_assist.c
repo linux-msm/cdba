@@ -339,9 +339,9 @@ static void cdb_gpio(struct cdb_assist *cdb, int gpio, bool on)
 	cdb_ctrl_write(cdb, &cmd[gpio][on], 1);
 }
 
-static void cdb_assist_print_status(struct device *dev)
+static void cdb_assist_print_status(void *data)
 {
-	struct cdb_assist *cdb = dev->cdb;
+	struct cdb_assist *cdb = data;
 	struct status_value vbat[] = {
 		{
 			.unit = STATUS_MV,
@@ -363,6 +363,13 @@ static void cdb_assist_print_status(struct device *dev)
 
 	status_send_values("vbat", vbat);
 	status_send_values("vref", vref);
+}
+
+static void cdb_assist_status_enable(struct device *dev)
+{
+	struct cdb_assist *cdb = dev->cdb;
+
+	watch_timer_add(1000, cdb_assist_print_status, cdb);
 }
 
 static void cdb_set_voltage(struct cdb_assist *cdb, unsigned mV)
@@ -392,7 +399,7 @@ const struct control_ops cdb_assist_ops = {
 	.open = cdb_assist_open,
 	.close = cdb_assist_close,
 	.power = cdb_assist_power,
-	.print_status = cdb_assist_print_status,
+	.status_enable = cdb_assist_status_enable,
 	.usb = cdb_assist_usb,
 	.key = cdb_assist_key,
 };

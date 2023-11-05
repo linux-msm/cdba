@@ -17,7 +17,7 @@ struct control_ops {
 	int (*power)(struct device *dev, bool on);
 	void (*usb)(struct device *dev, bool on);
 	void (*key)(struct device *device, int key, bool asserted);
-	void (*print_status)(struct device *dev);
+	void (*status_enable)(struct device *dev);
 };
 
 struct console_ops {
@@ -46,6 +46,8 @@ struct device {
 	int state;
 	bool has_power_key;
 
+	bool status_enabled;
+
 	void (*boot)(struct device *);
 
 	const struct control_ops *control_ops;
@@ -73,7 +75,7 @@ struct device *device_open(const char *board,
 void device_close(struct device *dev);
 int device_power(struct device *device, bool on);
 
-void device_print_status(struct device *device);
+void device_status_enable(struct device *device);
 void device_usb(struct device *device, bool on);
 int device_write(struct device *device, const void *buf, size_t len);
 

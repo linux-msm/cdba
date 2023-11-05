@@ -260,10 +260,15 @@ int device_power(struct device *device, bool on)
 		return device_power_off(device);
 }
 
-void device_print_status(struct device *device)
+void device_status_enable(struct device *device)
 {
-	if (device_has_control(device, print_status))
-		device_control(device, print_status);
+	if (device->status_enabled)
+		return;
+
+	if (device_has_control(device, status_enable))
+		device_control(device, status_enable);
+
+	device->status_enabled = true;
 }
 
 void device_usb(struct device *device, bool on)
