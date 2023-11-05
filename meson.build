@@ -71,7 +71,8 @@ server_srcs = ['cdba-server.c',
 	       'local-gpio.c',
 	       'console.c',
 	       'qcomlt_dbg.c',
-	       'ppps.c']
+	       'ppps.c',
+               'status.c']
 
 if gpiod_dep.version().version_compare('>=2.0')
 	server_srcs += ['local-gpio-v2.c']

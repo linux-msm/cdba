@@ -43,6 +43,7 @@
 
 #include "cdba-server.h"
 #include "device.h"
+#include "status.h"
 
 struct cdb_assist {
 	char serial[9];
@@ -341,20 +342,27 @@ static void cdb_gpio(struct cdb_assist *cdb, int gpio, bool on)
 static void cdb_assist_print_status(struct device *dev)
 {
 	struct cdb_assist *cdb = dev->cdb;
-	char buf[128];
-	int n;
+	struct status_value vbat[] = {
+		{
+			.unit = STATUS_MV,
+			.value = cdb->voltage_set,
+		},
+		{
+			.unit = STATUS_MA,
+			.value = cdb->current_actual,
+		},
+		{}
+	};
+	struct status_value vref[] = {
+		{
+			.unit = STATUS_MV,
+			.value = cdb->vref,
+		},
+		{}
+	};
 
-	n = sprintf(buf, "%umV %umA%s%s%s%s%s ref: %umV",
-			 cdb->voltage_set,
-			 cdb->current_actual,
-			 cdb->vbat ? " vbat" : "",
-			 cdb->vbus ? " vbus" : "",
-			 cdb->btn[0] ? " btn1" : "",
-			 cdb->btn[1] ? " btn2" : "",
-			 cdb->btn[2] ? " btn3" : "",
-			 cdb->vref);
-
-	cdba_send_buf(MSG_STATUS_UPDATE, n, buf);
+	status_send_values("vbat", vbat);
+	status_send_values("vref", vref);
 }
 
 static void cdb_set_voltage(struct cdb_assist *cdb, unsigned mV)
