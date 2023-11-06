@@ -309,6 +309,11 @@ void device_boot(struct device *device, const void *data, size_t len)
 		fastboot_set_active(device->fastboot, device->set_active);
 	fastboot_download(device->fastboot, data, len);
 	device->boot(device);
+
+	if (device->status_enabled && !device->usb_always_on) {
+		warnx("disabling USB, use ^A V to enable");
+		device_usb(device, false);
+	}
 }
 
 void device_send_break(struct device *device)
