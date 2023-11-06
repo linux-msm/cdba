@@ -581,7 +581,7 @@ int main(int argc, char **argv)
 	int timeout_total = 600;
 	struct work *next;
 	struct work *work;
-	struct circ_buf recv_buf = { 0 };
+	struct circ_buf recv_buf = { };
 	const char *board = NULL;
 	const char *host = NULL;
 	struct timeval now;

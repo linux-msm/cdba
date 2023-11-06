@@ -158,7 +158,7 @@ void cdba_send_buf(int type, size_t len, const void *buf)
 
 static int handle_stdin(int fd, void *buf)
 {
-	static struct circ_buf recv_buf = { 0 };
+	static struct circ_buf recv_buf = { };
 	struct msg *msg;
 	struct msg hdr;
 	size_t n;
