@@ -1,0 +1,8 @@
+---
+devices:
+  - board: myboard
+    name: "My Board"
+    alpaca: /dev/ttyACM0
+    console: /dev/ttyUSB0
+    fastboot: cacafada
+    status-cmd: /usr/bin/sample-measure-app --sample-rate 100 /dev/measure0
