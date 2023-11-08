@@ -356,6 +356,10 @@ int main(int argc, char **argv)
 	signal(SIGPIPE, sigpipe_handler);
 
 	username = getenv("CDBA_USER");
+	if (!username)
+		username = getenv("USER");
+	if (!username)
+		username = "nobody";
 
 	ret = device_parser(".cdba");
 	if (ret) {
