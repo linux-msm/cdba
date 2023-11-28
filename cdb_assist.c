@@ -43,6 +43,7 @@
 
 #include "cdba-server.h"
 #include "device.h"
+#include "status.h"
 
 struct cdb_assist {
 	char serial[9];
@@ -338,23 +339,37 @@ static void cdb_gpio(struct cdb_assist *cdb, int gpio, bool on)
 	cdb_ctrl_write(cdb, &cmd[gpio][on], 1);
 }
 
-static void cdb_assist_print_status(struct device *dev)
+static void cdb_assist_print_status(void *data)
+{
+	struct cdb_assist *cdb = data;
+	struct status_value vbat[] = {
+		{
+			.unit = STATUS_MV,
+			.value = cdb->voltage_set,
+		},
+		{
+			.unit = STATUS_MA,
+			.value = cdb->current_actual,
+		},
+		{}
+	};
+	struct status_value vref[] = {
+		{
+			.unit = STATUS_MV,
+			.value = cdb->vref,
+		},
+		{}
+	};
+
+	status_send_values("vbat", vbat);
+	status_send_values("vref", vref);
+}
+
+static void cdb_assist_status_enable(struct device *dev)
 {
 	struct cdb_assist *cdb = dev->cdb;
-	char buf[128];
-	int n;
 
-	n = sprintf(buf, "%umV %umA%s%s%s%s%s ref: %umV",
-			 cdb->voltage_set,
-			 cdb->current_actual,
-			 cdb->vbat ? " vbat" : "",
-			 cdb->vbus ? " vbus" : "",
-			 cdb->btn[0] ? " btn1" : "",
-			 cdb->btn[1] ? " btn2" : "",
-			 cdb->btn[2] ? " btn3" : "",
-			 cdb->vref);
-
-	cdba_send_buf(MSG_STATUS_UPDATE, n, buf);
+	watch_timer_add(1000, cdb_assist_print_status, cdb);
 }
 
 static void cdb_set_voltage(struct cdb_assist *cdb, unsigned mV)
@@ -384,7 +399,7 @@ const struct control_ops cdb_assist_ops = {
 	.open = cdb_assist_open,
 	.close = cdb_assist_close,
 	.power = cdb_assist_power,
-	.print_status = cdb_assist_print_status,
+	.status_enable = cdb_assist_status_enable,
 	.usb = cdb_assist_usb,
 	.key = cdb_assist_key,
 };

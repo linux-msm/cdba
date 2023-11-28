@@ -193,6 +193,8 @@ static void parse_board(struct device_parser *dp)
 			dev->ppps_path = strdup(value);
 		} else if (!strcmp(key, "ppps3_path")) {
 			dev->ppps3_path = strdup(value);
+		} else if (!strcmp(key, "status-cmd")) {
+			dev->status_cmd = strdup(value);
 		} else {
 			fprintf(stderr, "device parser: unknown key \"%s\"\n", key);
 			exit(1);

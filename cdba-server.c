@@ -210,7 +210,7 @@ static int handle_stdin(int fd, void *buf)
 			// fprintf(stderr, "fastboot boot\n");
 			break;
 		case MSG_STATUS_UPDATE:
-			device_print_status(selected_device);
+			device_status_enable(selected_device);
 			break;
 		case MSG_VBUS_ON:
 			device_usb(selected_device, true);

@@ -45,6 +45,7 @@
 #include "fastboot.h"
 #include "list.h"
 #include "ppps.h"
+#include "status-cmd.h"
 
 #define ARRAY_SIZE(x) ((sizeof(x)/sizeof((x)[0])))
 
@@ -260,10 +261,18 @@ int device_power(struct device *device, bool on)
 		return device_power_off(device);
 }
 
-void device_print_status(struct device *device)
+void device_status_enable(struct device *device)
 {
-	if (device_has_control(device, print_status))
-		device_control(device, print_status);
+	if (device->status_enabled)
+		return;
+
+	if (device_has_control(device, status_enable))
+		device_control(device, status_enable);
+
+	if (device->status_cmd)
+		status_cmd_open(device);
+
+	device->status_enabled = true;
 }
 
 void device_usb(struct device *device, bool on)
@@ -300,6 +309,11 @@ void device_boot(struct device *device, const void *data, size_t len)
 		fastboot_set_active(device->fastboot, device->set_active);
 	fastboot_download(device->fastboot, data, len);
 	device->boot(device);
+
+	if (device->status_enabled && !device->usb_always_on) {
+		warnx("disabling USB, use ^A V to enable");
+		device_usb(device, false);
+	}
 }
 
 void device_send_break(struct device *device)

@@ -58,6 +58,13 @@ server_deps = [dependency('libudev', required: server_opt),
 	       dependency('yaml-0.1', required: server_opt),
 	       gpiod_dep,
 	       ftdi_dep]
+
+# E.g. Debian reuires -lutil for forkpty
+if not compiler.has_function('forkpty')
+  util_dep = compiler.find_library('util')
+  server_deps += util_dep
+endif
+
 server_srcs = ['cdba-server.c',
 	       'cdb_assist.c',
 	       'circ_buf.c',
@@ -71,7 +78,9 @@ server_srcs = ['cdba-server.c',
 	       'local-gpio.c',
 	       'console.c',
 	       'qcomlt_dbg.c',
-	       'ppps.c']
+	       'ppps.c',
+               'status.c',
+               'status-cmd.c']
 
 if gpiod_dep.version().version_compare('>=2.0')
 	server_srcs += ['local-gpio-v2.c']

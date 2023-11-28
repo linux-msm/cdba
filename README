@@ -18,7 +18,7 @@ from sandbox/cdba/cdba-server. Available devices are read from $HOME/.cdba
 = Client side
 The client is invoked as:
 
-  cdba -b <board> -h <host> [-c <power-cylce-count>] boot.img
+  cdba -b <board> -h <host> [-c <power-cylce-count>] [-s <status-fifo>] boot.img
 
 <host> will be connected to using ssh and <board> will be selected for
 operation. As the board's fastboot interface shows up the given boot.img will
@@ -31,8 +31,22 @@ If the optional -c is given, the board will upon receiving the tilde sequence
 restart the board the given number of times. Each time booting the given
 boot.img.
 
+The optional -s argument can be used to specify that a fifo should be created
+and opened. cdba will request the server to start sending status/measurement
+updates, which will be written to this fifo.
+
+= Server side
+
 == Device configuration
 The list of attached devices is read from $HOME/.cdba and is YAML formatted.
+
+== Status command
+
+The "status-cmd" property for a board specifies a command line that should be
+executed to perform measurements and report status updates to the client. The
+command is expected to run for the duration of the board session and should
+produce a continuous stream of json-formatted lines of status updates according
+to the format defined in this document.
 
 === Example
 devices:
@@ -110,3 +124,38 @@ devices:
     fastboot: cacafada
     fastboot_set_active: true
     fastboot_key_timeout: 2
+
+= Status messages
+
+The status messages that are used by the client fifo and the server's status
+command should be json-formatted, with one status update per line.
+
+Each message should contain one timestamp member "ts", and one or more
+measurement members. Like so:
+
+  {"ts":%d.%03d, "name": {["mv"|"ma"]: %u}(, "name2": {["mv"|"ma"]: %u})*}
+
+The timestamp member ("ts"), should provide the time since first measurement in
+decimal form with millisecond accuracy.
+
+The key for the measurement members should be an identifier of the measured
+resources, and the value should be an object with members for each unit
+measured for the given resource and the measured value.
+
+Valid units to report are "mv", "ma", and "mw".
+
+Note that the cadence of measurement might differ between different items to be
+measured, so not all status messages contains data for all items that can be
+measured.
+
+== Examples
+
+Single resource "dc" measured at 20.271s, with voltage and current reported:
+
+  {"ts":20.271, "dc":{ "mv": 12165, "ma": 114}}
+
+Multiple resources measured in a single status message, followed by single
+resource measurement, all with voltage and current reported:
+
+  {"ts":38.341, "battery":{"mv":8023, "ma":725}, "vdd_cx":{"mv":750, "ma":466}}
+  {"ts":44.339, "battery":{"mv":8023, "ma":733}}

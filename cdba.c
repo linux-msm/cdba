@@ -52,6 +52,8 @@ static bool quit;
 static bool fastboot_repeat;
 static bool fastboot_done;
 
+static int status_fd = -1;
+
 static const char *fastboot_file;
 
 static struct termios *tty_unbuffer(void)
@@ -398,12 +400,40 @@ static void request_fastboot_files(void)
 
 static void handle_status_update(const void *data, size_t len)
 {
-	char *str = alloca(len + 1);
+	if (status_fd < 0)
+		return;
 
-	memcpy(str, data, len);
-	str[len] = '\n';
+	write(status_fd, data, len);
+}
 
-	write(STDOUT_FILENO, str, len + 1);
+static void status_enable_fn(struct work *work, int ssh_stdin)
+{
+	cdba_send(ssh_stdin, MSG_STATUS_UPDATE);
+
+	free(work);
+}
+
+static void status_pipe_open(const char *path)
+{
+	struct work *work;
+	int ret;
+	int fd;
+
+	ret = mkfifo(path, 0600);
+	if (ret < 0 && errno != EEXIST)
+		err(1, "failed to create fifo %s", path);
+
+	fd = open(path, O_RDWR | O_NONBLOCK);
+	if (fd < 0)
+		err(1, "failed to open fifo %s", path);
+
+	status_fd = fd;
+
+	/* Queue a MSG_STATUS_UPDATE request */
+	work = malloc(sizeof(*work));
+	work->fn = status_enable_fn;
+
+	list_add(&work_items, &work->node);
 }
 
 static void handle_list_devices(const void *data, size_t len)
@@ -577,6 +607,7 @@ int main(int argc, char **argv)
 	struct timeval timeout_total_tv;
 	struct termios *orig_tios;
 	const char *server_binary = "cdba-server";
+	const char *status_pipe = NULL;
 	int timeout_inactivity = 0;
 	int timeout_total = 600;
 	struct work *next;
@@ -597,7 +628,7 @@ int main(int argc, char **argv)
 	int opt;
 	int ret;
 
-	while ((opt = getopt(argc, argv, "b:c:C:h:ilRt:S:T:")) != -1) {
+	while ((opt = getopt(argc, argv, "b:c:C:h:ilRt:S:s:T:")) != -1) {
 		switch (opt) {
 		case 'b':
 			board = optarg;
@@ -622,6 +653,9 @@ int main(int argc, char **argv)
 			break;
 		case 'S':
 			server_binary = optarg;
+			break;
+		case 's':
+			status_pipe = optarg;
 			break;
 		case 't':
 			timeout_total = atoi(optarg);
@@ -660,6 +694,9 @@ int main(int argc, char **argv)
 		request_board_info(board);
 		break;
 	}
+
+	if (status_pipe)
+		status_pipe_open(status_pipe);
 
 	ret = fork_ssh(host, server_binary, ssh_fds);
 	if (ret)
