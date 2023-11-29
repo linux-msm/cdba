@@ -38,6 +38,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <syslog.h>
 
 #include "cdba-server.h"
 #include "circ_buf.h"
@@ -356,6 +357,12 @@ int main(int argc, char **argv)
 	signal(SIGPIPE, sigpipe_handler);
 
 	username = getenv("CDBA_USER");
+	if (!username)
+		username = getenv("USER");
+	if (!username)
+		username = "nobody";
+
+	openlog("cdba-server", 0, LOG_DAEMON);
 
 	ret = device_parser(".cdba");
 	if (ret) {

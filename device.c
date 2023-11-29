@@ -39,6 +39,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <syslog.h>
 
 #include "cdba-server.h"
 #include "device.h"
@@ -127,11 +128,17 @@ struct device *device_open(const char *board,
 			goto found;
 	}
 
+	syslog(LOG_INFO, "user %s asked for non-existing board %s", username, board);
 	return NULL;
 
 found:
-	if (!device_check_access(device, username))
+	if (!device_check_access(device, username)) {
+		syslog(LOG_INFO, "user %s access denied to the board %s", username, board);
+
 		return NULL;
+	}
+
+	syslog(LOG_INFO, "user %s opening board %s", username, board);
 
 	assert(device->console_ops);
 	assert(device->console_ops->open);
