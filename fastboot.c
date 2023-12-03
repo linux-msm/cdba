@@ -325,7 +325,7 @@ unref_dev:
 
 	return 0;
 }
-	
+
 struct fastboot *fastboot_open(const char *serial, struct fastboot_ops *ops, void *data)
 {
 	struct fastboot *fb;
@@ -345,9 +345,9 @@ struct fastboot *fastboot_open(const char *serial, struct fastboot_ops *ops, voi
 	fb->serial = serial;
 	fb->ops = ops;
 	fb->data = data;
-	
+
 	fb->state = FASTBOOT_STATE_START;
-	
+
 	fb->mon = udev_monitor_new_from_netlink(udev, "udev");
 	udev_monitor_filter_add_match_subsystem_devtype(fb->mon, "usb", NULL);
 	udev_monitor_enable_receiving(fb->mon);

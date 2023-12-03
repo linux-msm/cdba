@@ -85,7 +85,7 @@ static void *qcomlt_dbg_open(struct device *dev)
 
 static int qcomlt_dbg_power(struct device *dev, bool on)
 {
-	struct qcomlt_dbg *dbg = dev->cdb;	
+	struct qcomlt_dbg *dbg = dev->cdb;
 
 	// fprintf(stderr, "qcomlt_dbg_power(%d)\n", on);
 	return write(dbg->fd, &("pP"[on]), 1);
@@ -93,7 +93,7 @@ static int qcomlt_dbg_power(struct device *dev, bool on)
 
 static void qcomlt_dbg_usb(struct device *dev, bool on)
 {
-	struct qcomlt_dbg *dbg = dev->cdb;	
+	struct qcomlt_dbg *dbg = dev->cdb;
 
 	// fprintf(stderr, "qcomlt_dbg_usb(%d)\n", on);
 	write(dbg->fd, &("uU"[on]), 1);
@@ -101,7 +101,7 @@ static void qcomlt_dbg_usb(struct device *dev, bool on)
 
 static void qcomlt_dbg_key(struct device *dev, int key, bool asserted)
 {
-	struct qcomlt_dbg *dbg = dev->cdb;	
+	struct qcomlt_dbg *dbg = dev->cdb;
 
 	// fprintf(stderr, "qcomlt_dbg_key(%d, %d)\n", key, asserted);
 
