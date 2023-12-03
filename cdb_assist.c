@@ -100,7 +100,7 @@ static void cdb_parser_bool(struct cdb_assist *cdb, const char *key, bool set)
 	for (i = 0; i < 5; i++)
 		if (strcmp(key, sz_keys[i]) == 0)
 			break;
-	
+
 	switch (i) {
 	case 0:
 		cdb->vbat = set;
@@ -126,7 +126,7 @@ static void cdb_parser_voltage(struct cdb_assist *cdb, unsigned set, unsigned ac
 	cdb->voltage_actual = actual;
 	cdb->voltage_set = set;
 }
-			
+
 static void cdb_parser_vref(struct cdb_assist *cdb, unsigned vref)
 {
 	cdb->vref = vref;
@@ -224,7 +224,7 @@ static void cdb_parser_push(struct cdb_assist *cdb, char ch)
 	case STATE_key_of:
 		if (ch == 'f')
 			cdb_parser_bool(cdb, cdb->key, false);
-		cdb->state = STATE_;	
+		cdb->state = STATE_;
 		break;
 	case STATE_key_value:
 		if (isdigit(ch)) {
