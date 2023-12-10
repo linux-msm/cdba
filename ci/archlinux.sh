@@ -17,7 +17,7 @@ case $CC in
 esac
 
 pacman -Syu --noconfirm \
-	libftdi-compat \
+	libftdi \
 	libyaml \
 	systemd-libs \
 	libgpiod \
