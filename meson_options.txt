@@ -1,1 +1,1 @@
-option('server', type: 'feature', description: 'Controls whether the CDBA server is built. By default it will be built of all dependencies are present.')
+option('server', type: 'feature', description: 'Controls whether the CDBA server is built. By default it will be built if all dependencies are present.')
