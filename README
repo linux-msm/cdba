@@ -5,6 +5,7 @@ attached using a CDB Assist [https://github.com/sonyxperiadev/CDB-Assist] or Con
 = Dependencies
 sudo apt-get install libudev-dev libyaml-dev libftdi1-dev pkg-config meson for debian systems
 dnf install systemd-devel libyaml-devel libftdi1-devel pkg-config meson for fedora systems
+pacman -S libftdi libgpiod libyaml pkgconf meson for Arch systems
 
 = Device side
 On the host with the CDB Assist or Conmux attached the "cdba-server" executable is run
