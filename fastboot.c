@@ -490,3 +490,17 @@ int fastboot_reboot(struct fastboot *fb)
 
 	return 0;
 }
+
+int fastboot_continue(struct fastboot *fb)
+{
+	char buf[80];
+	int n;
+
+	fastboot_write(fb, "continue", 8);
+
+	n = fastboot_read(fb, buf, sizeof(buf));
+	if (n >= 0)
+		fprintf(stderr, "%s\n", buf);
+
+	return 0;
+}

@@ -17,5 +17,6 @@ int fastboot_erase(struct fastboot *fb, const char *partition);
 int fastboot_set_active(struct fastboot *fb, const char *active);
 int fastboot_flash(struct fastboot *fb, const char *partition);
 int fastboot_reboot(struct fastboot *fb);
+int fastboot_continue(struct fastboot *fb);
 
 #endif
