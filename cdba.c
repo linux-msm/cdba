@@ -51,6 +51,7 @@
 static bool quit;
 static bool fastboot_repeat;
 static bool fastboot_done;
+static bool fastboot_continue;
 
 static int status_fd = -1;
 
@@ -340,6 +341,22 @@ static void request_power_off(void)
 	list_add(&work_items, &work.node);
 }
 
+static void request_fastboot_continue_fn(struct work *work, int ssh_stdin)
+{
+	int ret;
+
+	ret = cdba_send(ssh_stdin, MSG_FASTBOOT_CONTINUE);
+	if (ret < 0)
+		err(1, "failed to send fastboot continue request");
+}
+
+static void request_fastboot_continue(void)
+{
+	static struct work work = { request_fastboot_continue_fn };
+
+	list_add(&work_items, &work.node);
+}
+
 struct fastboot_download_work {
 	struct work work;
 
@@ -532,10 +549,14 @@ static int handle_message(struct circ_buf *buf)
 		case MSG_FASTBOOT_PRESENT:
 			if (*(uint8_t*)msg->data) {
 				// printf("======================================== MSG_FASTBOOT_PRESENT(on)\n");
-				if (!fastboot_done || fastboot_repeat)
+				if (fastboot_continue) {
+					request_fastboot_continue();
+					fastboot_continue = false;
+				} else if (!fastboot_done || fastboot_repeat) {
 					request_fastboot_files();
-				else
+				} else {
 					quit = true;
+				}
 			} else {
 				fastboot_done = true;
 				// printf("======================================== MSG_FASTBOOT_PRESENT(off)\n");
@@ -556,6 +577,9 @@ static int handle_message(struct circ_buf *buf)
 		case MSG_BOARD_INFO:
 			handle_board_info(msg->data, msg->len);
 			return -1;
+			break;
+		case MSG_FASTBOOT_CONTINUE:
+			// printf("======================================== MSG_FASTBOOT_CONTINUE\n");
 			break;
 		default:
 			fprintf(stderr, "unk %d len %d\n", msg->type, msg->len);
@@ -585,7 +609,7 @@ static void usage(void)
 	extern const char *__progname;
 
 	fprintf(stderr, "usage: %s -b <board> -h <host> [-t <timeout>] "
-			"[-T <inactivity-timeout>] boot.img\n",
+			"[-T <inactivity-timeout>] <boot.img>\n",
 			__progname);
 	fprintf(stderr, "usage: %s -i -b <board> -h <host>\n",
 			__progname);
@@ -673,13 +697,15 @@ int main(int argc, char **argv)
 
 	switch (verb) {
 	case CDBA_BOOT:
-		if (optind >= argc || !board)
+		if (optind > argc || !board)
 			usage();
 
 		fastboot_file = argv[optind];
-		if (lstat(fastboot_file, &sb))
+		if (!fastboot_file)
+			fastboot_continue = true;
+		else if (lstat(fastboot_file, &sb))
 			err(1, "unable to read \"%s\"", fastboot_file);
-		if (!S_ISREG(sb.st_mode) && !S_ISLNK(sb.st_mode))
+		else if (!S_ISREG(sb.st_mode) && !S_ISLNK(sb.st_mode))
 			errx(1, "\"%s\" is not a regular file", fastboot_file);
 
 		request_select_board(board);

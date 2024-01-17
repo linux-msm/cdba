@@ -145,6 +145,12 @@ static void msg_fastboot_download(const void *data, size_t len)
 	}
 }
 
+static void msg_fastboot_continue(void)
+{
+	device_fastboot_continue(selected_device);
+	cdba_send(MSG_FASTBOOT_CONTINUE);
+}
+
 void cdba_send_buf(int type, size_t len, const void *buf)
 {
 	struct msg msg = {
@@ -227,6 +233,9 @@ static int handle_stdin(int fd, void *buf)
 			break;
 		case MSG_BOARD_INFO:
 			device_info(username, msg->data, msg->len);
+			break;
+		case MSG_FASTBOOT_CONTINUE:
+			msg_fastboot_continue();
 			break;
 		default:
 			fprintf(stderr, "unk %d len %d\n", msg->type, msg->len);

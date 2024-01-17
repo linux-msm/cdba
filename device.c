@@ -303,6 +303,11 @@ void device_fastboot_boot(struct device *device)
 	fastboot_boot(device->fastboot);
 }
 
+void device_fastboot_continue(struct device *device)
+{
+	fastboot_continue(device->fastboot);
+}
+
 void device_fastboot_flash_reboot(struct device *device)
 {
 	fastboot_flash(device->fastboot, "boot");
