@@ -20,6 +20,7 @@
 #include "cdba-server.h"
 #include "device.h"
 #include "status.h"
+#include "watch.h"
 
 struct cdb_assist {
 	char serial[9];

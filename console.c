@@ -13,6 +13,7 @@
 
 #include "cdba-server.h"
 #include "device.h"
+#include "watch.h"
 
 struct console {
 	int console_fd;
