@@ -55,11 +55,13 @@ static struct fastboot_ops fastboot_ops = {
 
 static void msg_select_board(const void *param)
 {
-	selected_device = device_open(param, username, &fastboot_ops);
+	selected_device = device_open(param, username);
 	if (!selected_device) {
 		fprintf(stderr, "failed to open %s\n", (const char *)param);
 		watch_quit();
 	}
+
+	device_fastboot_open(selected_device, &fastboot_ops);
 
 	cdba_send(MSG_SELECT_BOARD);
 }

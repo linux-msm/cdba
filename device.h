@@ -72,8 +72,7 @@ struct device_user {
 void device_add(struct device *device);
 
 struct device *device_open(const char *board,
-			   const char *username,
-			   struct fastboot_ops *fastboot_ops);
+			   const char *username);
 void device_close(struct device *dev);
 int device_power(struct device *device, bool on);
 
@@ -83,6 +82,8 @@ int device_write(struct device *device, const void *buf, size_t len);
 
 void device_boot(struct device *device, const void *data, size_t len);
 
+void device_fastboot_open(struct device *device,
+			  struct fastboot_ops *fastboot_ops);
 void device_fastboot_boot(struct device *device);
 void device_fastboot_flash_reboot(struct device *device);
 void device_send_break(struct device *device);
