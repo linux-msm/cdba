@@ -79,7 +79,7 @@ void ppps_power(struct device *dev, bool on)
 		dev->ppps_path = temp;
 	}
 
-	if (dev->ppps3_path[0] != '/') {
+	if (dev->ppps3_path && dev->ppps3_path[0] != '/') {
 		char *temp;
 
 		asprintf(&temp, PPPS_BASE_PATH, dev->ppps3_path);
