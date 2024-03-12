@@ -21,6 +21,7 @@
 #include "cdba-server.h"
 #include "device.h"
 #include "status.h"
+#include "tty.h"
 #include "watch.h"
 
 enum qcomlt_parse_state {

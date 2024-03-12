@@ -17,8 +17,8 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include "cdba-server.h"
 #include "device.h"
+#include "tty.h"
 
 struct alpaca {
 	int alpaca_fd;
