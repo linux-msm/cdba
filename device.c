@@ -95,8 +95,7 @@ static bool device_check_access(struct device *device,
 }
 
 struct device *device_open(const char *board,
-			   const char *username,
-			   struct fastboot_ops *fastboot_ops)
+			   const char *username)
 {
 	struct device *device;
 
@@ -135,8 +134,6 @@ found:
 
 	if (device->usb_always_on)
 		device_usb(device, true);
-
-	device->fastboot = fastboot_open(device->serial, fastboot_ops, NULL);
 
 	return device;
 }
@@ -275,18 +272,36 @@ int device_write(struct device *device, const void *buf, size_t len)
 	return device_console(device, write, buf, len);
 }
 
+void device_fastboot_open(struct device *device,
+			  struct fastboot_ops *fastboot_ops)
+{
+	device->fastboot = fastboot_open(device->serial, fastboot_ops, NULL);
+}
+
 void device_fastboot_boot(struct device *device)
 {
+	if (!device->fastboot) {
+		fprintf(stderr, "fastboot not opened\n");
+		return;
+	}
 	fastboot_boot(device->fastboot);
 }
 
 void device_fastboot_continue(struct device *device)
 {
+	if (!device->fastboot) {
+		fprintf(stderr, "fastboot not opened\n");
+		return;
+	}
 	fastboot_continue(device->fastboot);
 }
 
 void device_fastboot_flash_reboot(struct device *device)
 {
+	if (!device->fastboot) {
+		fprintf(stderr, "fastboot not opened\n");
+		return;
+	}
 	fastboot_flash(device->fastboot, "boot");
 	fastboot_reboot(device->fastboot);
 }
