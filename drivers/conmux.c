@@ -18,6 +18,7 @@
 
 #include "cdba-server.h"
 #include "device.h"
+#include "watch.h"
 
 extern int h_errno;
 

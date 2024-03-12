@@ -88,7 +88,8 @@ server_srcs = ['cdba-server.c',
 	       'console.c',
 	       'ppps.c',
                'status.c',
-               'status-cmd.c']
+               'status-cmd.c',
+               'watch.c']
 
 build_server = true
 foreach d: server_deps

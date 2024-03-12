@@ -17,6 +17,7 @@
 #include "device.h"
 #include "status.h"
 #include "status-cmd.h"
+#include "watch.h"
 
 static void launch_status_cmd(struct device *dev)
 {
