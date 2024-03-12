@@ -17,9 +17,9 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include "cdba-server.h"
 #include "device.h"
 #include "status.h"
+#include "tty.h"
 #include "watch.h"
 
 struct cdb_assist {

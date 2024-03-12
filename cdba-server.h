@@ -6,8 +6,6 @@
 
 #include "cdba.h"
 
-int tty_open(const char *tty, struct termios *old);
-
 void cdba_send_buf(int type, size_t len, const void *buf);
 #define cdba_send(type) cdba_send_buf(type, 0, NULL)
 
