@@ -124,7 +124,7 @@ void watch_quit(void)
 	quit_invoked = true;
 }
 
-int watch_run(void)
+int watch_main_loop(bool (*quit_cb)(void))
 {
 	struct timeval *timeoutp;
 	struct watch *w;
@@ -133,16 +133,14 @@ int watch_run(void)
 	int ret;
 
 	while (!quit_invoked) {
+		if (quit_cb && quit_cb())
+			break;
+
 		nfds = 0;
 
 		list_for_each_entry(w, &read_watches, node) {
 			nfds = MAX(nfds, w->fd);
 			FD_SET(w->fd, &rfds);
-		}
-
-		if (!FD_ISSET(STDIN_FILENO, &rfds)) {
-			fprintf(stderr, "rfds is trash!\n");
-			return -EINVAL;
 		}
 
 		timeoutp = watch_timer_next();
@@ -169,4 +167,22 @@ int watch_run(void)
 	}
 
 	return 0;
+}
+
+int watch_run(void)
+{
+	struct watch *w;
+	bool found = false;
+
+	list_for_each_entry(w, &read_watches, node) {
+		if (w->fd == STDIN_FILENO)
+			found = true;
+	}
+
+	if (!found) {
+		fprintf(stderr, "rfds is trash!\n");
+		return -EINVAL;
+	}
+
+	return watch_main_loop(NULL);
 }

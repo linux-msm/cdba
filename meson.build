@@ -54,7 +54,7 @@ if not ftdi_dep.found()
 endif
 
 gpiod_dep = dependency('libgpiod', required: server_opt)
-server_deps = [dependency('libudev', required: server_opt),
+cdbalib_deps = [dependency('libudev', required: server_opt),
 	       dependency('yaml-0.1', required: server_opt),
 	       gpiod_dep,
 	       ftdi_dep]
@@ -62,7 +62,7 @@ server_deps = [dependency('libudev', required: server_opt),
 # E.g. Debian reuires -lutil for forkpty
 if not compiler.has_function('forkpty')
   util_dep = compiler.find_library('util')
-  server_deps += util_dep
+  cdbalib_deps += util_dep
 endif
 
 drivers_srcs = ['drivers/alpaca.c',
@@ -80,8 +80,7 @@ else
 	drivers_srcs += ['drivers/local-gpio-v1.c']
 endif
 
-server_srcs = ['cdba-server.c',
-	       'circ_buf.c',
+cdbalib_srcs = ['circ_buf.c',
 	       'device.c',
 	       'device_parser.c',
 	       'fastboot.c',
@@ -92,17 +91,28 @@ server_srcs = ['cdba-server.c',
                'watch.c',
                'tty.c']
 
+server_srcs = ['cdba-server.c']
+
 build_server = true
-foreach d: server_deps
+foreach d: cdbalib_deps
   if not d.found()
     build_server = false
   endif
 endforeach
 
 if build_server
+	libcdba = static_library('cdba',
+				cdbalib_srcs + drivers_srcs,
+				dependencies : cdbalib_deps,
+				)
+
 	executable('cdba-server',
-		  server_srcs + drivers_srcs,
-		  dependencies : server_deps,
+		  server_srcs,
+		  link_with : libcdba,
+		  install : true)
+        executable('cdba-power',
+                  ['cdba-power.c'],
+		  link_with : libcdba,
 		  install : true)
 elif not server_opt.disabled()
 	message('Skipping CDBA server build')

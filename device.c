@@ -227,6 +227,11 @@ static void device_tick(void *data)
 	}
 }
 
+bool device_is_running(struct device *device)
+{
+	return device->state == DEVICE_STATE_RUNNING;
+}
+
 static int device_power_on(struct device *device)
 {
 	if (!device || !device_has_control(device, power))

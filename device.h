@@ -91,6 +91,7 @@ void device_send_break(struct device *device);
 void device_list_devices(const char *username);
 void device_info(const char *username, const void *data, size_t dlen);
 void device_fastboot_continue(struct device *device);
+bool device_is_running(struct device *device);
 
 enum {
 	DEVICE_KEY_FASTBOOT,
