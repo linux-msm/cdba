@@ -36,6 +36,8 @@ The optional -s argument can be used to specify that a fifo should be created
 and opened. cdba will request the server to start sending status/measurement
 updates, which will be written to this fifo.
 
+How to quit the console and close session: ctrl+a then q
+
 = Server side
 
 == Device configuration
