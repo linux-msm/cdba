@@ -65,28 +65,30 @@ if not compiler.has_function('forkpty')
   server_deps += util_dep
 endif
 
+drivers_srcs = ['drivers/alpaca.c',
+	        'drivers/cdb_assist.c',
+		'drivers/conmux.c',
+		'drivers/external.c',
+		'drivers/ftdi-gpio.c',
+		'drivers/local-gpio.c',
+		'drivers/qcomlt_dbg.c',
+		]
+
+if gpiod_dep.version().version_compare('>=2.0')
+	drivers_srcs += ['drivers/local-gpio-v2.c']
+else
+	drivers_srcs += ['drivers/local-gpio-v1.c']
+endif
+
 server_srcs = ['cdba-server.c',
-	       'cdb_assist.c',
 	       'circ_buf.c',
-	       'conmux.c',
 	       'device.c',
 	       'device_parser.c',
-               'external.c',
 	       'fastboot.c',
-	       'alpaca.c',
-	       'ftdi-gpio.c',
-	       'local-gpio.c',
 	       'console.c',
-	       'qcomlt_dbg.c',
 	       'ppps.c',
                'status.c',
                'status-cmd.c']
-
-if gpiod_dep.version().version_compare('>=2.0')
-	server_srcs += ['local-gpio-v2.c']
-else
-	server_srcs += ['local-gpio-v1.c']
-endif
 
 build_server = true
 foreach d: server_deps
@@ -97,7 +99,7 @@ endforeach
 
 if build_server
 	executable('cdba-server',
-		  server_srcs,
+		  server_srcs + drivers_srcs,
 		  dependencies : server_deps,
 		  install : true)
 elif not server_opt.disabled()
