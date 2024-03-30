@@ -2,31 +2,7 @@
  * Copyright (c) 2016-2018, Linaro Ltd.
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice,
- * this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions and the following disclaimer in the documentation
- * and/or other materials provided with the distribution.
- *
- * 3. Neither the name of the copyright holder nor the names of its contributors
- * may be used to endorse or promote products derived from this software without
- * specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 #include <sys/file.h>
 #include <sys/stat.h>
@@ -47,6 +23,7 @@
 #include "list.h"
 #include "ppps.h"
 #include "status-cmd.h"
+#include "watch.h"
 
 #define ARRAY_SIZE(x) ((sizeof(x)/sizeof((x)[0])))
 
@@ -117,9 +94,10 @@ static bool device_check_access(struct device *device,
 	return false;
 }
 
+static int device_power_off(struct device *device);
+
 struct device *device_open(const char *board,
-			   const char *username,
-			   struct fastboot_ops *fastboot_ops)
+			   const char *username)
 {
 	struct device *device;
 
@@ -156,10 +134,20 @@ found:
 	if (!device->console)
 		errx(1, "failed to open device console");
 
+	/*
+	 * Power off before opening fastboot. Otherwise if the device is
+	 * already in the fastboot state, CDBA will detect it, then power up
+	 * procedure will restart the device causing fastboot to disappear and
+	 * appear again. This will cause CDBA to exit, ending up with the
+	 * unbreakable fastboot-reset-second_fastboot-quit cycle.
+	 * */
+	if (device->power_always_on) {
+		device_power_off(device);
+		sleep(2);
+	}
+
 	if (device->usb_always_on)
 		device_usb(device, true);
-
-	device->fastboot = fastboot_open(device->serial, fastboot_ops, NULL);
 
 	return device;
 }
@@ -239,6 +227,11 @@ static void device_tick(void *data)
 	}
 }
 
+bool device_is_running(struct device *device)
+{
+	return device->state == DEVICE_STATE_RUNNING;
+}
+
 static int device_power_on(struct device *device)
 {
 	if (!device || !device_has_control(device, power))
@@ -298,18 +291,36 @@ int device_write(struct device *device, const void *buf, size_t len)
 	return device_console(device, write, buf, len);
 }
 
+void device_fastboot_open(struct device *device,
+			  struct fastboot_ops *fastboot_ops)
+{
+	device->fastboot = fastboot_open(device->serial, fastboot_ops, NULL);
+}
+
 void device_fastboot_boot(struct device *device)
 {
+	if (!device->fastboot) {
+		fprintf(stderr, "fastboot not opened\n");
+		return;
+	}
 	fastboot_boot(device->fastboot);
 }
 
 void device_fastboot_continue(struct device *device)
 {
+	if (!device->fastboot) {
+		fprintf(stderr, "fastboot not opened\n");
+		return;
+	}
 	fastboot_continue(device->fastboot);
 }
 
 void device_fastboot_flash_reboot(struct device *device)
 {
+	if (!device->fastboot) {
+		fprintf(stderr, "fastboot not opened\n");
+		return;
+	}
 	fastboot_flash(device->fastboot, "boot");
 	fastboot_reboot(device->fastboot);
 }
@@ -382,7 +393,8 @@ void device_close(struct device *dev)
 {
 	if (!dev->usb_always_on)
 		device_usb(dev, false);
-	device_power(dev, false);
+	if (!dev->power_always_on)
+		device_power(dev, false);
 
 	if (device_has_control(dev, close))
 		device_control(dev, close);
