@@ -1,0 +1,13 @@
+---
+devices:
+  - board: myboard
+    name: "My Board"
+    description: |
+      My Awesome board
+    console: /dev/ttyABC0
+    fastboot: cacafada
+    fastboot_set_active: true
+    fastboot_key_timeout: 2
+    laurent:
+      server: laurent.lan
+      relay: 5
