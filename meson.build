@@ -70,6 +70,7 @@ drivers_srcs = ['drivers/alpaca.c',
 		'drivers/conmux.c',
 		'drivers/external.c',
 		'drivers/ftdi-gpio.c',
+		'drivers/laurent.c',
 		'drivers/local-gpio.c',
 		'drivers/qcomlt_dbg.c',
 		]
