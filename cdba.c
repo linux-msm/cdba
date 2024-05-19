@@ -184,6 +184,12 @@ static int tty_callback(int *ssh_fds)
 			case 'B':
 				cdba_send(ssh_fds[0], MSG_SEND_BREAK);
 				break;
+			case 'f':
+				cdba_send(ssh_fds[0], MSG_FASTBOOT_BTN_PRESS);
+				break;
+			case 'F':
+				cdba_send(ssh_fds[0], MSG_FASTBOOT_BTN_RELEASE);
+				break;
 			}
 
 			special = false;

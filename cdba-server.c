@@ -185,6 +185,12 @@ static int handle_stdin(int fd, void *buf)
 		case MSG_FASTBOOT_CONTINUE:
 			msg_fastboot_continue();
 			break;
+		case MSG_FASTBOOT_BTN_PRESS:
+			device_key(selected_device, DEVICE_KEY_FASTBOOT, true);
+			break;
+		case MSG_FASTBOOT_BTN_RELEASE:
+			device_key(selected_device, DEVICE_KEY_FASTBOOT, false);
+			break;
 		default:
 			fprintf(stderr, "unk %d len %d\n", msg->type, msg->len);
 			exit(1);

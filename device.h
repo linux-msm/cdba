@@ -80,6 +80,7 @@ int device_power(struct device *device, bool on);
 void device_status_enable(struct device *device);
 void device_usb(struct device *device, bool on);
 int device_write(struct device *device, const void *buf, size_t len);
+void device_key(struct device *device, int key, bool asserted);
 
 void device_boot(struct device *device, const void *data, size_t len);
 
