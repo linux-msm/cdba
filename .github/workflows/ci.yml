@@ -43,10 +43,13 @@ jobs:
           # Fails on configure on GCC and clang (process restrictions?)
           # - fedora:rawhide
           - fedora:latest
+          - fedora:40
           - fedora:39
           - fedora:38
           - fedora:37
-          - ubuntu:lunar # EOL 01.2024
+          - ubuntu:latest
+          - ubuntu:noble
+          - ubuntu:mantic
           - ubuntu:jammy
           - ubuntu:focal
           # On Ubuntu Bionic the Meson doesn't support feature options
@@ -178,7 +181,7 @@ jobs:
         echo "PKG_CONFIG_PATH: $PKG_CONFIG_PATH"
 
     - name: Git checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Install additional packages
       run: |
