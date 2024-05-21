@@ -216,7 +216,7 @@ int main(int argc, char **argv)
 	if (!username)
 		username = "nobody";
 
-	openlog("cdba-server", 0, LOG_DAEMON);
+	openlog("cdba-server", LOG_PID, LOG_DAEMON);
 
 	ret = device_parser(".cdba");
 	if (ret) {
