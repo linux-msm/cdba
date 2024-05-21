@@ -47,6 +47,7 @@ jobs:
           - fedora:39
           - fedora:38
           - fedora:37
+          - ubuntu:latest
           - ubuntu:noble
           - ubuntu:mantic
           - ubuntu:jammy
