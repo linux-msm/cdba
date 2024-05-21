@@ -201,6 +201,11 @@ static void sigpipe_handler(int signo)
 	watch_quit();
 }
 
+static void atexit_handler(void)
+{
+	syslog(LOG_INFO, "exiting");
+}
+
 int main(int argc, char **argv)
 {
 	int flags;
@@ -217,6 +222,7 @@ int main(int argc, char **argv)
 		username = "nobody";
 
 	openlog("cdba-server", LOG_PID, LOG_DAEMON);
+	atexit(atexit_handler);
 
 	ret = device_parser(".cdba");
 	if (ret) {
