@@ -64,15 +64,21 @@ static void device_lock(struct device *device)
 	if (fd < 0)
 		err(1, "failed to open lockfile %s", lock);
 
-	n = flock(fd, LOCK_EX | LOCK_NB);
-	if (!n)
-		return;
+	while (1) {
+		char c;
 
-	warnx("board is in use, waiting...");
+		n = flock(fd, LOCK_EX | LOCK_NB);
+		if (!n)
+			return;
 
-	n = flock(fd, LOCK_EX);
-	if (n < 0)
-		err(1, "failed to lock lockfile %s", lock);
+		warnx("board is in use, waiting...");
+
+		sleep(3);
+
+		/* check that connection isn't gone */
+		if (read(STDIN_FILENO, &c, 1) == 0)
+			errx(1, "connection is gone");
+	}
 }
 
 static bool device_check_access(struct device *device,
