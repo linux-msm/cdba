@@ -311,15 +311,15 @@ static void *ftdi_gpio_open(struct device *dev)
 	if (ftdi_gpio->options->gpios[GPIO_POWER_KEY].present)
 		dev->has_power_key = true;
 
+	if (ftdi_gpio->options->gpios[GPIO_OUTPUT_ENABLE].present)
+		ftdi_gpio_toggle_io(ftdi_gpio, GPIO_OUTPUT_ENABLE, 1);
+
 	ftdi_gpio_device_power(ftdi_gpio, 0);
 
 	if (dev->usb_always_on)
 		ftdi_gpio_device_usb(ftdi_gpio, 1);
 	else
 		ftdi_gpio_device_usb(ftdi_gpio, 0);
-
-	if (ftdi_gpio->options->gpios[GPIO_OUTPUT_ENABLE].present)
-		ftdi_gpio_toggle_io(ftdi_gpio, GPIO_OUTPUT_ENABLE, 1);
 
 	usleep(500000);
 
