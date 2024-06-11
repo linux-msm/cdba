@@ -103,7 +103,7 @@ static int fork_ssh(const char *host, const char *cmd, int *pipes)
 		close(piped_stderr[0]);
 		close(piped_stderr[1]);
 
-		execl("/usr/bin/ssh", "ssh", host, cmd, NULL);
+		execlp("ssh", "ssh", host, cmd, NULL);
 		err(1, "launching ssh failed");
 	default:
 		close(piped_stdin[0]);
