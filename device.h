@@ -42,6 +42,9 @@ struct device {
 	bool tickle_mmc;
 	bool usb_always_on;
 	bool power_always_on;
+
+	char *video_device;
+
 	struct fastboot *fastboot;
 	unsigned int fastboot_key_timeout;
 	int state;

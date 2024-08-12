@@ -14,6 +14,10 @@
 #include <unistd.h>
 #include <syslog.h>
 
+#ifndef CDBA_CAMERA_DISABLED
+#include "camera.h"
+#endif // CDBA_CAMERA_DISABLED
+
 #include "cdba-server.h"
 #include "circ_buf.h"
 #include "device.h"
@@ -98,6 +102,50 @@ static void msg_fastboot_continue(void)
 	device_fastboot_continue(selected_device);
 	cdba_send(MSG_FASTBOOT_CONTINUE);
 }
+
+#ifdef CDBA_CAMERA_DISABLED
+static void capture_image(struct device *device)
+{
+	fprintf(stderr, "Camera support is not built into the server\n");
+}
+#else
+static void capture_image(struct device *device)
+{
+	uint8_t *jpeg = NULL;
+	size_t size = 0;
+
+	if (!device->video_device)
+	{
+		fprintf(stderr, "video_device not specified!\n");
+		return;
+	}
+
+	int ret = camera_capture_jpeg(&jpeg, &size, device->video_device);
+	if (ret < 0)
+	{
+		fprintf(stderr, "Failed to capture image\n");
+		return;
+	}
+
+	const size_t chunk_size = 1024;
+	size_t remaining_size = size;
+	const uint8_t *ptr = jpeg;
+
+	while (remaining_size > 0) {
+		size_t send_size = remaining_size > chunk_size ? chunk_size : remaining_size;
+
+		cdba_send_buf(MSG_CAPTURE_IMAGE, send_size, ptr);
+
+		ptr += send_size;
+		remaining_size -= send_size;
+	}
+
+	// Empty message to indicate end of image
+	cdba_send_buf(MSG_CAPTURE_IMAGE, 0, NULL);
+
+	free(jpeg);
+}
+#endif // CDBA_CAMERA_DISABLED
 
 void cdba_send_buf(int type, size_t len, const void *buf)
 {
@@ -184,6 +232,9 @@ static int handle_stdin(int fd, void *buf)
 			break;
 		case MSG_FASTBOOT_CONTINUE:
 			msg_fastboot_continue();
+			break;
+		case MSG_CAPTURE_IMAGE:
+			capture_image(selected_device);
 			break;
 		default:
 			fprintf(stderr, "unk %d len %d\n", msg->type, msg->len);

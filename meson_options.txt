@@ -1,1 +1,3 @@
 option('server', type: 'feature', description: 'Controls whether the CDBA server is built. By default it will be built if all dependencies are present.')
+
+option('camera', type: 'feature', description: 'Controls whether camera support is built into the server. By default it will be built if libjpeg is present.')

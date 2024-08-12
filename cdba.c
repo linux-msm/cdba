@@ -13,6 +13,7 @@
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -183,6 +184,9 @@ static int tty_callback(int *ssh_fds)
 				break;
 			case 'B':
 				cdba_send(ssh_fds[0], MSG_SEND_BREAK);
+				break;
+			case 'i':
+				cdba_send(ssh_fds[0], MSG_CAPTURE_IMAGE);
 				break;
 			}
 
@@ -481,6 +485,45 @@ static void handle_console(const void *data, size_t len)
 	write(STDOUT_FILENO, data, len);
 }
 
+static void handle_image_capture(void *data, size_t len)
+{
+	static int fd = -1;
+	const char *filename = "capture.jpg";
+	int ret;
+
+	if (len == 0)
+	{
+		// End of image
+		if (fd >= 0)
+		{
+			close(fd);
+			fd = -1;
+
+			fprintf(stderr, "Saved captured image to %s\n", filename);
+		}
+		return;
+	}
+
+	if (fd < 0) {
+		// First chunk of image
+		fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC, 0666);
+		if (fd < 0) {
+			err(1, "Failed to open %s", filename);
+		}
+	}
+
+	while (len > 0)
+	{
+		ret = write(fd, data, len);
+		if (ret < 0) {
+			err(1, "Failed to write to %s", filename);
+		}
+
+		data = (uint8_t *)data + ret;
+		len -= ret;
+	}
+}
+
 static bool auto_power_on;
 
 static int handle_message(struct circ_buf *buf)
@@ -556,6 +599,9 @@ static int handle_message(struct circ_buf *buf)
 			break;
 		case MSG_FASTBOOT_CONTINUE:
 			// printf("======================================== MSG_FASTBOOT_CONTINUE\n");
+			break;
+		case MSG_CAPTURE_IMAGE:
+			handle_image_capture(msg->data, msg->len);
 			break;
 		default:
 			fprintf(stderr, "unk %d len %d\n", msg->type, msg->len);

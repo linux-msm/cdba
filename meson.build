@@ -102,6 +102,19 @@ foreach d: cdbalib_deps
 endforeach
 
 if build_server
+	camera_opt = get_option('camera')
+	jpeg_dep = dependency('libjpeg', required: camera_opt)
+
+	build_camera = true
+	server_cflags = []
+	if not jpeg_dep.found()
+		build_camera = false
+		server_cflags += '-DCDBA_CAMERA_DISABLED'
+	else
+		cdbalib_srcs += ['camera.c']
+		cdbalib_deps += jpeg_dep
+	endif
+
 	libcdba = static_library('cdba',
 				cdbalib_srcs + drivers_srcs,
 				dependencies : cdbalib_deps,
@@ -110,7 +123,8 @@ if build_server
 	executable('cdba-server',
 		  server_srcs,
 		  link_with : libcdba,
-		  install : true)
+		  install : true,
+		  c_args : server_cflags)
         executable('cdba-power',
                   ['cdba-power.c'],
 		  link_with : libcdba,
