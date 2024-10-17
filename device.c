@@ -25,6 +25,8 @@
 #include "status-cmd.h"
 #include "watch.h"
 
+const char *cdba_user;
+
 #define ARRAY_SIZE(x) ((sizeof(x)/sizeof((x)[0])))
 
 #define device_has_control(_dev, _op) \
