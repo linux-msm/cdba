@@ -124,7 +124,7 @@ properties:
                 devicenode:
                   $ref: "#/$defs/device_path"
               patternProperties:
-                "^power|fastboot_key|power_key|usb_disconnect|output_enable$":
+                "^power|fastboot_key|power_key|usb[01]?_disconnect|output_enable$":
                   $ref: "#/$defs/ftdi_gpio"
               additionalProperties: false
 
