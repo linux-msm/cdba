@@ -103,8 +103,13 @@ static int fork_ssh(const char *host, const char *cmd, int *pipes)
 		close(piped_stderr[0]);
 		close(piped_stderr[1]);
 
-		execlp("ssh", "ssh", host, cmd, NULL);
-		err(1, "launching ssh failed");
+		if (host) {
+			execlp("ssh", "ssh", host, cmd, NULL);
+			err(1, "launching ssh failed");
+		} else {
+			execlp(cmd, cmd, NULL);
+			err(1, "launching cdba-server failed");
+		}
 	default:
 		close(piped_stdin[0]);
 		close(piped_stdout[1]);
@@ -583,12 +588,12 @@ static void usage(void)
 {
 	extern const char *__progname;
 
-	fprintf(stderr, "usage: %s -b <board> -h <host> [-t <timeout>] "
+	fprintf(stderr, "usage: %s -b <board> [-h <host>] [-t <timeout>] "
 			"[-T <inactivity-timeout>] [boot.img]\n",
 			__progname);
-	fprintf(stderr, "usage: %s -i -b <board> -h <host>\n",
+	fprintf(stderr, "usage: %s -i -b <board> [-h <host>]\n",
 			__progname);
-	fprintf(stderr, "usage: %s -l -h <host>\n",
+	fprintf(stderr, "usage: %s -l [-h <host>]\n",
 			__progname);
 	exit(1);
 }
@@ -666,9 +671,6 @@ int main(int argc, char **argv)
 			usage();
 		}
 	}
-
-	if (!host)
-		usage();
 
 	switch (verb) {
 	case CDBA_BOOT:
