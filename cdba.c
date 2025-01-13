@@ -609,6 +609,7 @@ int main(int argc, char **argv)
 	bool power_cycle_on_timeout = true;
 	struct timeval timeout_inactivity_tv;
 	struct timeval timeout_total_tv;
+	struct timeval *timeout = NULL;
 	struct termios *orig_tios;
 	const char *server_binary = "cdba-server";
 	const char *status_pipe = NULL;
@@ -709,6 +710,8 @@ int main(int argc, char **argv)
 
 	timeout_total_tv = get_timeout(timeout_total);
 	timeout_inactivity_tv = get_timeout(timeout_inactivity);
+	if (timeout_total || timeout_inactivity)
+		timeout = &tv;
 
 	while (!quit) {
 		if (received_power_off || reached_timeout) {
@@ -746,14 +749,16 @@ int main(int argc, char **argv)
 		if (!list_empty(&work_items))
 			FD_SET(ssh_fds[0], &wfds);
 
-		gettimeofday(&now, NULL);
-		if (timeout_inactivity && timercmp(&timeout_inactivity_tv, &timeout_total_tv, <)) {
-			timersub(&timeout_inactivity_tv, &now, &tv);
-		} else {
-			timersub(&timeout_total_tv, &now, &tv);
+		if (timeout) {
+			gettimeofday(&now, NULL);
+			if (timeout_inactivity && (!timeout_total ||
+			    timercmp(&timeout_inactivity_tv, &timeout_total_tv, <))) {
+				timersub(&timeout_inactivity_tv, &now, timeout);
+			} else {
+				timersub(&timeout_total_tv, &now, timeout);
+			}
 		}
-
-		ret = select(nfds + 1, &rfds, &wfds, NULL, &tv);
+		ret = select(nfds + 1, &rfds, &wfds, NULL, timeout);
 #if 0
 		printf("select: %d (%c%c%c)\n", ret, FD_ISSET(STDIN_FILENO, &rfds) ? 'X' : '-',
 						     FD_ISSET(ssh_fds[1], &rfds) ? 'X' : '-',
