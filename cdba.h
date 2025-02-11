@@ -31,6 +31,24 @@ enum {
 	MSG_LIST_DEVICES,
 	MSG_BOARD_INFO,
 	MSG_FASTBOOT_CONTINUE,
+	MSG_KEY_PRESS,
+};
+
+struct key_press {
+	uint8_t key;
+	uint8_t state;
+} __packed;
+
+enum {
+	DEVICE_KEY_FASTBOOT,
+	DEVICE_KEY_POWER,
+	DEVICE_KEY_COUNT
+};
+
+enum {
+	KEY_PRESS_RELEASE,
+	KEY_PRESS_PRESS,
+	KEY_PRESS_PULSE,
 };
 
 #endif

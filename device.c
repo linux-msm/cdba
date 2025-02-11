@@ -163,7 +163,7 @@ static void device_impl_power(struct device *device, bool on)
 	device_control(device, power, on);
 }
 
-static void device_key(struct device *device, int key, bool asserted)
+void device_key(struct device *device, int key, bool asserted)
 {
 	if (device_has_control(device, key))
 		device_control(device, key, key, asserted);

@@ -143,8 +143,25 @@ static int cdba_send_buf(int fd, int type, size_t len, const void *buf)
 	return ret < 0 ? ret : 0;
 }
 
+static int cdba_send_key(int fd, int key, uint8_t state)
+{
+	struct key_press press = {
+		.key = key,
+		.state = state,
+	};
+
+	return cdba_send_buf(fd, MSG_KEY_PRESS, sizeof(press), &press);
+}
+
+static int cdba_toggle_key(int fd, int key, bool key_state[DEVICE_KEY_COUNT])
+{
+	key_state[key] = !key_state[key];
+	return cdba_send_key(fd, key, key_state[key]);
+}
+
 static int tty_callback(int *ssh_fds)
 {
+	static bool key_state[DEVICE_KEY_COUNT];
 	static const char ctrl_a = 0x1;
 	static bool special;
 	char buf[32];
@@ -183,6 +200,18 @@ static int tty_callback(int *ssh_fds)
 				break;
 			case 'B':
 				cdba_send(ssh_fds[0], MSG_SEND_BREAK);
+				break;
+			case 'o':
+				cdba_send_key(ssh_fds[0], DEVICE_KEY_POWER, KEY_PRESS_PULSE);
+				break;
+			case 'O':
+				cdba_toggle_key(ssh_fds[0], DEVICE_KEY_POWER, key_state);
+				break;
+			case 'f':
+				cdba_send_key(ssh_fds[0], DEVICE_KEY_FASTBOOT, KEY_PRESS_PULSE);
+				break;
+			case 'F':
+				cdba_toggle_key(ssh_fds[0], DEVICE_KEY_FASTBOOT, key_state);
 				break;
 			}
 
