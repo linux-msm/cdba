@@ -22,6 +22,11 @@ static void nextsym(struct device_parser *dp)
 {
 	if (!yaml_parser_parse(&dp->parser, &dp->event)) {
 		fprintf(stderr, "device parser: error %u\n", dp->parser.error);
+		fprintf(stderr,
+		        "device parser: index %zu, line %zu, column %zu\n",
+		        dp->parser.context_mark.index,
+		        dp->parser.context_mark.line,
+		        dp->parser.context_mark.column);
 		exit(1);
 	}
 }
@@ -43,6 +48,33 @@ int device_parser_accept(struct device_parser *dp, int type,
 	}
 }
 
+void decode_yaml_type_error(struct device_parser *dp, int type)
+{
+		char event_type[11][26] = {
+				"YAML_NO_EVENT",
+				"YAML_STREAM_START_EVENT",
+				"YAML_STREAM_END_EVENT",
+				"YAML_DOCUMENT_START_EVENT",
+				"YAML_DOCUMENT_END_EVENT",
+				"YAML_ALIAS_EVENT",
+				"YAML_SCALAR_EVENT",
+				"YAML_SEQUENCE_START_EVENT",
+				"YAML_SEQUENCE_END_EVENT",
+				"YAML_MAPPING_START_EVENT",
+				"YAML_MAPPING_END_EVENT"
+		};
+
+		fprintf(stderr,
+		        "device parser: expected %s got %s\n",
+		        event_type[type],
+		        event_type[dp->event.type]);
+		fprintf(stderr,
+		        "device parser: index %zu, line %zu, column %zu\n",
+		        dp->parser.mark.index,
+		        dp->parser.mark.line,
+		        dp->parser.mark.column);
+}
+
 bool device_parser_expect(struct device_parser *dp, int type,
 			  char *scalar,  size_t scalar_len)
 {
@@ -50,7 +82,7 @@ bool device_parser_expect(struct device_parser *dp, int type,
 		return true;
 	}
 
-	fprintf(stderr, "device parser: expected %d got %u\n", type, dp->event.type);
+	decode_yaml_type_error(dp, type);
 	exit(1);
 }
 
