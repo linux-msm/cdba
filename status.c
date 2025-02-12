@@ -43,7 +43,8 @@ void status_send_values(const char *id, struct status_value *values)
 
 	status_get_ts(&ts);
 
-	len = snprintf(buf, sizeof(buf), "{\"ts\":%ld.%03ld, \"%s\":{ ", ts.tv_sec, ts.tv_nsec / 1000000, id);
+	len = snprintf(buf, sizeof(buf), "{\"ts\":%lld.%03ld, \"%s\":{ ",
+		      (long long int)ts.tv_sec, ts.tv_nsec / 1000000, id);
 
 	for (value = values; value->unit; value++) {
 		if (value != values) {
