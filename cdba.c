@@ -533,13 +533,11 @@ static int handle_message(struct circ_buf *buf)
 				} else {
 					quit = true;
 				}
-			} else {
-				fastboot_done = true;
-				// printf("======================================== MSG_FASTBOOT_PRESENT(off)\n");
 			}
 			break;
 		case MSG_FASTBOOT_DOWNLOAD:
 			// printf("======================================== MSG_FASTBOOT_DOWNLOAD\n");
+			fastboot_done = true;
 			break;
 		case MSG_FASTBOOT_BOOT:
 			// printf("======================================== MSG_FASTBOOT_BOOT\n");
@@ -556,6 +554,7 @@ static int handle_message(struct circ_buf *buf)
 			break;
 		case MSG_FASTBOOT_CONTINUE:
 			// printf("======================================== MSG_FASTBOOT_CONTINUE\n");
+			fastboot_done = true;
 			break;
 		default:
 			fprintf(stderr, "unk %d len %d\n", msg->type, msg->len);
