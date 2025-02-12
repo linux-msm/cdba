@@ -43,6 +43,8 @@ jobs:
           # Fails on configure on GCC and clang (process restrictions?)
           # - fedora:rawhide
           - fedora:latest
+          - fedora:42
+          - fedora:41
           - fedora:40
           - fedora:39
           - fedora:38
