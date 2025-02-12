@@ -43,13 +43,15 @@ jobs:
           # Fails on configure on GCC and clang (process restrictions?)
           # - fedora:rawhide
           - fedora:latest
+          - fedora:42
+          - fedora:41
           - fedora:40
           - fedora:39
           - fedora:38
           - fedora:37
           - ubuntu:latest
+          - ubuntu:oracular
           - ubuntu:noble
-          - ubuntu:mantic
           - ubuntu:jammy
           - ubuntu:focal
           # On Ubuntu Bionic the Meson doesn't support feature options
