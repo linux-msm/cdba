@@ -138,7 +138,7 @@ properties:
         local_gpio:
           description: Local GPIO
           type: object
-          unevaluatedItems: false
+          additionalProperties: false
           patternProperties:
             "^power|fastboot_key|power_key|usb_disconnect$":
               $ref: "#/$defs/local_gpio"
@@ -146,7 +146,7 @@ properties:
         laurent:
           description: KernelChip Laurent relays
           type: object
-          unevaluatedItems: false
+          additionalProperties: false
           properties:
             server:
               type: string
