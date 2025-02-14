@@ -31,7 +31,8 @@ enum {
 	GPIO_POWER = 0,			// Power input enable
 	GPIO_FASTBOOT_KEY,		// Usually volume key
 	GPIO_POWER_KEY,			// Key to power the device
-	GPIO_USB_DISCONNECT,		// Simulate main USB connection
+	GPIO_USB0_DISCONNECT,		// Simulate main USB connection
+	GPIO_USB1_DISCONNECT,		// Simulate secondary USB connection
 	GPIO_OUTPUT_ENABLE,		// Enable FTDI signals to flow to the board
 	GPIO_COUNT
 };
@@ -131,7 +132,7 @@ static void ftdi_gpio_parse_config(struct ftdi_gpio_options *options, char *valu
 		else if (strncmp("POWER_KEY", name, off - name - 1) == 0)
 			gpio_type = GPIO_POWER_KEY;
 		else if (strncmp("USB_DISCONNECT", name, off - name - 1) == 0)
-			gpio_type = GPIO_USB_DISCONNECT;
+			gpio_type = GPIO_USB0_DISCONNECT;
 		else if (strncmp("OUTPUT_ENABLE", name, off - name - 1) == 0)
 			gpio_type = GPIO_OUTPUT_ENABLE;
 		else
@@ -182,7 +183,11 @@ void *ftdi_gpio_parse_options(struct device_parser *dp)
 		} else if (!strcmp(key, "power_key")) {
 			gpio_id = GPIO_POWER_KEY;
 		} else if (!strcmp(key, "usb_disconnect")) {
-			gpio_id = GPIO_USB_DISCONNECT;
+			gpio_id = GPIO_USB0_DISCONNECT;
+		} else if (!strcmp(key, "usb0_disconnect")) {
+			gpio_id = GPIO_USB0_DISCONNECT;
+		} else if (!strcmp(key, "usb1_disconnect")) {
+			gpio_id = GPIO_USB1_DISCONNECT;
 		} else if (!strcmp(key, "output_enable")) {
 			gpio_id = GPIO_OUTPUT_ENABLE;
 		} else {
@@ -357,7 +362,8 @@ static int ftdi_gpio_device_power(struct ftdi_gpio *ftdi_gpio, bool on)
 
 static void ftdi_gpio_device_usb(struct ftdi_gpio *ftdi_gpio, bool on)
 {
-	ftdi_gpio_toggle_io(ftdi_gpio, GPIO_USB_DISCONNECT, on);
+	ftdi_gpio_toggle_io(ftdi_gpio, GPIO_USB0_DISCONNECT, on);
+	ftdi_gpio_toggle_io(ftdi_gpio, GPIO_USB1_DISCONNECT, on);
 }
 
 static int ftdi_gpio_power(struct device *dev, bool on)
