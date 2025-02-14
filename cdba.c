@@ -584,7 +584,7 @@ static void usage(void)
 	extern const char *__progname;
 
 	fprintf(stderr, "usage: %s -b <board> -h <host> [-t <timeout>] "
-			"[-T <inactivity-timeout>] <boot.img>\n",
+			"[-T <inactivity-timeout>] [boot.img]\n",
 			__progname);
 	fprintf(stderr, "usage: %s -i -b <board> -h <host>\n",
 			__progname);
