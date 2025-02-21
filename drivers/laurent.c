@@ -23,6 +23,7 @@ struct laurent_options {
 	const char *server;
 	const char *password;
 	unsigned int relay;
+	int usb_relay;
 };
 
 struct laurent {
@@ -42,6 +43,7 @@ void *laurent_parse_options(struct device_parser *dp)
 
 	options = calloc(1, sizeof(*options));
 	options->password = DEFAULT_PASSWORD;
+	options->usb_relay = -1;
 
 	device_parser_accept(dp, YAML_MAPPING_START_EVENT, NULL, 0);
 	while (device_parser_accept(dp, YAML_SCALAR_EVENT, key, TOKEN_LENGTH)) {
@@ -54,6 +56,8 @@ void *laurent_parse_options(struct device_parser *dp)
 			options->password = strdup(value);
 		else if (!strcmp(key, "relay"))
 			options->relay = strtoul(value, NULL, 0);
+		else if (!strcmp(key, "usb_relay"))
+			options->usb_relay = strtoul(value, NULL, 0);
 		else
 			errx(1, "%s: unknown option \"%s\"", __func__, key);
 	}
@@ -124,7 +128,7 @@ static void *laurent_open(struct device *dev)
 	return laurent;
 }
 
-static int laurent_power(struct device *dev, bool on)
+static int laurent_control(struct device *dev, unsigned int relay, bool on)
 {
 	struct laurent *laurent = dev->cdb;
 	char buf[BUFSIZ];
@@ -145,7 +149,7 @@ static int laurent_power(struct device *dev, bool on)
 
 	len = snprintf(buf, sizeof(buf), "GET /cmd.cgi?psw=%s&cmd=REL,%u,%d HTTP/1.0\r\n\r\n",
 		       laurent->options->password,
-		       laurent->options->relay,
+		       relay,
 		       on);
 	if (len < 0) {
 		warn("asprintf failed\n");
@@ -190,8 +194,30 @@ err:
 	return -1;
 }
 
+static int laurent_power(struct device *dev, bool on)
+{
+	struct laurent *laurent = dev->cdb;
+
+	return laurent_control(dev,
+			       laurent->options->relay,
+			       on);
+}
+
+static void laurent_usb(struct device *dev, bool on)
+{
+	struct laurent *laurent = dev->cdb;
+
+	if (laurent->options->usb_relay < 0)
+		return;
+
+	laurent_control(dev,
+			laurent->options->usb_relay,
+			on);
+}
+
 const struct control_ops laurent_ops = {
 	.parse_options = laurent_parse_options,
 	.open = laurent_open,
 	.power = laurent_power,
+	.usb = laurent_usb,
 };
