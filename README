@@ -19,11 +19,13 @@ from sandbox/cdba/cdba-server. Available devices are read from $HOME/.cdba
 = Client side
 The client is invoked as:
 
-  cdba -b <board> -h <host> [-c <power-cylce-count>] [-s <status-fifo>] boot.img
+  cdba -b <board> [-h <host>] [-c <power-cylce-count>] [-s <status-fifo>] [boot.img]
 
 <host> will be connected to using ssh and <board> will be selected for
-operation. As the board's fastboot interface shows up the given boot.img will
-be transfered and booted on the device.
+operation. As the board's fastboot interface shows up the given boot.img
+will be transfered and booted on the device. If <host> is omitted, the
+cdba-server is started locally without using ssh. If [boot.img] is omitted,
+"fastboot continue" is run to boot the installed operating system.
 
 The board will execute until the key sequence ^A q is invoked or the board
 outputs a sequence of 20 ~ (tilde) chards in a row.

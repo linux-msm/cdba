@@ -103,8 +103,13 @@ static int fork_ssh(const char *host, const char *cmd, int *pipes)
 		close(piped_stderr[0]);
 		close(piped_stderr[1]);
 
-		execl("/usr/bin/ssh", "ssh", host, cmd, NULL);
-		err(1, "launching ssh failed");
+		if (host) {
+			execlp("ssh", "ssh", host, cmd, NULL);
+			err(1, "launching ssh failed");
+		} else {
+			execlp(cmd, cmd, NULL);
+			err(1, "launching cdba-server failed");
+		}
 	default:
 		close(piped_stdin[0]);
 		close(piped_stdout[1]);
@@ -583,12 +588,12 @@ static void usage(void)
 {
 	extern const char *__progname;
 
-	fprintf(stderr, "usage: %s -b <board> -h <host> [-t <timeout>] "
-			"[-T <inactivity-timeout>] <boot.img>\n",
+	fprintf(stderr, "usage: %s -b <board> [-h <host>] [-t <timeout>] "
+			"[-T <inactivity-timeout>] [boot.img]\n",
 			__progname);
-	fprintf(stderr, "usage: %s -i -b <board> -h <host>\n",
+	fprintf(stderr, "usage: %s -i -b <board> [-h <host>]\n",
 			__progname);
-	fprintf(stderr, "usage: %s -l -h <host>\n",
+	fprintf(stderr, "usage: %s -l [-h <host>]\n",
 			__progname);
 	exit(1);
 }
@@ -604,6 +609,7 @@ int main(int argc, char **argv)
 	bool power_cycle_on_timeout = true;
 	struct timeval timeout_inactivity_tv;
 	struct timeval timeout_total_tv;
+	struct timeval *timeout = NULL;
 	struct termios *orig_tios;
 	const char *server_binary = "cdba-server";
 	const char *status_pipe = NULL;
@@ -667,9 +673,6 @@ int main(int argc, char **argv)
 		}
 	}
 
-	if (!host)
-		usage();
-
 	switch (verb) {
 	case CDBA_BOOT:
 		if (optind > argc || !board)
@@ -707,6 +710,8 @@ int main(int argc, char **argv)
 
 	timeout_total_tv = get_timeout(timeout_total);
 	timeout_inactivity_tv = get_timeout(timeout_inactivity);
+	if (timeout_total || timeout_inactivity)
+		timeout = &tv;
 
 	while (!quit) {
 		if (received_power_off || reached_timeout) {
@@ -744,14 +749,16 @@ int main(int argc, char **argv)
 		if (!list_empty(&work_items))
 			FD_SET(ssh_fds[0], &wfds);
 
-		gettimeofday(&now, NULL);
-		if (timeout_inactivity && timercmp(&timeout_inactivity_tv, &timeout_total_tv, <)) {
-			timersub(&timeout_inactivity_tv, &now, &tv);
-		} else {
-			timersub(&timeout_total_tv, &now, &tv);
+		if (timeout) {
+			gettimeofday(&now, NULL);
+			if (timeout_inactivity && (!timeout_total ||
+			    timercmp(&timeout_inactivity_tv, &timeout_total_tv, <))) {
+				timersub(&timeout_inactivity_tv, &now, timeout);
+			} else {
+				timersub(&timeout_total_tv, &now, timeout);
+			}
 		}
-
-		ret = select(nfds + 1, &rfds, &wfds, NULL, &tv);
+		ret = select(nfds + 1, &rfds, &wfds, NULL, timeout);
 #if 0
 		printf("select: %d (%c%c%c)\n", ret, FD_ISSET(STDIN_FILENO, &rfds) ? 'X' : '-',
 						     FD_ISSET(ssh_fds[1], &rfds) ? 'X' : '-',
