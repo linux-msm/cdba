@@ -285,7 +285,7 @@ void device_usb(struct device *device, bool on)
 {
 	if (device->ppps_path)
 		ppps_power(device, on);
-	else if (device_has_control(device, usb))
+	if (device_has_control(device, usb))
 		device_control(device, usb, on);
 }
 
