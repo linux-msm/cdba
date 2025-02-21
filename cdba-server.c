@@ -99,6 +99,28 @@ static void msg_fastboot_continue(void)
 	cdba_send(MSG_FASTBOOT_CONTINUE);
 }
 
+static void msg_key_release(void *data)
+{
+	int key = (int)(uintptr_t)data;
+
+	device_key(selected_device, key, false);
+}
+
+static void msg_key_press(const void *data, size_t len)
+{
+	const struct key_press *press = data;
+
+	if (len != sizeof(*press))
+		return;
+
+	if (press->state == KEY_PRESS_PULSE) {
+		device_key(selected_device, press->key, true);
+		watch_timer_add(100, msg_key_release, (void*)(uintptr_t)press->key);
+	} else {
+		device_key(selected_device, press->key, !!press->state);
+	}
+}
+
 void cdba_send_buf(int type, size_t len, const void *buf)
 {
 	struct msg msg = {
@@ -184,6 +206,9 @@ static int handle_stdin(int fd, void *buf)
 			break;
 		case MSG_FASTBOOT_CONTINUE:
 			msg_fastboot_continue();
+			break;
+		case MSG_KEY_PRESS:
+			msg_key_press(msg->data, msg->len);
 			break;
 		default:
 			fprintf(stderr, "unk %d len %d\n", msg->type, msg->len);

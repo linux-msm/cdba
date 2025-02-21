@@ -2,6 +2,7 @@
 #define __DEVICE_H__
 
 #include <termios.h>
+#include "cdba.h"
 #include "list.h"
 
 struct cdb_assist;
@@ -76,6 +77,7 @@ struct device *device_open(const char *board,
 			   const char *username);
 void device_close(struct device *dev);
 int device_power(struct device *device, bool on);
+void device_key(struct device *device, int key, bool asserted);
 
 void device_status_enable(struct device *device);
 void device_usb(struct device *device, bool on);
@@ -92,11 +94,6 @@ void device_list_devices(const char *username);
 void device_info(const char *username, const void *data, size_t dlen);
 void device_fastboot_continue(struct device *device);
 bool device_is_running(struct device *device);
-
-enum {
-	DEVICE_KEY_FASTBOOT,
-	DEVICE_KEY_POWER,
-};
 
 extern const struct control_ops alpaca_ops;
 extern const struct control_ops cdb_assist_ops;
