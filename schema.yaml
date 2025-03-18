@@ -123,9 +123,10 @@ properties:
                   minimin: 0
                 devicenode:
                   $ref: "#/$defs/device_path"
-                patternProperties:
-                  "^power|fastboot_key|power_key|usb_disconnect|output_enable$":
-                    $ref: "#/$defs/ftdi_gpio"
+              patternProperties:
+                "^power|fastboot_key|power_key|usb[01]?_disconnect|output_enable$":
+                  $ref: "#/$defs/ftdi_gpio"
+              additionalProperties: false
 
               dependentRequired:
                 index:
@@ -138,7 +139,7 @@ properties:
         local_gpio:
           description: Local GPIO
           type: object
-          unevaluatedItems: false
+          additionalProperties: false
           patternProperties:
             "^power|fastboot_key|power_key|usb_disconnect$":
               $ref: "#/$defs/local_gpio"
@@ -146,7 +147,7 @@ properties:
         laurent:
           description: KernelChip Laurent relays
           type: object
-          unevaluatedItems: false
+          additionalProperties: false
           properties:
             server:
               type: string

@@ -73,3 +73,32 @@ devices:
       power:
         interface: D
         line: 6
+  - board: myboard-5
+    name: "My Board 5"
+    description: |
+      My super awesome board Number 5
+    console: /dev/ttyABC1
+    fastboot: cacafada
+    ftdi_gpio:
+      vendor: "0x0403"
+      product: "0x6011"
+      index: 0
+      power:
+        interface: B
+        line: 1
+        active_low: true
+      fastboot_key:
+        interface: B
+        line: 0
+        active_low: true
+      power_key:
+        interface: B
+        line: 2
+      usb0_disconnect:
+        interface: C
+        line: 7
+        active_low: true
+      usb1_disconnect:
+        interface: A
+        line: 4
+        active_low: true
