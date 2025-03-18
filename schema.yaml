@@ -153,6 +153,8 @@ properties:
               type: string
             relay:
               type: integer
+            usb_relay:
+              type: integer
             password:
               description: password to access the relays, defaults to 'Laurent'
               type: string
