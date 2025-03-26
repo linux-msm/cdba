@@ -25,6 +25,8 @@
 #include "status-cmd.h"
 #include "watch.h"
 
+const char *cdba_user;
+
 #define ARRAY_SIZE(x) ((sizeof(x)/sizeof((x)[0])))
 
 #define device_has_control(_dev, _op) \
@@ -49,6 +51,7 @@ void device_add(struct device *device)
 static void device_lock(struct device *device)
 {
 	char lock[PATH_MAX];
+	char user[128] = { 0 };
 	int fd;
 	int n;
 
@@ -60,18 +63,26 @@ static void device_lock(struct device *device)
 	if (fd >= 0)
 		close(fd);
 
-	fd = open(lock, O_RDONLY | O_CLOEXEC);
+	fd = open(lock, O_RDWR | O_CLOEXEC);
 	if (fd < 0)
 		err(1, "failed to open lockfile %s", lock);
+
+	/* Read current user out of the lockfile if there is one */
+	n = read(fd, user, sizeof(user)-1);
+	if (n < 0)
+		err(1, "failed to read lockfile %s", lock);
+	/* Strip newline */
+	if (n)
+		user[n-1] = '\0';
 
 	while (1) {
 		char c;
 
 		n = flock(fd, LOCK_EX | LOCK_NB);
 		if (!n)
-			return;
+			break;
 
-		warnx("board is in use, waiting...");
+		warnx("board is in use by %s, waiting...", user);
 
 		sleep(3);
 
@@ -79,6 +90,22 @@ static void device_lock(struct device *device)
 		if (read(STDIN_FILENO, &c, 1) == 0)
 			errx(1, "connection is gone");
 	}
+
+	/* Write our username to the lockfile */
+	n = snprintf(user, sizeof(user), "%s\n", cdba_user);
+	if (n >= (int)sizeof(user))
+		errx(1, "failed to build lockfile username");
+
+	if (ftruncate(fd, 0) < 0)
+		err(1, "failed to truncate lockfile %s", lock);
+
+	lseek(fd, 0, SEEK_SET);
+	if (write(fd, user, n) < 0)
+		err(1, "failed to write lockfile %s", lock);
+
+	warnx("board locked by %s", cdba_user);
+
+	fsync(fd);
 }
 
 static bool device_check_access(struct device *device,
