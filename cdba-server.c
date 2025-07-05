@@ -22,8 +22,6 @@
 #include "list.h"
 #include "watch.h"
 
-static const char *username;
-
 struct device *selected_device;
 
 static void fastboot_opened(struct fastboot *fb, void *data)
@@ -55,7 +53,7 @@ static struct fastboot_ops fastboot_ops = {
 
 static void msg_select_board(const void *param)
 {
-	selected_device = device_open(param, username);
+	selected_device = device_open(param, cdba_user);
 	if (!selected_device) {
 		fprintf(stderr, "failed to open %s\n", (const char *)param);
 		watch_quit();
@@ -199,10 +197,10 @@ static int handle_stdin(int fd, void *buf)
 			device_send_break(selected_device);
 			break;
 		case MSG_LIST_DEVICES:
-			device_list_devices(username);
+			device_list_devices(cdba_user);
 			break;
 		case MSG_BOARD_INFO:
-			device_info(username, msg->data, msg->len);
+			device_info(cdba_user, msg->data, msg->len);
 			break;
 		case MSG_FASTBOOT_CONTINUE:
 			msg_fastboot_continue();
@@ -240,11 +238,11 @@ int main(int argc, char **argv)
 
 	fprintf(stderr, "Starting cdba server\n");
 
-	username = getenv("CDBA_USER");
-	if (!username)
-		username = getenv("USER");
-	if (!username)
-		username = "nobody";
+	cdba_user = getenv("CDBA_USER");
+	if (!cdba_user)
+		cdba_user = getenv("USER");
+	if (!cdba_user)
+		cdba_user = "nobody";
 
 	openlog("cdba-server", LOG_PID, LOG_DAEMON);
 	atexit(atexit_handler);
