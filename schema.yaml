@@ -26,7 +26,7 @@ properties:
         fastboot:
           description: fastboot id
           type: string
-          pattern: "^[0-9a-f]{8}$"
+          pattern: "^[0-9a-f]{8,16}$"
 
         fastboot_set_active:
           description: run fastboot set active before each boot, slot can be selected
