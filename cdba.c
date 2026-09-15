@@ -501,7 +501,7 @@ static int tty_callback(int *ssh_fds)
 	ssize_t n;
 
 	n = read(STDIN_FILENO, buf, sizeof(buf));
-	if (n < 0)
+	if (n <= 0)
 		return n;
 
 	for (k = 0; k < n; k++) {
@@ -553,7 +553,7 @@ static int tty_callback(int *ssh_fds)
 		}
 	}
 
-	return 0;
+	return n;
 }
 
 /**
@@ -909,6 +909,7 @@ int main(int argc, char **argv)
 	struct timeval timeout_total_tv;
 	struct timeval *timeout = NULL;
 	struct termios *orig_tios;
+	bool watch_stdin = true;
 	const char *server_binary = "cdba-server";
 	const char *status_pipe = NULL;
 	bool bump_inactivity_timer;
@@ -1054,7 +1055,7 @@ int main(int argc, char **argv)
 		FD_SET(ssh_fds[2], &rfds);
 		nfds = MAX(ssh_fds[1], ssh_fds[2]);
 
-		if (orig_tios) {
+		if (watch_stdin) {
 			FD_SET(STDIN_FILENO, &rfds);
 
 			nfds = MAX(nfds, STDIN_FILENO);
@@ -1092,8 +1093,10 @@ int main(int argc, char **argv)
 
 		bump_inactivity_timer = false;
 
-		if (FD_ISSET(STDIN_FILENO, &rfds))
-			tty_callback(ssh_fds);
+		if (watch_stdin && FD_ISSET(STDIN_FILENO, &rfds)) {
+			if (tty_callback(ssh_fds) <= 0)
+				watch_stdin = false;
+		}
 
 		if (FD_ISSET(ssh_fds[2], &rfds)) {
 			n = read(ssh_fds[2], buf, sizeof(buf));
