@@ -49,6 +49,17 @@ void device_add(struct device *device)
 	list_append(&devices, &device->node);
 }
 
+struct device *device_next(struct device *device)
+{
+	struct list_head *item;
+
+	item = device ? device->node.next : devices.next;
+	if (item == &devices)
+		return NULL;
+
+	return list_entry(item, struct device, node);
+}
+
 static void device_lock(struct device *device)
 {
 	char lock[PATH_MAX];

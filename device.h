@@ -94,6 +94,7 @@ struct device_qdl_user {
 };
 
 void device_add(struct device *device);
+struct device *device_next(struct device *device);
 
 struct device *device_open(const char *board,
 			   const char *username);

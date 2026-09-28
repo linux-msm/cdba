@@ -23,6 +23,7 @@ void cdba_send_buf(int type, size_t len, const void *buf)
 static void usage(const char *name)
 {
 	fprintf(stderr, "Usage: %s <board> on|off\n", name);
+	fprintf(stderr, "Usage: %s all-off\n", name);
 	exit(EXIT_FAILURE);
 }
 
@@ -33,22 +34,47 @@ bool ready(void)
 	return device_is_running(selected_device);
 }
 
+static int all_off(void)
+{
+	struct device *next = NULL, *dev;
+	int ret = 0;
+
+	while ((next = device_next(next))) {
+		dev = device_open(next->board, "nobody");
+		if (!dev) {
+			fprintf(stderr, "failed to open %s\n", next->board);
+			ret = EXIT_FAILURE;
+			continue;
+		}
+
+		device_usb(dev, false);
+		device_power_off(dev);
+		device_close(dev);
+	}
+
+	return ret;
+}
+
 int main(int argc, char **argv)
 {
 	const char *home;
 	const char *name;
+	bool all = false;
 	bool on;
 	int ret;
 
-	if (argc != 3)
+	if (argc == 2 && !strcmp(argv[1], "all-off")) {
+		all = true;
+	} else if (argc == 3) {
+		if (!strcmp(argv[2], "on"))
+			on = true;
+		else if (!strcmp(argv[2], "off"))
+			on = false;
+		else
+			usage(argv[0]);
+	} else {
 		usage(argv[0]);
-
-	if (!strcmp(argv[2], "on"))
-		on = true;
-	else if (!strcmp(argv[2], "off"))
-		on = false;
-	else
-		usage(argv[0]);
+	}
 
 	home = getenv("HOME");
 	if (home)
@@ -62,6 +88,9 @@ int main(int argc, char **argv)
 			exit(1);
 		}
 	}
+
+	if (all)
+		return all_off();
 
 	name = argv[1];
 	selected_device = device_open(name, "nobody");
