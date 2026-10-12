@@ -308,9 +308,18 @@ static void *ftdi_gpio_open(struct device *dev)
 
 		ret = ftdi_usb_open_string(ftdi_gpio->interface[ftdi_interface],
 					   ftdi_gpio->options->ftdi.description);
-		if (ret < 0)
-			errx(1, "failed to open ftdi gpio device '%s' (%d)",
-			     ftdi_gpio->options->ftdi.description, ret);
+		if (ret < 0) {
+			warnx("failed to open ftdi gpio device '%s' (%d)",
+			      ftdi_gpio->options->ftdi.description, ret);
+			for (i = 0; i < FTDI_INTERFACE_COUNT; ++i) {
+				if (!ftdi_gpio->interface[i])
+					continue;
+				ftdi_usb_close(ftdi_gpio->interface[i]);
+				ftdi_free(ftdi_gpio->interface[i]);
+			}
+			free(ftdi_gpio);
+			return NULL;
+		}
 
 		ftdi_set_bitmode(ftdi_gpio->interface[ftdi_interface],
 				 0xFF, BITMODE_BITBANG);
