@@ -52,8 +52,10 @@ static void *qcomlt_dbg_open(struct device *dev)
 	dbg = calloc(1, sizeof(*dbg));
 
 	dbg->fd = tty_open(dev->control_dev, &dbg->orig_tios);
-	if (dbg->fd < 0)
-		err(1, "failed to open %s", dev->control_dev);
+	if (dbg->fd < 0) {
+		free(dbg);
+		return NULL;
+	}
 
 	// fprintf(stderr, "qcomlt_dbg_open()\n");
 	write(dbg->fd, "brpu", 4);

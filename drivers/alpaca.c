@@ -38,8 +38,10 @@ static void *alpaca_open(struct device *dev)
 	alpaca = calloc(1, sizeof(*alpaca));
 
 	alpaca->alpaca_fd = tty_open(dev->control_dev, &alpaca->alpaca_tios);
-	if (alpaca->alpaca_fd < 0)
-		err(1, "failed to open %s", dev->control_dev);
+	if (alpaca->alpaca_fd < 0) {
+		free(alpaca);
+		return NULL;
+	}
 
 	alpaca_device_power(alpaca, 0);
 

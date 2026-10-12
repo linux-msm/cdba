@@ -49,8 +49,10 @@ static void *pic32cx_open(struct device *dev)
 	pic32cx = calloc(1, sizeof(*pic32cx));
 
 	pic32cx->fd = tty_open(dev->control_dev, &pic32cx->tios);
-	if (pic32cx->fd < 0)
-		err(1, "failed to open %s", dev->control_dev);
+	if (pic32cx->fd < 0) {
+		free(pic32cx);
+		return NULL;
+	}
 
 	pic32cx_device_power(pic32cx, 1);
 

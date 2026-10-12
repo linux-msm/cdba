@@ -20,8 +20,10 @@ int tty_open(const char *tty, struct termios *old)
 	int fd;
 
 	fd = open(tty, O_RDWR | O_NOCTTY | O_EXCL);
-	if (fd < 0)
-		err(1, "unable to open \"%s\"", tty);
+	if (fd < 0) {
+		warn("unable to open \"%s\"", tty);
+		return -1;
+	}
 
 	ret = tcgetattr(fd, old);
 	if (ret < 0)
