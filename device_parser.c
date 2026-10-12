@@ -226,6 +226,11 @@ static void parse_board(struct device_parser *dp)
 			if (dev->control_options)
 				set_control_ops(dev, &laurent_ops);
 			continue;
+		} else if (!strcmp(key, "unoq")) {
+			dev->control_options = unoq_ops.parse_options(dp);
+			if (dev->control_options)
+				set_control_ops(dev, &unoq_ops);
+			continue;
 		}
 
 		device_parser_expect(dp, YAML_SCALAR_EVENT, value, TOKEN_LENGTH);

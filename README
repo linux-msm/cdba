@@ -184,6 +184,15 @@ target.
     fastboot_set_active: true
     fastboot_key_timeout: 2
 
+  - board: unoq
+    console: /dev/serial/by-id/usb-FTDI_ALPACA-LITE_MTP_DEBUG_BOARD_FTAMC2D5-if00-port0
+    name: Arduino UnoQ
+    unoq:
+      vendor: "0x0403"
+      product: "0x6015"
+      serial: DK0HENU2
+    fastboot: 1ff52e59
+
 = Status messages
 
 The status messages that are used by the client fifo and the server's status

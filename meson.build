@@ -55,6 +55,7 @@ endif
 
 gpiod_dep = dependency('libgpiod', required: server_opt)
 cdbalib_deps = [dependency('libudev', required: server_opt),
+	       dependency('libusb-1.0', required: server_opt),
 	       dependency('yaml-0.1', required: server_opt),
 	       gpiod_dep,
 	       ftdi_dep]
@@ -76,6 +77,7 @@ drivers_srcs = ['drivers/alpaca.c',
 		'drivers/local-gpio.c',
 		'drivers/pic32cx.c',
 		'drivers/qcomlt_dbg.c',
+		'drivers/unoq.c',
 		]
 
 if gpiod_dep.version().version_compare('>=2.0')
