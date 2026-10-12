@@ -97,6 +97,8 @@ void device_add(struct device *device);
 
 struct device *device_open(const char *board,
 			   const char *username);
+struct device *device_open_power_only(const char *board,
+				      const char *username);
 void device_close(struct device *dev);
 int device_power_on(struct device *device, enum power_on_mode mode);
 int device_power_off(struct device *device);

@@ -103,8 +103,8 @@ static bool device_check_access(struct device *device,
 	return false;
 }
 
-struct device *device_open(const char *board,
-			   const char *username)
+static struct device *__device_open(const char *board, const char *username,
+				    bool power_only)
 {
 	struct device *device;
 
@@ -133,9 +133,19 @@ found:
 
 	if (device_has_control(device, open)) {
 		device->cdb = device_control(device, open);
-		if (!device->cdb)
+		if (!device->cdb) {
+			if (power_only) {
+				warnx("failed to open device controller for %s",
+				      board);
+				return NULL;
+			}
 			errx(1, "failed to open device controller");
+		}
 	}
+
+	/* Switching power and USB off needs neither console nor fastboot. */
+	if (power_only)
+		return device;
 
 	device->console = device_console(device, open);
 	if (!device->console)
@@ -157,6 +167,20 @@ found:
 		device_usb(device, true);
 
 	return device;
+}
+
+struct device *device_open(const char *board, const char *username)
+{
+	return __device_open(board, username, false);
+}
+
+/*
+ * Open only the board's controller (no console), enough to switch power and
+ * USB off. Unlike device_open() this doesn't exit if the console is missing.
+ */
+struct device *device_open_power_only(const char *board, const char *username)
+{
+	return __device_open(board, username, true);
 }
 
 static void device_impl_power(struct device *device, bool on)
