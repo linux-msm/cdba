@@ -131,6 +131,7 @@ extern const struct control_ops external_ops;
 extern const struct control_ops qcomlt_dbg_ops;
 extern const struct control_ops laurent_ops;
 extern const struct control_ops pic32cx_ops;
+extern const struct control_ops unoq_ops;
 
 extern const struct console_ops conmux_console_ops;
 extern const struct console_ops console_ops;

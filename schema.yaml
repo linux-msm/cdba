@@ -131,6 +131,39 @@ properties:
           description: PIC32CX board control device path
           $ref: "#/$defs/device_path"
 
+        unoq:
+          description: UnoQ board control over FTDI CBUS
+          oneOf:
+            - type: string
+              description: libftdi device description string
+              pattern: "^(d:/.*)|(i:0x[0-9a-fA-F]{4}:0x[0-9a-fA-F]{4}(:[0-9]+)?)|(s:0x[0-9a-fA-F]{4}:0x[0-9a-fA-F]{4}:[0-9a-zA-Z]+)$"
+
+            - type: object
+              properties:
+                vendor:
+                  type: string
+                  pattern: "^0x[0-9a-fA-F]{4}$"
+                product:
+                  type: string
+                  pattern: "^0x[0-9a-fA-F]{4}$"
+                serial:
+                  type: string
+                  pattern: "^[0-9a-zA-Z]+$"
+                index:
+                  type: integer
+                  minimum: 0
+                devicenode:
+                  $ref: "#/$defs/device_path"
+              additionalProperties: false
+
+              dependentRequired:
+                index:
+                  - product
+                  - vendor
+                serial:
+                  - product
+                  - vendor
+
         users:
           description: User access allowance for the board
           type: array

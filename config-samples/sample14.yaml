@@ -1,0 +1,10 @@
+---
+devices:
+  - board: unoq
+    name: Arduino UnoQ
+    console: /dev/serial/by-id/usb-FTDI_ALPACA-LITE_MTP_DEBUG_BOARD_FTAMC2D5-if00-port0
+    unoq:
+      vendor: "0x0403"
+      product: "0x6015"
+      serial: DK0HENU2
+    fastboot: 1ff52e59
