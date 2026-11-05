@@ -309,7 +309,7 @@ int device_write(struct device *device, const void *buf, size_t len)
 
 void device_edl_open(struct device *device, void (*edl_present)(bool present))
 {
-	device->edl = edl_open(device->serial, edl_present);
+	device->edl = edl_open(device->qdl_serial, edl_present);
 }
 
 void device_fastboot_open(struct device *device,
