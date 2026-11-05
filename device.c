@@ -173,6 +173,7 @@ void device_key(struct device *device, int key, bool asserted)
 enum {
 	DEVICE_STATE_START,
 	DEVICE_STATE_CONNECT,
+	DEVICE_STATE_CONNECT_USB,
 	DEVICE_STATE_PRESS,
 	DEVICE_STATE_RELEASE_PWR,
 	DEVICE_STATE_RELEASE_FASTBOOT,
@@ -180,14 +181,38 @@ enum {
 	DEVICE_STATE_RUNNING,
 };
 
+static bool device_edl_mode(struct device *device)
+{
+	return device->power_on_mode == MSG_POWER_ON_EDL;
+}
+
+static void device_tick(void *data);
+
+static void device_connected(struct device *device, unsigned int press_delay_ms)
+{
+	if (device->has_power_key) {
+		device->state = DEVICE_STATE_PRESS;
+		watch_timer_add(press_delay_ms, device_tick, device);
+	} else if (device_edl_mode(device)) {
+		device->state = DEVICE_STATE_RELEASE_EDL;
+		watch_timer_add(EDL_KEY_TIMEOUT_MS, device_tick, device);
+	} else if (device->fastboot_key_timeout) {
+		device->state = DEVICE_STATE_RELEASE_FASTBOOT;
+		watch_timer_add(device->fastboot_key_timeout * 1000, device_tick, device);
+	} else {
+		device->state = DEVICE_STATE_RUNNING;
+	}
+}
+
 static void device_tick(void *data)
 {
 	struct device *device = data;
+	unsigned int press_ms;
 
 	switch (device->state) {
 	case DEVICE_STATE_START:
 		/* Make sure power key is not engaged */
-		if (device->power_on_mode == MSG_POWER_ON_EDL)
+		if (device_edl_mode(device))
 			device_key(device, DEVICE_KEY_EDL, true);
 		else if (device->fastboot_key_timeout)
 			device_key(device, DEVICE_KEY_FASTBOOT, true);
@@ -195,41 +220,46 @@ static void device_tick(void *data)
 			device_key(device, DEVICE_KEY_POWER, false);
 
 		device->state = DEVICE_STATE_CONNECT;
-		watch_timer_add(10, device_tick, device);
+		if (device_edl_mode(device) && device->edl_power_delay_ms)
+			watch_timer_add(device->edl_power_delay_ms, device_tick, device);
+		else
+			watch_timer_add(10, device_tick, device);
 		break;
 	case DEVICE_STATE_CONNECT:
 		/* Connect power and USB */
 		device_impl_power(device, true);
-		device_usb(device, true);
 
-		if (device->has_power_key) {
-			device->state = DEVICE_STATE_PRESS;
-			watch_timer_add(250, device_tick, device);
-		} else if (device->power_on_mode == MSG_POWER_ON_EDL) {
-			device->state = DEVICE_STATE_RELEASE_EDL;
-			watch_timer_add(EDL_KEY_TIMEOUT_MS, device_tick, device);
-		} else if (device->fastboot_key_timeout) {
-			device->state = DEVICE_STATE_RELEASE_FASTBOOT;
-			watch_timer_add(device->fastboot_key_timeout * 1000, device_tick, device);
-		} else {
-			device->state = DEVICE_STATE_RUNNING;
+		if (device_edl_mode(device) && device->edl_usb_delay_ms) {
+			device->state = DEVICE_STATE_CONNECT_USB;
+			watch_timer_add(device->edl_usb_delay_ms, device_tick, device);
+			break;
 		}
+
+		device_usb(device, true);
+		device_connected(device, 250);
+		break;
+	case DEVICE_STATE_CONNECT_USB:
+		device_usb(device, true);
+		device_connected(device, 30);
 		break;
 	case DEVICE_STATE_PRESS:
 		/* Press power key */
 		device_key(device, DEVICE_KEY_POWER, true);
 
 		device->state = DEVICE_STATE_RELEASE_PWR;
-		if (device->power_key_press_ms)
-			watch_timer_add(device->power_key_press_ms, device_tick, device);
-		else
-			watch_timer_add(100, device_tick, device);
+		press_ms = device->power_key_press_ms;
+		if (device_edl_mode(device) && device->edl_power_key_press_ms)
+			press_ms = device->edl_power_key_press_ms;
+		watch_timer_add(press_ms ? press_ms : 100, device_tick, device);
 		break;
 	case DEVICE_STATE_RELEASE_PWR:
 		/* Release power key */
 		device_key(device, DEVICE_KEY_POWER, false);
 
-		if (device->power_on_mode == MSG_POWER_ON_EDL) {
+		if (device_edl_mode(device) && device->edl_power_key_press_ms) {
+			device_key(device, DEVICE_KEY_EDL, false);
+			device->state = DEVICE_STATE_RUNNING;
+		} else if (device_edl_mode(device)) {
 			device->state = DEVICE_STATE_RELEASE_EDL;
 			watch_timer_add(EDL_KEY_TIMEOUT_MS, device_tick, device);
 		} else if (device->fastboot_key_timeout) {

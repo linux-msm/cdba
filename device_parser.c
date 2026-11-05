@@ -279,6 +279,12 @@ static void parse_board(struct device_parser *dp)
 			dev->fastboot_key_timeout = strtoul(value, NULL, 10);
 		} else if (!strcmp(key, "power_key_press_ms")) {
 			dev->power_key_press_ms = MAX(100, strtoul(value, NULL, 10));
+		} else if (!strcmp(key, "edl_power_delay_ms")) {
+			dev->edl_power_delay_ms = strtoul(value, NULL, 10);
+		} else if (!strcmp(key, "edl_usb_delay_ms")) {
+			dev->edl_usb_delay_ms = strtoul(value, NULL, 10);
+		} else if (!strcmp(key, "edl_power_key_press_ms")) {
+			dev->edl_power_key_press_ms = MAX(100, strtoul(value, NULL, 10));
 		} else if (!strcmp(key, "usb_always_on")) {
 			dev->usb_always_on = !strcmp(value, "true");
 		} else if (!strcmp(key, "ppps_path")) {

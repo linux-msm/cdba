@@ -36,6 +36,14 @@ static void *alpaca_open(struct device *dev)
 
 	dev->has_power_key = true;
 
+	/* firehose powers the device off after a power key press under 2.5 s */
+	if (!dev->edl_power_delay_ms)
+		dev->edl_power_delay_ms = 500;
+	if (!dev->edl_usb_delay_ms)
+		dev->edl_usb_delay_ms = 900;
+	if (!dev->edl_power_key_press_ms)
+		dev->edl_power_key_press_ms = 3000;
+
 	alpaca = calloc(1, sizeof(*alpaca));
 
 	alpaca->alpaca_fd = tty_open(dev->control_dev, &alpaca->alpaca_tios);

@@ -135,6 +135,10 @@ must identify an exact location, use the explicit <lun>/<partition-name> or
 <lun>/<start-sector> form instead. The special target "all" allows any QDL
 target.
 
+The EDL power-on timing is set by edl_power_delay_ms (EDL key to power),
+edl_usb_delay_ms (power to USB) and edl_power_key_press_ms. Alpaca defaults to
+500, 900 and 3000 ms.
+
   - board: testboard
     console: /dev/serial/by-id/usb-1234-if00-port0
     name: GPIO controller board
