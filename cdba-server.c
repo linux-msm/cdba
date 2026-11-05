@@ -82,7 +82,9 @@ static void msg_select_board(const void *param)
 		fprintf(stderr, "failed to open %s\n", (const char *)param);
 		watch_quit();
 	} else {
-		device_edl_open(selected_device, edl_present);
+		/* without qdl_serial any EDL device on the host matches */
+		if (selected_device->qdl_serial || selected_device->qdl_programmer)
+			device_edl_open(selected_device, edl_present);
 		device_fastboot_open(selected_device, &fastboot_ops);
 	}
 

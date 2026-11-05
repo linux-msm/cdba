@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <unistd.h>
 
 #include "edl.h"
@@ -127,12 +128,34 @@ static int parse_usb_desc(int usbfd)
 		    ifc->bInterfaceProtocol != 17)
 			continue;
 
-		/* TODO: check serial number */
-
 		return 0;
 	}
 
 	return -ENOENT;
+}
+
+/* iProduct carries "..._SN:<serial>", as matched by qdl --serial */
+static bool edl_serial_match(struct edl *edl, struct udev_device *dev)
+{
+	const char *product;
+	const char *sn;
+	size_t len;
+
+	if (!edl->serial)
+		return true;
+
+	product = udev_device_get_sysattr_value(dev, "product");
+	if (!product)
+		return false;
+
+	sn = strstr(product, "_SN:");
+	if (!sn)
+		return false;
+
+	sn += strlen("_SN:");
+	len = strcspn(sn, "_");
+
+	return len == strlen(edl->serial) && !strncasecmp(sn, edl->serial, len);
 }
 
 static int handle_edl_add(struct edl *edl, struct udev_device *dev)
@@ -144,6 +167,11 @@ static int handle_edl_add(struct edl *edl, struct udev_device *dev)
 
 	dev_path = udev_device_get_devpath(dev);
 	dev_node = udev_device_get_devnode(dev);
+	if (!dev_node)
+		return -ENOENT;
+
+	if (!edl_serial_match(edl, dev))
+		return -ENOENT;
 
 	usbfd = open(dev_node, O_RDWR);
 	if (usbfd < 0)

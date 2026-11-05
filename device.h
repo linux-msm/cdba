@@ -48,6 +48,9 @@ struct device {
 	struct fastboot *fastboot;
 	unsigned int fastboot_key_timeout;
 	unsigned int power_key_press_ms;
+	unsigned int edl_power_delay_ms;
+	unsigned int edl_usb_delay_ms;
+	unsigned int edl_power_key_press_ms;
 	int state;
 	enum power_on_mode power_on_mode;
 	bool has_power_key;

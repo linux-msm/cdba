@@ -54,6 +54,21 @@ properties:
           type: integer
           minimum: 100
 
+        edl_power_delay_ms:
+          description: EDL power-on, delay from EDL key to power
+          type: integer
+          minimum: 1
+
+        edl_usb_delay_ms:
+          description: EDL power-on, delay from power to USB
+          type: integer
+          minimum: 1
+
+        edl_power_key_press_ms:
+          description: EDL power-on, power key press duration
+          type: integer
+          minimum: 100
+
         cdba:
           description: CDB Assist device path
           $ref: "#/$defs/device_path"
