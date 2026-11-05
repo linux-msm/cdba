@@ -28,6 +28,7 @@ struct alpaca {
 
 static int alpaca_device_power(struct alpaca *alpaca, int on);
 static int alpaca_usb_device_power(struct alpaca *alpaca, int on);
+static int alpaca_output_bit(struct alpaca *alpaca, int bit, int value);
 
 static void *alpaca_open(struct device *dev)
 {
@@ -42,6 +43,7 @@ static void *alpaca_open(struct device *dev)
 		err(1, "failed to open %s", dev->control_dev);
 
 	alpaca_device_power(alpaca, 0);
+	alpaca_output_bit(alpaca, 4, 0);
 
 	if (dev->usb_always_on)
 		alpaca_usb_device_power(alpaca, 1);
@@ -120,6 +122,9 @@ static void alpaca_key(struct device *dev, int key, bool asserted)
 		break;
 	case DEVICE_KEY_POWER:
 		alpaca_output_bit(dev->cdb, 1, asserted);
+		break;
+	case DEVICE_KEY_EDL:
+		alpaca_output_bit(dev->cdb, 4, asserted);
 		break;
 	}
 }
